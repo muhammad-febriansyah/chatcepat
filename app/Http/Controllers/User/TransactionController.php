@@ -16,7 +16,7 @@ class TransactionController extends Controller
     public function index(Request $request): Response
     {
         $query = Transaction::where('user_id', auth()->id())
-            ->with(['pricingPackage:id,name', 'bank:id,name,code'])
+            ->with(['pricingPackage:id,name', 'bank:id,nama_bank,norek'])
             ->latest();
 
         // Filter by status
@@ -37,7 +37,7 @@ class TransactionController extends Controller
                 'id' => $transaction->id,
                 'invoice_number' => $transaction->invoice_number,
                 'package_name' => $transaction->pricingPackage?->name ?? '-',
-                'bank_name' => $transaction->bank?->name ?? $transaction->payment_method ?? '-',
+                'bank_name' => $transaction->bank?->nama_bank ?? $transaction->payment_method ?? '-',
                 'amount' => $transaction->amount,
                 'formatted_amount' => 'Rp ' . number_format($transaction->amount, 0, ',', '.'),
                 'status' => $transaction->status,
@@ -89,8 +89,8 @@ class TransactionController extends Controller
                 'invoice_number' => $transaction->invoice_number,
                 'merchant_order_id' => $transaction->merchant_order_id,
                 'package_name' => $transaction->pricingPackage?->name ?? '-',
-                'bank_name' => $transaction->bank?->name ?? '-',
-                'bank_code' => $transaction->bank?->code ?? '-',
+                'bank_name' => $transaction->bank?->nama_bank ?? '-',
+                'bank_code' => $transaction->bank?->norek ?? '-',
                 'amount' => $transaction->amount,
                 'formatted_amount' => 'Rp ' . number_format($transaction->amount, 0, ',', '.'),
                 'status' => $transaction->status,
