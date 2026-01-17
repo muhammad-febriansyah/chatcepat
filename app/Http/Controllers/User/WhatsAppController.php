@@ -311,14 +311,33 @@ class WhatsAppController extends Controller
             abort(403, 'Unauthorized access to this session.');
         }
 
+        // Disconnect from WhatsApp gateway (without logout - keep auth files)
+        try {
+            $gatewayUrl = config('services.whatsapp_gateway.url');
+            $response = Http::timeout(10)->post($gatewayUrl . '/api/sessions/' . $session->session_id . '/disconnect', [
+                'logout' => false, // Don't logout, just disconnect (can reconnect without QR)
+            ]);
+
+            if ($response->successful()) {
+                Log::info("Session {$session->session_id} disconnected from gateway");
+            } else {
+                Log::warning("Failed to disconnect session from gateway: " . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error("Error disconnecting session from gateway: " . $e->getMessage());
+            // Continue with database update even if gateway call fails
+        }
+
+        // Update local database
         $session->update([
             'status' => 'disconnected',
+            'is_active' => false,
             'qr_code' => null,
-            'qr_code_expires_at' => null,
+            'qr_expires_at' => null,
         ]);
 
         return redirect()->back()
-            ->with('success', 'WhatsApp session disconnected successfully.');
+            ->with('success', 'Koneksi WhatsApp berhasil diputuskan.');
     }
 
     /**
