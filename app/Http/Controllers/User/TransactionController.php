@@ -37,13 +37,14 @@ class TransactionController extends Controller
                 'id' => $transaction->id,
                 'invoice_number' => $transaction->invoice_number,
                 'package_name' => $transaction->pricingPackage?->name ?? '-',
-                'bank_name' => $transaction->bank?->nama_bank ?? $transaction->payment_method ?? '-',
+                'bank_name' => $transaction->bank?->nama_bank ?? $this->getPaymentMethodLabel($transaction->payment_method),
                 'amount' => $transaction->amount,
                 'formatted_amount' => 'Rp ' . number_format($transaction->amount, 0, ',', '.'),
                 'status' => $transaction->status,
                 'status_label' => $this->getStatusLabel($transaction->status),
                 'status_color' => $this->getStatusColor($transaction->status),
                 'payment_method' => $transaction->payment_method,
+                'payment_method_label' => $this->getPaymentMethodLabel($transaction->payment_method),
                 'va_number' => $transaction->va_number,
                 'created_at' => $transaction->created_at->format('d/m/Y H:i'),
                 'paid_at' => $transaction->paid_at?->format('d/m/Y H:i'),
@@ -89,7 +90,7 @@ class TransactionController extends Controller
                 'invoice_number' => $transaction->invoice_number,
                 'merchant_order_id' => $transaction->merchant_order_id,
                 'package_name' => $transaction->pricingPackage?->name ?? '-',
-                'bank_name' => $transaction->bank?->nama_bank ?? '-',
+                'bank_name' => $transaction->bank?->nama_bank ?? $this->getPaymentMethodLabel($transaction->payment_method),
                 'bank_code' => $transaction->bank?->norek ?? '-',
                 'amount' => $transaction->amount,
                 'formatted_amount' => 'Rp ' . number_format($transaction->amount, 0, ',', '.'),
@@ -97,6 +98,7 @@ class TransactionController extends Controller
                 'status_label' => $this->getStatusLabel($transaction->status),
                 'status_color' => $this->getStatusColor($transaction->status),
                 'payment_method' => $transaction->payment_method,
+                'payment_method_label' => $this->getPaymentMethodLabel($transaction->payment_method),
                 'payment_code' => $transaction->payment_code,
                 'va_number' => $transaction->va_number,
                 'payment_url' => $transaction->payment_url,
@@ -137,5 +139,58 @@ class TransactionController extends Controller
             'cancelled' => 'gray',
             default => 'gray',
         };
+    }
+
+    /**
+     * Get readable payment method name from Duitku code
+     */
+    private function getPaymentMethodLabel(?string $code): string
+    {
+        if (!$code) return '-';
+
+        $methods = [
+            // Virtual Account
+            'BC' => 'BCA Virtual Account',
+            'M1' => 'Mandiri Virtual Account',
+            'M2' => 'Mandiri Virtual Account',
+            'VA' => 'Maybank Virtual Account',
+            'I1' => 'BNI Virtual Account',
+            'B1' => 'CIMB Niaga Virtual Account',
+            'BT' => 'Permata Bank Virtual Account',
+            'A1' => 'ATM Bersama',
+            'AG' => 'Bank Artha Graha',
+            'NC' => 'Bank Neo Commerce',
+            'BR' => 'BRIVA',
+            'S1' => 'Bank Sahabat Sampoerna',
+
+            // E-Wallet
+            'OV' => 'OVO',
+            'SA' => 'ShopeePay',
+            'LQ' => 'LinkAja',
+            'DA' => 'DANA',
+            'LA' => 'LinkAja',
+            'SP' => 'ShopeePay Later',
+            'IR' => 'Indodana PayLater',
+
+            // Retail
+            'FT' => 'Pegadaian',
+            'A2' => 'POS Indonesia',
+            'IR' => 'Indomaret',
+            'AL' => 'Alfamart',
+            'PC' => 'Credit Card',
+
+            // QRIS
+            'SP' => 'ShopeePay QRIS',
+            'NQ' => 'QRIS',
+            'DQ' => 'DANA QRIS',
+            'GQ' => 'GoPay QRIS',
+            'SQ' => 'ShopeePay QRIS',
+            'LF' => 'LinkAja Fixed',
+
+            // Manual Transfer
+            'manual' => 'Transfer Manual',
+        ];
+
+        return $methods[$code] ?? $code;
     }
 }
