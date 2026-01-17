@@ -89,7 +89,35 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
             onSuccess: (response: any) => {
                 const paymentUrl = response.props?.data?.payment_url;
                 if (paymentUrl) {
-                    window.location.href = paymentUrl;
+                    // Buka popup window untuk halaman pembayaran Duitku
+                    const width = 600;
+                    const height = 700;
+                    const left = (window.innerWidth - width) / 2;
+                    const top = (window.innerHeight - height) / 2;
+
+                    const popup = window.open(
+                        paymentUrl,
+                        'DuitkuPayment',
+                        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+                    );
+
+                    // Jika popup diblokir, fallback ke redirect
+                    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+                        toast.info('Popup diblokir, mengalihkan ke halaman pembayaran...');
+                        window.location.href = paymentUrl;
+                    } else {
+                        toast.success('Silakan selesaikan pembayaran di window yang terbuka');
+
+                        // Monitor popup closure
+                        const checkPopup = setInterval(() => {
+                            if (popup.closed) {
+                                clearInterval(checkPopup);
+                                toast.info('Mengecek status pembayaran...');
+                                // Refresh halaman atau redirect ke history transaksi
+                                router.visit('/user/transactions');
+                            }
+                        }, 1000);
+                    }
                 }
             },
             onError: (errors) => {
