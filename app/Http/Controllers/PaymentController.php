@@ -54,10 +54,17 @@ class PaymentController extends Controller
         // Get active banks for manual payment
         $banks = Bank::active()->get();
 
+        $user = Auth::user();
+
         return Inertia::render('payment/index', [
             'package' => $package,
             'paymentMethods' => $paymentMethods,
             'banks' => $banks,
+            'user' => $user ? [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? '',
+            ] : null,
         ]);
     }
 

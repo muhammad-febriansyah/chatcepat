@@ -40,13 +40,20 @@ interface Bank {
     is_active: boolean;
 }
 
+interface UserInfo {
+    name: string;
+    email: string;
+    phone: string;
+}
+
 interface PaymentProps {
     package: PricingPackage | null;
     paymentMethods: PaymentMethod[];
     banks: Bank[];
+    user: UserInfo | null;
 }
 
-export default function PaymentIndex({ package: selectedPackage, paymentMethods, banks }: PaymentProps) {
+export default function PaymentIndex({ package: selectedPackage, paymentMethods, banks, user }: PaymentProps) {
     const [selectedMethod, setSelectedMethod] = useState<string>('');
     const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
     const [paymentType, setPaymentType] = useState<string>('gateway');
@@ -55,22 +62,22 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
     const [copiedField, setCopiedField] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Form for Duitku payment
+    // Form for Duitku payment - auto-fill from user session
     const gatewayForm = useForm({
         package_id: selectedPackage?.id || '',
         payment_method: '',
-        customer_name: '',
-        email: '',
-        phone: '',
+        customer_name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
     });
 
-    // Form for manual payment
+    // Form for manual payment - auto-fill from user session
     const manualForm = useForm({
         package_id: selectedPackage?.id || '',
         bank_id: '',
-        customer_name: '',
-        email: '',
-        phone: '',
+        customer_name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
         proof_image: null as File | null,
     });
 
