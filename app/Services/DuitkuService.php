@@ -146,10 +146,11 @@ class DuitkuService
 
             Log::info('Duitku Create Invoice Request', $params);
 
-            // Call Duitku createInvoice API
+            // Call Duitku createInvoice API (without payment method - user selects on Duitku page)
+            // Endpoint: /createInvoice for pop-up/redirect mode
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '/v2/inquiry', $params);
+            ])->post($this->baseUrl . '/createInvoice', $params);
 
             $result = $response->json();
 

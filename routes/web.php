@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
+// Route to refresh CSRF token (for handling 419 errors)
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->name('csrf.token');
+
 Route::get('/', function () {
     $features = App\Models\Feature::active()->ordered()->get();
     $fiturUnggulans = App\Models\FiturUnggulan::active()->ordered()->get();

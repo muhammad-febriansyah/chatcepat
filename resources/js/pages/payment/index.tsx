@@ -72,19 +72,54 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
         proof_image: null as File | null,
     });
 
+    // Function to get fresh CSRF token
+    const getCsrfToken = (): string => {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    };
+
+    // Function to refresh CSRF token
+    const refreshCsrfToken = async (): Promise<string> => {
+        try {
+            const response = await fetch('/csrf-token', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.token) {
+                    // Update meta tag with new token
+                    const metaTag = document.querySelector('meta[name="csrf-token"]');
+                    if (metaTag) {
+                        metaTag.setAttribute('content', data.token);
+                    }
+                    return data.token;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to refresh CSRF token:', error);
+        }
+        return getCsrfToken();
+    };
+
     const handleGatewaySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         gatewayForm.setData('processing', true);
 
-        try {
-            const response = await fetch('/payment/create', {
+        // Helper function to make the payment request
+        const makePaymentRequest = async (csrfToken: string) => {
+            return fetch('/payment/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     package_id: gatewayForm.data.package_id,
                     customer_name: gatewayForm.data.customer_name,
@@ -92,6 +127,18 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                     phone: gatewayForm.data.phone,
                 }),
             });
+        };
+
+        try {
+            let response = await makePaymentRequest(getCsrfToken());
+
+            // If CSRF error (419), refresh token and retry once
+            if (response.status === 419) {
+                console.log('CSRF token expired, refreshing...');
+                toast.info('Memperbarui sesi, mencoba ulang...');
+                const newToken = await refreshCsrfToken();
+                response = await makePaymentRequest(newToken);
+            }
 
             const result = await response.json();
 
@@ -333,7 +380,7 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                                             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                                                 <div className="flex items-center gap-3">
                                                     <img
-                                                        src="https://www.duitku.com/wp-content/uploads/2020/10/duitku-logo.png"
+                                                        src="https://images.duitku.com/hotlink-ok/DUITKU2.png"
                                                         alt="Duitku"
                                                         className="h-8 w-auto object-contain"
                                                     />
