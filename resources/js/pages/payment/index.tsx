@@ -81,53 +81,73 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
         proof_image: null as File | null,
     });
 
-    const handleGatewaySubmit = (e: React.FormEvent) => {
+    const handleGatewaySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        gatewayForm.post('/payment/create', {
-            preserveScroll: true,
-            onSuccess: (response: any) => {
-                const paymentUrl = response.props?.data?.payment_url;
-                if (paymentUrl) {
-                    // Buka popup window untuk halaman pembayaran Duitku
-                    const width = 600;
-                    const height = 700;
-                    const left = (window.innerWidth - width) / 2;
-                    const top = (window.innerHeight - height) / 2;
+        gatewayForm.setData('processing', true);
 
-                    const popup = window.open(
-                        paymentUrl,
-                        'DuitkuPayment',
-                        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
-                    );
+        try {
+            const response = await fetch('/payment/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    package_id: gatewayForm.data.package_id,
+                    payment_method: gatewayForm.data.payment_method,
+                    customer_name: gatewayForm.data.customer_name,
+                    email: gatewayForm.data.email,
+                    phone: gatewayForm.data.phone,
+                }),
+            });
 
-                    // Jika popup diblokir, fallback ke redirect
-                    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-                        toast.info('Popup diblokir, mengalihkan ke halaman pembayaran...');
-                        window.location.href = paymentUrl;
-                    } else {
-                        toast.success('Silakan selesaikan pembayaran di window yang terbuka');
+            const result = await response.json();
 
-                        // Monitor popup closure
-                        const checkPopup = setInterval(() => {
-                            if (popup.closed) {
-                                clearInterval(checkPopup);
-                                toast.info('Mengecek status pembayaran...');
-                                // Refresh halaman atau redirect ke history transaksi
-                                router.visit('/user/transactions');
-                            }
-                        }, 1000);
-                    }
+            if (result.success && result.data?.payment_url) {
+                const paymentUrl = result.data.payment_url;
+
+                // Buka popup window untuk halaman pembayaran Duitku
+                const width = 600;
+                const height = 700;
+                const left = (window.innerWidth - width) / 2;
+                const top = (window.innerHeight - height) / 2;
+
+                const popup = window.open(
+                    paymentUrl,
+                    'DuitkuPayment',
+                    `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+                );
+
+                // Jika popup diblokir, fallback ke redirect
+                if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+                    toast.info('Popup diblokir, mengalihkan ke halaman pembayaran...');
+                    window.location.href = paymentUrl;
+                } else {
+                    toast.success('Silakan selesaikan pembayaran di window yang terbuka');
+
+                    // Monitor popup closure
+                    const checkPopup = setInterval(() => {
+                        if (popup.closed) {
+                            clearInterval(checkPopup);
+                            toast.info('Mengecek status pembayaran...');
+                            router.visit('/user/transactions');
+                        }
+                    }, 1000);
                 }
-            },
-            onError: (errors) => {
-                console.error('Payment creation failed:', errors);
-                toast.error('Gagal membuat pembayaran');
-            },
-        });
+            } else {
+                toast.error(result.message || 'Gagal membuat pembayaran');
+            }
+        } catch (error) {
+            console.error('Payment creation failed:', error);
+            toast.error('Gagal membuat pembayaran');
+        } finally {
+            gatewayForm.setData('processing', false);
+        }
     };
 
-    const handleManualSubmit = (e: React.FormEvent) => {
+    const handleManualSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!proofFile) {
@@ -135,25 +155,40 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
             return;
         }
 
-        const formData = new FormData();
-        formData.append('package_id', String(selectedPackage?.id || ''));
-        formData.append('bank_id', manualForm.data.bank_id);
-        formData.append('customer_name', manualForm.data.customer_name);
-        formData.append('email', manualForm.data.email);
-        formData.append('phone', manualForm.data.phone || '');
-        formData.append('proof_image', proofFile);
+        manualForm.setData('processing', true);
 
-        router.post('/payment/create-manual', formData, {
-            preserveScroll: true,
-            onSuccess: () => {
+        try {
+            const formData = new FormData();
+            formData.append('package_id', String(selectedPackage?.id || ''));
+            formData.append('bank_id', manualForm.data.bank_id);
+            formData.append('customer_name', manualForm.data.customer_name);
+            formData.append('email', manualForm.data.email);
+            formData.append('phone', manualForm.data.phone || '');
+            formData.append('proof_image', proofFile);
+
+            const response = await fetch('/payment/create-manual', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
                 toast.success('Pembayaran berhasil disubmit! Menunggu verifikasi admin.');
                 router.visit('/user/transactions');
-            },
-            onError: (errors) => {
-                console.error('Manual payment failed:', errors);
-                toast.error('Gagal membuat pembayaran manual');
-            },
-        });
+            } else {
+                toast.error(result.message || 'Gagal membuat pembayaran manual');
+            }
+        } catch (error) {
+            console.error('Manual payment failed:', error);
+            toast.error('Gagal membuat pembayaran manual');
+        } finally {
+            manualForm.setData('processing', false);
+        }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

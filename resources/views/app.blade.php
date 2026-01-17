@@ -15,7 +15,7 @@
         <title inertia>{{ $siteName ?? config('app.name', 'CekatAI') }}</title>
 
         {{-- SEO Meta Tags --}}
-        <meta name="description" content="Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas. Tingkatkan konversi hingga 3x dengan automation dan analytics real-time.">
+        <meta name="description" content="{{ $siteDescription ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas.' }}">
         <meta name="keywords" content="CRM, AI CRM, Customer Relationship Management, Sales Pipeline, Lead Management, Business Automation">
         <meta name="author" content="{{ $siteName ?? config('app.name', 'CekatAI') }}">
         <meta name="robots" content="index, follow">
@@ -24,15 +24,23 @@
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
         <meta property="og:title" content="{{ $siteName ?? config('app.name', 'CekatAI') }} - AI CRM Platform">
-        <meta property="og:description" content="Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas">
-        <meta property="og:image" content="{{ asset('images/og-image.png') }}">
+        <meta property="og:description" content="{{ $siteDescription ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas' }}">
+        @if($siteLogo)
+            <meta property="og:image" content="{{ asset('storage/' . $siteLogo) }}">
+        @else
+            <meta property="og:image" content="{{ asset('images/og-image.png') }}">
+        @endif
 
         {{-- Twitter --}}
         <meta property="twitter:card" content="summary_large_image">
         <meta property="twitter:url" content="{{ url()->current() }}">
         <meta property="twitter:title" content="{{ $siteName ?? config('app.name', 'CekatAI') }} - AI CRM Platform">
-        <meta property="twitter:description" content="Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas">
-        <meta property="twitter:image" content="{{ asset('images/og-image.png') }}">
+        <meta property="twitter:description" content="{{ $siteDescription ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas' }}">
+        @if($siteLogo)
+            <meta property="twitter:image" content="{{ asset('storage/' . $siteLogo) }}">
+        @else
+            <meta property="twitter:image" content="{{ asset('images/og-image.png') }}">
+        @endif
 
         {{-- Favicons --}}
         @if($siteFavicon)

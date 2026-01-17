@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $view->with([
                 'siteName' => Setting::get('site_name', config('app.name')),
+                'siteDescription' => Setting::get('site_description'),
                 'siteFavicon' => Setting::get('favicon'),
                 'siteLogo' => Setting::get('logo'),
             ]);
