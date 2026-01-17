@@ -296,6 +296,6 @@ class DuitkuService
      */
     protected function generateSignature(string $merchantOrderId, int $amount): string
     {
-        return hash('sha256', $this->merchantCode . $merchantOrderId . $amount . $this->apiKey);
+        return md5($this->merchantCode . $merchantOrderId . $amount . $this->apiKey);
     }
 }
