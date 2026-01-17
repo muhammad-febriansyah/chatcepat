@@ -115,7 +115,7 @@ class DuitkuService
     {
         try {
             $datetime = date('Y-m-d H:i:s');
-            $signature = hash('sha256', $this->merchantCode . $amount . $datetime . $this->apiKey);
+            $signature = md5($this->merchantCode . $amount . $datetime . $this->apiKey);
 
             $params = [
                 'merchantcode' => $this->merchantCode,
@@ -158,7 +158,7 @@ class DuitkuService
     public function checkTransactionStatus(string $merchantOrderId): array
     {
         try {
-            $signature = hash('sha256', $this->merchantCode . $merchantOrderId . $this->apiKey);
+            $signature = md5($this->merchantCode . $merchantOrderId . $this->apiKey);
 
             $params = [
                 'merchantCode' => $this->merchantCode,
@@ -203,7 +203,7 @@ class DuitkuService
         $resultCode = $data['resultCode'] ?? '';
         $amount = $data['amount'] ?? '';
 
-        $calculatedSignature = hash('sha256', $this->merchantCode . $amount . $merchantOrderId . $this->apiKey);
+        $calculatedSignature = md5($this->merchantCode . $amount . $merchantOrderId . $this->apiKey);
         $receivedSignature = $data['signature'] ?? '';
 
         return hash_equals($calculatedSignature, $receivedSignature);
