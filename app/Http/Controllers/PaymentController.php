@@ -34,23 +34,6 @@ class PaymentController extends Controller
             $package = PricingPackage::findOrFail($packageId);
         }
 
-        // Get payment methods from Duitku
-        $amount = $package ? (int) $package->price : 10000;
-        $paymentMethodsResult = $this->duitkuService->getPaymentMethods($amount);
-
-        // Transform Duitku response to expected format
-        $paymentMethods = [];
-        if ($paymentMethodsResult['success'] && is_array($paymentMethodsResult['data'])) {
-            foreach ($paymentMethodsResult['data'] as $method) {
-                $paymentMethods[] = [
-                    'paymentMethod' => $method['pgCode'] ?? '',
-                    'paymentName' => $method['name'] ?? '',
-                    'paymentImage' => $method['imageUrl'] ?? '',
-                    'totalFee' => (int) ($method['pgFee'] ?? 0),
-                ];
-            }
-        }
-
         // Get active banks for manual payment
         $banks = Bank::active()->get();
 
@@ -58,7 +41,6 @@ class PaymentController extends Controller
 
         return Inertia::render('payment/index', [
             'package' => $package,
-            'paymentMethods' => $paymentMethods,
             'banks' => $banks,
             'user' => $user ? [
                 'name' => $user->name,
@@ -75,7 +57,6 @@ class PaymentController extends Controller
     {
         $request->validate([
             'package_id' => 'required|exists:pricing_packages,id',
-            'payment_method' => 'required|string',
             'customer_name' => 'required|string|max:255',
             'email' => 'required|email',
             'phone' => 'nullable|string|max:20',
@@ -98,7 +79,7 @@ class PaymentController extends Controller
                 'invoice_number' => $invoiceNumber,
                 'merchant_order_id' => $merchantOrderId,
                 'amount' => $package->price,
-                'payment_method' => $request->payment_method,
+                'payment_method' => 'duitku', // Will be updated after user selects payment method
                 'status' => 'pending',
                 'customer_info' => [
                     'name' => $request->customer_name,
@@ -108,11 +89,10 @@ class PaymentController extends Controller
                 'expired_at' => now()->addDay(), // 24 hours expiry
             ]);
 
-            // Prepare data for Duitku
+            // Prepare data for Duitku - using createInvoice (no payment method required)
             $duitkuData = [
                 'merchantOrderId' => $merchantOrderId,
                 'paymentAmount' => (int) $package->price,
-                'paymentMethod' => $request->payment_method,
                 'productDetails' => $package->name . ' - ' . $package->description,
                 'email' => $request->email,
                 'customerName' => $request->customer_name,
@@ -130,8 +110,8 @@ class PaymentController extends Controller
                 'expiryPeriod' => 1440, // 24 hours in minutes
             ];
 
-            // Create payment via Duitku
-            $result = $this->duitkuService->createTransaction($duitkuData);
+            // Create invoice via Duitku (user will select payment method on Duitku page)
+            $result = $this->duitkuService->createInvoice($duitkuData);
 
             if (!$result['success']) {
                 DB::rollBack();

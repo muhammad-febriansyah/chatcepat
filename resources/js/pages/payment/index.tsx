@@ -24,12 +24,6 @@ interface PricingPackage {
     period_text: string;
 }
 
-interface PaymentMethod {
-    paymentMethod: string;
-    paymentName: string;
-    paymentImage: string;
-    totalFee: number;
-}
 
 interface Bank {
     id: number;
@@ -48,13 +42,11 @@ interface UserInfo {
 
 interface PaymentProps {
     package: PricingPackage | null;
-    paymentMethods: PaymentMethod[];
     banks: Bank[];
     user: UserInfo | null;
 }
 
-export default function PaymentIndex({ package: selectedPackage, paymentMethods, banks, user }: PaymentProps) {
-    const [selectedMethod, setSelectedMethod] = useState<string>('');
+export default function PaymentIndex({ package: selectedPackage, banks, user }: PaymentProps) {
     const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
     const [paymentType, setPaymentType] = useState<string>('gateway');
     const [proofFile, setProofFile] = useState<File | null>(null);
@@ -65,7 +57,6 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
     // Form for Duitku payment - auto-fill from user session
     const gatewayForm = useForm({
         package_id: selectedPackage?.id || '',
-        payment_method: '',
         customer_name: user?.name || '',
         email: user?.email || '',
         phone: user?.phone || '',
@@ -96,7 +87,6 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
                 },
                 body: JSON.stringify({
                     package_id: gatewayForm.data.package_id,
-                    payment_method: gatewayForm.data.payment_method,
                     customer_name: gatewayForm.data.customer_name,
                     email: gatewayForm.data.email,
                     phone: gatewayForm.data.phone,
@@ -328,7 +318,7 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
                                         </CardContent>
                                     </Card>
 
-                                    {/* Payment Method */}
+                                    {/* Payment Info */}
                                     <Card>
                                         <CardHeader>
                                             <CardTitle className="flex items-center gap-2">
@@ -336,69 +326,34 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
                                                 Metode Pembayaran
                                             </CardTitle>
                                             <CardDescription>
-                                                Pilih metode pembayaran yang Anda inginkan
+                                                Pembayaran melalui Duitku Payment Gateway
                                             </CardDescription>
                                         </CardHeader>
                                         <CardContent>
-                                            {paymentMethods.length > 0 ? (
-                                                <div className="grid gap-3 sm:grid-cols-2">
-                                                    {paymentMethods.map((method) => (
-                                                        <div
-                                                            key={method.paymentMethod}
-                                                            className={cn(
-                                                                "relative flex items-center gap-3 rounded-lg border p-4 cursor-pointer transition-all hover:border-primary",
-                                                                gatewayForm.data.payment_method === method.paymentMethod
-                                                                    ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                                                                    : "border-border"
-                                                            )}
-                                                            onClick={() => {
-                                                                gatewayForm.setData('payment_method', method.paymentMethod);
-                                                                setSelectedMethod(method.paymentMethod);
-                                                            }}
-                                                        >
-                                                            <input
-                                                                type="radio"
-                                                                name="payment_method"
-                                                                value={method.paymentMethod}
-                                                                checked={gatewayForm.data.payment_method === method.paymentMethod}
-                                                                onChange={() => {
-                                                                    gatewayForm.setData('payment_method', method.paymentMethod);
-                                                                    setSelectedMethod(method.paymentMethod);
-                                                                }}
-                                                                className="sr-only"
-                                                            />
-                                                            {method.paymentImage && (
-                                                                <img
-                                                                    src={method.paymentImage}
-                                                                    alt={method.paymentName}
-                                                                    className="h-8 w-auto object-contain"
-                                                                />
-                                                            )}
-                                                            <div className="flex-1">
-                                                                <p className="font-medium text-sm">{method.paymentName}</p>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    Biaya: Rp {method.totalFee.toLocaleString('id-ID')}
-                                                                </p>
-                                                            </div>
-                                                            {gatewayForm.data.payment_method === method.paymentMethod && (
-                                                                <CheckCircle className="size-5 text-primary" />
-                                                            )}
-                                                        </div>
-                                                    ))}
+                                            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src="https://www.duitku.com/wp-content/uploads/2020/10/duitku-logo.png"
+                                                        alt="Duitku"
+                                                        className="h-8 w-auto object-contain"
+                                                    />
+                                                    <div>
+                                                        <p className="font-medium">Duitku Payment Gateway</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Pilih metode pembayaran di halaman Duitku
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <div className="text-center py-8">
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Tidak ada metode pembayaran tersedia.
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground mt-1">
-                                                        Silakan gunakan Transfer Manual
-                                                    </p>
+                                                <div className="text-sm text-muted-foreground space-y-1">
+                                                    <p>Metode pembayaran yang tersedia:</p>
+                                                    <ul className="list-disc list-inside text-xs space-y-0.5">
+                                                        <li>Virtual Account (BCA, BNI, BRI, Mandiri, dll)</li>
+                                                        <li>E-Wallet (OVO, DANA, ShopeePay, dll)</li>
+                                                        <li>Retail (Alfamart, Indomaret)</li>
+                                                        <li>QRIS</li>
+                                                    </ul>
                                                 </div>
-                                            )}
-                                            {gatewayForm.errors.payment_method && (
-                                                <p className="text-sm text-destructive mt-2">{gatewayForm.errors.payment_method}</p>
-                                            )}
+                                            </div>
                                         </CardContent>
                                     </Card>
 
@@ -407,7 +362,7 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
                                         type="submit"
                                         size="lg"
                                         className="w-full"
-                                        disabled={gatewayForm.processing || !gatewayForm.data.payment_method}
+                                        disabled={gatewayForm.processing}
                                     >
                                         {gatewayForm.processing ? (
                                             <>
@@ -718,21 +673,15 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
                                         <span>Subtotal</span>
                                         <span>Rp {Number(selectedPackage.price).toLocaleString('id-ID')}</span>
                                     </div>
-                                    {paymentType === 'gateway' && selectedMethod && paymentMethods.find(m => m.paymentMethod === selectedMethod) && (
-                                        <div className="flex justify-between text-sm text-muted-foreground">
-                                            <span>Biaya Admin</span>
-                                            <span>
-                                                Rp {(paymentMethods.find(m => m.paymentMethod === selectedMethod)?.totalFee || 0).toLocaleString('id-ID')}
-                                            </span>
-                                        </div>
+                                    {paymentType === 'gateway' && (
+                                        <p className="text-xs text-muted-foreground">
+                                            * Biaya admin akan ditampilkan di halaman Duitku
+                                        </p>
                                     )}
                                     <div className="flex justify-between font-bold text-lg border-t pt-2">
                                         <span>Total</span>
                                         <span className="text-primary">
-                                            Rp {(
-                                                Number(selectedPackage.price) +
-                                                (paymentType === 'gateway' ? (paymentMethods.find(m => m.paymentMethod === selectedMethod)?.totalFee || 0) : 0)
-                                            ).toLocaleString('id-ID')}
+                                            Rp {Number(selectedPackage.price).toLocaleString('id-ID')}
                                         </span>
                                     </div>
                                 </div>

@@ -106,6 +106,84 @@ class DuitkuService
     }
 
     /**
+     * Create invoice (user selects payment method on Duitku page)
+     *
+     * @param array $data
+     * @return array
+     */
+    public function createInvoice(array $data): array
+    {
+        try {
+            $merchantOrderId = $data['merchantOrderId'];
+            $paymentAmount = $data['paymentAmount'];
+            $productDetails = $data['productDetails'];
+            $email = $data['email'];
+            $customerName = $data['customerName'];
+            $phoneNumber = $data['phoneNumber'] ?? '';
+            $itemDetails = $data['itemDetails'] ?? [];
+            $customerVaName = $data['customerVaName'] ?? $customerName;
+            $callbackUrl = $data['callbackUrl'] ?? config('services.duitku.callback_url');
+            $returnUrl = $data['returnUrl'] ?? config('services.duitku.return_url');
+            $expiryPeriod = $data['expiryPeriod'] ?? 1440;
+
+            // Generate signature for createInvoice
+            $signature = md5($this->merchantCode . $merchantOrderId . $paymentAmount . $this->apiKey);
+
+            $params = [
+                'merchantCode' => $this->merchantCode,
+                'paymentAmount' => $paymentAmount,
+                'merchantOrderId' => $merchantOrderId,
+                'productDetails' => $productDetails,
+                'email' => $email,
+                'customerVaName' => $customerVaName,
+                'phoneNumber' => $phoneNumber,
+                'itemDetails' => $itemDetails,
+                'callbackUrl' => $callbackUrl,
+                'returnUrl' => $returnUrl,
+                'signature' => $signature,
+                'expiryPeriod' => $expiryPeriod,
+            ];
+
+            Log::info('Duitku Create Invoice Request', $params);
+
+            // Call Duitku createInvoice API
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . '/v2/inquiry', $params);
+
+            $result = $response->json();
+
+            Log::info('Duitku Create Invoice Response', [
+                'status' => $response->status(),
+                'result' => $result,
+            ]);
+
+            if ($response->successful() && isset($result['statusCode']) && $result['statusCode'] === '00') {
+                return [
+                    'success' => true,
+                    'data' => $result,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => $result['statusMessage'] ?? 'Failed to create invoice',
+                'data' => $result,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Duitku Create Invoice Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Get payment methods
      *
      * @param int $amount
