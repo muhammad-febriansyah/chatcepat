@@ -84,7 +84,7 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
     const handleGatewaySubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        gatewayForm.post(route('payment.create'), {
+        gatewayForm.post('/payment/create', {
             preserveScroll: true,
             onSuccess: (response: any) => {
                 const paymentUrl = response.props?.data?.payment_url;
@@ -143,7 +143,7 @@ export default function PaymentIndex({ package: selectedPackage, paymentMethods,
         formData.append('phone', manualForm.data.phone || '');
         formData.append('proof_image', proofFile);
 
-        router.post(route('payment.create-manual'), formData, {
+        router.post('/payment/create-manual', formData, {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Pembayaran berhasil disubmit! Menunggu verifikasi admin.');
