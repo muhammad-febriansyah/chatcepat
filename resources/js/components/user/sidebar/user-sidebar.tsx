@@ -151,7 +151,7 @@ export function UserSidebar() {
                                 <p className="text-sm font-medium text-green-800">{subscription.package_name}</p>
                                 <p className="text-xs text-green-600">
                                     {subscription.days_remaining > 0
-                                        ? `${subscription.days_remaining} hari tersisa`
+                                        ? `${Math.ceil(subscription.days_remaining)} hari tersisa`
                                         : 'Berakhir hari ini'
                                     }
                                 </p>

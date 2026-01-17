@@ -198,7 +198,7 @@ export default function PaymentReturn({ transaction, status, message }: PaymentR
                                         </Link>
                                     </Button>
                                     <Button asChild variant="outline" className="flex-1">
-                                        <Link href={`/payment/transactions/${transaction.id}`}>
+                                        <Link href={`/user/transactions/${transaction.id}`}>
                                             <Download className="mr-2 size-4" />
                                             Lihat Detail
                                         </Link>
@@ -219,7 +219,7 @@ export default function PaymentReturn({ transaction, status, message }: PaymentR
                                         </a>
                                     </Button>
                                     <Button asChild variant="default" className="flex-1">
-                                        <Link href="/payment/transactions">
+                                        <Link href="/user/transactions">
                                             Lihat Riwayat
                                             <ArrowRight className="ml-2 size-4" />
                                         </Link>

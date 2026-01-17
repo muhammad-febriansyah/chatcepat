@@ -25,8 +25,9 @@ import {
 export function UserHeader() {
     const { url, props } = usePage<{ auth: { user: { id: number; name: string; email: string; role: string; avatar: string | null } } }>()
 
-    // Generate breadcrumbs from URL
-    const pathSegments = url.split('/').filter(Boolean)
+    // Generate breadcrumbs from URL (strip query string first)
+    const pathWithoutQuery = url.split('?')[0]
+    const pathSegments = pathWithoutQuery.split('/').filter(Boolean)
 
     const getBreadcrumbLabel = (segment: string): string => {
         const labels: Record<string, string> = {
@@ -39,6 +40,20 @@ export function UserHeader() {
             'contacts': 'Kontak',
             'maps': 'Peta',
             'create': 'Buat Baru',
+            'payment': 'Pembayaran',
+            'return': 'Status Pembayaran',
+            'transactions': 'Riwayat Transaksi',
+            'topup': 'Top Up',
+            'broadcast': 'Broadcast',
+            'groups': 'Group',
+            'chatbot': 'Chatbot',
+            'templates': 'Template',
+            'reply-manual': 'Reply Manual',
+            'edit': 'Edit',
+        }
+        // Check if segment is a numeric ID
+        if (/^\d+$/.test(segment)) {
+            return 'Detail'
         }
         return labels[segment] || segment
     }
