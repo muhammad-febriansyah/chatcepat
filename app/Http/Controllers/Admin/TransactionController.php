@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
+use App\Mail\PaymentSuccessNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -74,9 +77,30 @@ class TransactionController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $wasNotPaid = $transaction->status !== 'paid';
+
         // Use markAsPaid() for 'paid' status to handle subscription extension
-        if ($validated['status'] === 'paid' && $transaction->status !== 'paid') {
+        if ($validated['status'] === 'paid' && $wasNotPaid) {
             $transaction->markAsPaid();
+
+            // Refresh transaction to get updated data
+            $transaction->refresh();
+
+            // Send payment success email notification
+            try {
+                $customerEmail = $transaction->customer_info['email'] ?? $transaction->user->email;
+                Mail::to($customerEmail)->send(new PaymentSuccessNotification($transaction));
+                Log::info('Payment success email sent (admin approve)', [
+                    'transaction_id' => $transaction->id,
+                    'email' => $customerEmail,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment success email (admin approve)', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail if email fails
+            }
         } else {
             $transaction->update([
                 'status' => $validated['status'],

@@ -6,10 +6,13 @@ use App\Models\Transaction;
 use App\Models\PricingPackage;
 use App\Models\Bank;
 use App\Services\DuitkuService;
+use App\Mail\PaymentSuccessNotification;
+use App\Mail\PaymentPendingNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -134,6 +137,19 @@ class PaymentController extends Controller
 
             DB::commit();
 
+            // Send payment pending email notification
+            try {
+                $customerEmail = $request->email;
+                Mail::to($customerEmail)->send(new PaymentPendingNotification($transaction));
+                Log::info('Payment pending email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment pending email', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail the transaction if email fails
+            }
+
             // Redirect to Duitku payment page
             return response()->json([
                 'success' => true,
@@ -210,6 +226,19 @@ class PaymentController extends Controller
 
             DB::commit();
 
+            // Send payment pending email notification
+            try {
+                $customerEmail = $request->email;
+                Mail::to($customerEmail)->send(new PaymentPendingNotification($transaction));
+                Log::info('Manual payment pending email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send manual payment pending email', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail the transaction if email fails
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pembayaran manual berhasil dibuat. Menunggu verifikasi admin.',
@@ -246,6 +275,21 @@ class PaymentController extends Controller
             $result = $this->duitkuService->handleCallback($callbackData);
 
             if ($result['success']) {
+                // Send payment success email if transaction exists and is paid
+                if (isset($result['transaction']) && $result['transaction']->status === 'paid') {
+                    try {
+                        $transaction = $result['transaction'];
+                        $customerEmail = $transaction->customer_info['email'] ?? $transaction->user->email;
+                        Mail::to($customerEmail)->send(new PaymentSuccessNotification($transaction));
+                        Log::info('Payment success email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send payment success email', [
+                            'transaction_id' => $result['transaction']->id ?? 'unknown',
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+
                 // Return success response to Duitku
                 return response()->json([
                     'success' => true,
