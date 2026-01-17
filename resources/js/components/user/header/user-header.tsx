@@ -10,7 +10,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { usePage, router } from '@inertiajs/react'
-import { Bell, Settings, LogOut, UserCircle } from 'lucide-react'
+import { Bell, Settings, LogOut, UserCircle, CheckCircle, Clock, XCircle, Receipt } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -22,8 +22,25 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
+interface Notification {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    status: string;
+    icon: string;
+    color: string;
+    payment_method: string;
+    time: string;
+    url: string;
+}
+
 export function UserHeader() {
-    const { url, props } = usePage<{ auth: { user: { id: number; name: string; email: string; role: string; avatar: string | null } } }>()
+    const { url, props } = usePage<{
+        auth: { user: { id: number; name: string; email: string; role: string; avatar: string | null } };
+        notifications: Notification[];
+    }>()
+    const notifications = props.notifications || []
 
     // Generate breadcrumbs from URL (strip query string first)
     const pathWithoutQuery = url.split('?')[0]
@@ -110,39 +127,61 @@ export function UserHeader() {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="relative rounded-full">
                             <Bell className="size-5" />
-                            <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                                3
-                            </span>
+                            {notifications.length > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                    {notifications.length}
+                                </span>
+                            )}
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-80">
-                        <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
+                        <DropdownMenuLabel>Riwayat Transaksi</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <div className="max-h-[300px] overflow-y-auto">
-                            <DropdownMenuItem className="flex flex-col items-start py-3 cursor-pointer">
-                                <p className="text-sm font-medium">Sesi WhatsApp Terhubung</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Sesi WhatsApp baru berhasil terhubung
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">2 jam yang lalu</p>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="flex flex-col items-start py-3 cursor-pointer">
-                                <p className="text-sm font-medium">Scraping Selesai</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Data scraping 50 tempat telah selesai
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">5 jam yang lalu</p>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="flex flex-col items-start py-3 cursor-pointer">
-                                <p className="text-sm font-medium">Pesan Baru</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Anda menerima 10 pesan baru
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">1 hari yang lalu</p>
-                            </DropdownMenuItem>
+                            {notifications.length > 0 ? (
+                                notifications.map((notif, index) => (
+                                    <Fragment key={notif.id}>
+                                        <DropdownMenuItem
+                                            className="flex items-start gap-3 py-3 cursor-pointer"
+                                            onClick={() => router.visit(notif.url)}
+                                        >
+                                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                                                notif.color === 'green' ? 'bg-green-100 text-green-600' :
+                                                notif.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
+                                                notif.color === 'red' ? 'bg-red-100 text-red-600' :
+                                                'bg-gray-100 text-gray-600'
+                                            }`}>
+                                                {notif.status === 'paid' ? <CheckCircle className="h-4 w-4" /> :
+                                                 notif.status === 'pending' ? <Clock className="h-4 w-4" /> :
+                                                 notif.status === 'failed' || notif.status === 'expired' ? <XCircle className="h-4 w-4" /> :
+                                                 <Receipt className="h-4 w-4" />}
+                                            </div>
+                                            <div className="flex-1 space-y-1">
+                                                <p className="text-sm font-medium">{notif.title}</p>
+                                                <p className="text-xs text-muted-foreground">{notif.message}</p>
+                                                <p className="text-xs text-muted-foreground">{notif.time}</p>
+                                            </div>
+                                        </DropdownMenuItem>
+                                        {index < notifications.length - 1 && <DropdownMenuSeparator />}
+                                    </Fragment>
+                                ))
+                            ) : (
+                                <div className="py-6 text-center text-sm text-muted-foreground">
+                                    Belum ada transaksi
+                                </div>
+                            )}
                         </div>
+                        {notifications.length > 0 && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    className="justify-center text-primary cursor-pointer"
+                                    onClick={() => router.visit('/user/transactions')}
+                                >
+                                    Lihat Semua Transaksi
+                                </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
 

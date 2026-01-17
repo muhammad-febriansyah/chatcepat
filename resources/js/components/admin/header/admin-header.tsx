@@ -1,9 +1,10 @@
+import { Fragment } from 'react'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Breadcrumbs } from './breadcrumbs'
 import { SearchBar } from './search-bar'
 import { UserMenu } from './user-menu'
-import { Bell, HelpCircle, UserPlus, AlertTriangle, CheckCircle, FileText, MessageCircleQuestion, Phone, ExternalLink } from 'lucide-react'
+import { Bell, HelpCircle, CheckCircle, Clock, XCircle, Receipt, FileText, MessageCircleQuestion, Phone, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -13,9 +14,25 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { router } from '@inertiajs/react'
+import { router, usePage } from '@inertiajs/react'
+
+interface Notification {
+    id: number;
+    type: string;
+    title: string;
+    message: string;
+    amount?: string;
+    status: string;
+    color: string;
+    payment_method: string;
+    time: string;
+    url: string;
+}
 
 export function AdminHeader() {
+    const { props } = usePage<{ notifications: Notification[] }>()
+    const notifications = props.notifications || []
+
     return (
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-4 border-b border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-4 md:px-6">
             {/* Left Section */}
@@ -40,79 +57,64 @@ export function AdminHeader() {
                             className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground relative"
                         >
                             <Bell className="h-5 w-5" />
-                            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                                4
-                            </span>
+                            {notifications.length > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                    {notifications.length}
+                                </span>
+                            )}
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-80">
-                        <DropdownMenuLabel className="flex items-center justify-between">
-                            <span>Notifikasi</span>
-                            <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-primary hover:text-primary/80">
-                                Tandai semua dibaca
-                            </Button>
-                        </DropdownMenuLabel>
+                        <DropdownMenuLabel>Transaksi Terbaru</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <div className="max-h-[350px] overflow-y-auto">
-                            <DropdownMenuItem className="flex items-start gap-3 py-3 cursor-pointer">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                    <UserPlus className="h-4 w-4" />
+                            {notifications.length > 0 ? (
+                                notifications.map((notif, index) => (
+                                    <Fragment key={notif.id}>
+                                        <DropdownMenuItem
+                                            className="flex items-start gap-3 py-3 cursor-pointer"
+                                            onClick={() => router.visit(notif.url)}
+                                        >
+                                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                                                notif.color === 'green' ? 'bg-green-100 text-green-600' :
+                                                notif.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
+                                                notif.color === 'red' ? 'bg-red-100 text-red-600' :
+                                                'bg-gray-100 text-gray-600'
+                                            }`}>
+                                                {notif.status === 'paid' ? <CheckCircle className="h-4 w-4" /> :
+                                                 notif.status === 'pending' ? <Clock className="h-4 w-4" /> :
+                                                 notif.status === 'failed' || notif.status === 'expired' ? <XCircle className="h-4 w-4" /> :
+                                                 <Receipt className="h-4 w-4" />}
+                                            </div>
+                                            <div className="flex-1 space-y-1">
+                                                <p className="text-sm font-medium">{notif.title}</p>
+                                                <p className="text-xs text-muted-foreground">{notif.message}</p>
+                                                {notif.amount && (
+                                                    <p className="text-xs font-medium text-primary">{notif.amount}</p>
+                                                )}
+                                                <p className="text-xs text-muted-foreground">{notif.time}</p>
+                                            </div>
+                                        </DropdownMenuItem>
+                                        {index < notifications.length - 1 && <DropdownMenuSeparator />}
+                                    </Fragment>
+                                ))
+                            ) : (
+                                <div className="py-6 text-center text-sm text-muted-foreground">
+                                    Belum ada transaksi
                                 </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-sm font-medium">User Baru Terdaftar</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        John Doe baru saja mendaftar sebagai user baru
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">5 menit yang lalu</p>
-                                </div>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="flex items-start gap-3 py-3 cursor-pointer">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
-                                    <AlertTriangle className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-sm font-medium">Peringatan Sistem</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Penggunaan disk mencapai 80%, pertimbangkan untuk membersihkan data
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">1 jam yang lalu</p>
-                                </div>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="flex items-start gap-3 py-3 cursor-pointer">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                                    <CheckCircle className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-sm font-medium">Backup Selesai</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Backup otomatis database berhasil dilakukan
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">3 jam yang lalu</p>
-                                </div>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="flex items-start gap-3 py-3 cursor-pointer">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                    <UserPlus className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-sm font-medium">User Baru Terdaftar</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Jane Smith baru saja mendaftar sebagai user baru
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">1 hari yang lalu</p>
-                                </div>
-                            </DropdownMenuItem>
+                            )}
                         </div>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="justify-center text-primary cursor-pointer"
-                            onClick={() => router.visit('/admin/notifications')}
-                        >
-                            Lihat Semua Notifikasi
-                        </DropdownMenuItem>
+                        {notifications.length > 0 && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    className="justify-center text-primary cursor-pointer"
+                                    onClick={() => router.visit('/admin/transactions')}
+                                >
+                                    Lihat Semua Transaksi
+                                </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
 

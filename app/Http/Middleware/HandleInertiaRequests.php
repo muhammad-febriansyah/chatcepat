@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Setting;
+use App\Models\Transaction;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -54,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                     'subscription' => $request->user()->getSubscriptionInfo(),
                 ] : null,
             ],
+            'notifications' => $this->getNotifications($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [
                 'success' => $request->session()->get('success'),
@@ -115,5 +117,118 @@ class HandleInertiaRequests extends Middleware
                 'faq_description' => Setting::get('faq_description'),
             ],
         ];
+    }
+
+    /**
+     * Get notifications (recent transactions) for the user
+     */
+    private function getNotifications(Request $request): array
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return [];
+        }
+
+        // Payment method labels
+        $paymentMethods = [
+            'BC' => 'BCA VA',
+            'M1' => 'Mandiri VA',
+            'M2' => 'Mandiri VA',
+            'VA' => 'Maybank VA',
+            'I1' => 'BNI VA',
+            'B1' => 'CIMB Niaga VA',
+            'BT' => 'Permata VA',
+            'BR' => 'BRIVA',
+            'OV' => 'OVO',
+            'SA' => 'ShopeePay',
+            'DA' => 'DANA',
+            'NQ' => 'QRIS',
+            'manual' => 'Transfer Manual',
+        ];
+
+        // For regular users, show their own transactions
+        if ($user->role === 'user') {
+            $transactions = Transaction::where('user_id', $user->id)
+                ->with('pricingPackage:id,name')
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return $transactions->map(function ($tx) use ($paymentMethods) {
+                $statusLabels = [
+                    'pending' => 'Menunggu Pembayaran',
+                    'paid' => 'Pembayaran Berhasil',
+                    'failed' => 'Pembayaran Gagal',
+                    'expired' => 'Pembayaran Kedaluwarsa',
+                ];
+
+                $statusIcons = [
+                    'pending' => 'clock',
+                    'paid' => 'check-circle',
+                    'failed' => 'x-circle',
+                    'expired' => 'x-circle',
+                ];
+
+                $statusColors = [
+                    'pending' => 'yellow',
+                    'paid' => 'green',
+                    'failed' => 'red',
+                    'expired' => 'gray',
+                ];
+
+                return [
+                    'id' => $tx->id,
+                    'type' => 'transaction',
+                    'title' => $statusLabels[$tx->status] ?? 'Transaksi',
+                    'message' => ($tx->pricingPackage?->name ?? 'Paket') . ' - Rp ' . number_format($tx->amount, 0, ',', '.'),
+                    'status' => $tx->status,
+                    'icon' => $statusIcons[$tx->status] ?? 'receipt',
+                    'color' => $statusColors[$tx->status] ?? 'gray',
+                    'payment_method' => $paymentMethods[$tx->payment_method] ?? $tx->payment_method,
+                    'time' => $tx->created_at->diffForHumans(),
+                    'url' => '/user/transactions/' . $tx->id,
+                ];
+            })->toArray();
+        }
+
+        // For admin, show all recent transactions
+        if ($user->role === 'admin') {
+            $transactions = Transaction::with(['user:id,name', 'pricingPackage:id,name'])
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return $transactions->map(function ($tx) use ($paymentMethods) {
+                $statusLabels = [
+                    'pending' => 'Transaksi Pending',
+                    'paid' => 'Pembayaran Diterima',
+                    'failed' => 'Pembayaran Gagal',
+                    'expired' => 'Transaksi Expired',
+                ];
+
+                $statusColors = [
+                    'pending' => 'yellow',
+                    'paid' => 'green',
+                    'failed' => 'red',
+                    'expired' => 'gray',
+                ];
+
+                return [
+                    'id' => $tx->id,
+                    'type' => 'transaction',
+                    'title' => $statusLabels[$tx->status] ?? 'Transaksi',
+                    'message' => ($tx->user?->name ?? 'User') . ' - ' . ($tx->pricingPackage?->name ?? 'Paket'),
+                    'amount' => 'Rp ' . number_format($tx->amount, 0, ',', '.'),
+                    'status' => $tx->status,
+                    'color' => $statusColors[$tx->status] ?? 'gray',
+                    'payment_method' => $paymentMethods[$tx->payment_method] ?? $tx->payment_method,
+                    'time' => $tx->created_at->diffForHumans(),
+                    'url' => '/admin/transactions/' . $tx->id,
+                ];
+            })->toArray();
+        }
+
+        return [];
     }
 }
