@@ -1,0 +1,8 @@
+export { HeroSection } from './HeroSection';
+export { WorldMapSection } from './WorldMapSection';
+export { FeaturesSection } from './FeaturesSection';
+export { WhyChooseSection } from './WhyChooseSection';
+export { FiturUnggulanSection } from './FiturUnggulanSection';
+export { TestimonialsSection } from './TestimonialsSection';
+export { FaqSection } from './FaqSection';
+export { HelpSectionWrapper } from './HelpSectionWrapper';

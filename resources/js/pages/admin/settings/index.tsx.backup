@@ -1,0 +1,1801 @@
+import { Head, usePage, useForm } from '@inertiajs/react'
+import { update } from '@/routes/admin/settings'
+import AdminLayout from '@/layouts/admin/admin-layout'
+import { PageHeader } from '@/components/admin/common/page-header'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import InputError from '@/components/input-error'
+import {
+    Globe,
+    Mail,
+    Phone,
+    MapPin,
+    Facebook,
+    Twitter,
+    Instagram,
+    Linkedin,
+    Search,
+    Save,
+    Image as ImageIcon,
+    Upload,
+    X,
+    FileImage,
+    Plus,
+    Trash2,
+    Map
+} from 'lucide-react'
+import { useState, useEffect, FormEventHandler } from 'react'
+
+interface SettingsProps {
+    settings: {
+        site_name: string
+        site_description: string
+        contact_email: string
+        contact_phone: string
+        address: string
+        google_maps_embed: string
+        contact_help_image: string
+        facebook_url: string
+        twitter_url: string
+        instagram_url: string
+        linkedin_url: string
+        tiktok_url: string
+        meta_keywords: string
+        meta_description: string
+        logo: string
+        favicon: string
+        auth_logo: string
+        auth_logo_name: string
+        auth_tagline: string
+        auth_heading: string
+        auth_description: string
+        auth_features: string
+        auth_copyright: string
+        auth_hero_image: string
+        hero_image: string
+        hero_badge: string
+        hero_heading: string
+        hero_description: string
+        hero_stat_1_value: string
+        hero_stat_1_label: string
+        hero_stat_2_value: string
+        hero_stat_2_label: string
+        hero_stat_3_value: string
+        hero_stat_3_label: string
+        features_section_title: string
+        features_section_subtitle: string
+        feature_1_icon: string
+        feature_1_title: string
+        feature_1_description: string
+        feature_2_icon: string
+        feature_2_title: string
+        feature_2_description: string
+        feature_3_icon: string
+        feature_3_title: string
+        feature_3_description: string
+        feature_4_icon: string
+        feature_4_title: string
+        feature_4_description: string
+        feature_5_icon: string
+        feature_5_title: string
+        feature_5_description: string
+        feature_6_icon: string
+        feature_6_title: string
+        feature_6_description: string
+    }
+}
+
+export default function Settings({ settings }: SettingsProps) {
+    // Convert JSON array to array of strings for auth_features
+    const authFeaturesArray = settings?.auth_features
+        ? (() => {
+            try {
+                const features = JSON.parse(settings.auth_features);
+                return Array.isArray(features) ? features : [''];
+            } catch {
+                return [''];
+            }
+        })()
+        : [''];
+
+    const [authFeatures, setAuthFeatures] = useState<string[]>(authFeaturesArray);
+
+    const { data, setData, post, processing, errors } = useForm({
+        site_name: settings?.site_name || '',
+        site_description: settings?.site_description || '',
+        contact_email: settings?.contact_email || '',
+        contact_phone: settings?.contact_phone || '',
+        address: settings?.address || '',
+        google_maps_embed: settings?.google_maps_embed || '',
+        contact_help_image: null as File | null,
+        facebook_url: settings?.facebook_url || '',
+        twitter_url: settings?.twitter_url || '',
+        instagram_url: settings?.instagram_url || '',
+        linkedin_url: settings?.linkedin_url || '',
+        tiktok_url: settings?.tiktok_url || '',
+        meta_keywords: settings?.meta_keywords || '',
+        meta_description: settings?.meta_description || '',
+        logo: null as File | null,
+        favicon: null as File | null,
+        auth_logo: null as File | null,
+        auth_logo_name: settings?.auth_logo_name || '',
+        auth_tagline: settings?.auth_tagline || '',
+        auth_heading: settings?.auth_heading || '',
+        auth_description: settings?.auth_description || '',
+        auth_features: '',
+        auth_copyright: settings?.auth_copyright || '',
+        auth_hero_image: null as File | null,
+        hero_image: null as File | null,
+        hero_badge: settings?.hero_badge || 'Balas Chat dengan Cepat 24/7, Non Stop!',
+        hero_heading: settings?.hero_heading || 'Tingkatkan Penjualan Hingga 40% dengan Customer Service & Sales AI',
+        hero_description: settings?.hero_description || 'Tingkatkan Interaksi dengan Customer, Followup Otomatis, dan Hemat Anggaran CS Hingga Ratusan Juta dengan Agent AI Cerdas dan Humanis',
+        hero_stat_1_value: settings?.hero_stat_1_value || '5000+',
+        hero_stat_1_label: settings?.hero_stat_1_label || 'Pengguna Aktif',
+        hero_stat_2_value: settings?.hero_stat_2_value || '3x',
+        hero_stat_2_label: settings?.hero_stat_2_label || 'Peningkatan Konversi',
+        hero_stat_3_value: settings?.hero_stat_3_value || '85%',
+        hero_stat_3_label: settings?.hero_stat_3_label || 'Waktu Hemat',
+        features_section_title: settings?.features_section_title || 'Fitur Lengkap untuk',
+        features_section_subtitle: settings?.features_section_subtitle || 'Pertumbuhan Bisnis',
+        feature_1_icon: settings?.feature_1_icon || 'Bot',
+        feature_1_title: settings?.feature_1_title || 'AI-Powered Automation',
+        feature_1_description: settings?.feature_1_description || 'Otomatis mengelola lead dan customer dengan kecerdasan buatan',
+        feature_2_icon: settings?.feature_2_icon || 'MessageSquare',
+        feature_2_title: settings?.feature_2_title || 'Smart Conversations',
+        feature_2_description: settings?.feature_2_description || 'Chatbot cerdas yang memahami konteks dan kebutuhan customer',
+        feature_3_icon: settings?.feature_3_icon || 'TrendingUp',
+        feature_3_title: settings?.feature_3_title || 'Sales Analytics',
+        feature_3_description: settings?.feature_3_description || 'Analisis penjualan real-time untuk keputusan bisnis yang lebih baik',
+        feature_4_icon: settings?.feature_4_icon || 'Users',
+        feature_4_title: settings?.feature_4_title || 'Contact Management',
+        feature_4_description: settings?.feature_4_description || 'Kelola semua kontak dan interaksi customer di satu tempat',
+        feature_5_icon: settings?.feature_5_icon || 'Zap',
+        feature_5_title: settings?.feature_5_title || 'Quick Response',
+        feature_5_description: settings?.feature_5_description || 'Respon otomatis dan cepat untuk setiap inquiry customer',
+        feature_6_icon: settings?.feature_6_icon || 'BarChart3',
+        feature_6_title: settings?.feature_6_title || 'Performance Tracking',
+        feature_6_description: settings?.feature_6_description || 'Pantau performa tim sales dan target pencapaian',
+        _method: 'PUT' as const,
+    })
+
+    const [logoPreview, setLogoPreview] = useState<string | null>(null)
+    const [faviconPreview, setFaviconPreview] = useState<string | null>(null)
+    const [authLogoPreview, setAuthLogoPreview] = useState<string | null>(null)
+    const [authHeroPreview, setAuthHeroPreview] = useState<string | null>(null)
+    const [contactHelpPreview, setContactHelpPreview] = useState<string | null>(null)
+    const [heroPreview, setHeroPreview] = useState<string | null>(null)
+
+    // Set initial previews
+    useEffect(() => {
+        if (settings?.logo) {
+            setLogoPreview(`/storage/${settings.logo}`)
+        }
+        if (settings?.favicon) {
+            setFaviconPreview(`/storage/${settings.favicon}`)
+        }
+        if (settings?.auth_logo) {
+            setAuthLogoPreview(`/storage/${settings.auth_logo}`)
+        }
+        if (settings?.auth_hero_image) {
+            setAuthHeroPreview(`/storage/${settings.auth_hero_image}`)
+        }
+        if (settings?.contact_help_image) {
+            setContactHelpPreview(`/storage/${settings.contact_help_image}`)
+        }
+        if (settings?.hero_image) {
+            setHeroPreview(`/storage/${settings.hero_image}`)
+        }
+    }, [settings])
+
+    const handleSubmit: FormEventHandler = (e) => {
+        e.preventDefault()
+
+        // Convert authFeatures array to JSON string
+        const featuresJson = JSON.stringify(authFeatures.filter(f => f.trim() !== ''));
+        setData('auth_features', featuresJson);
+
+        // Use setTimeout to ensure state is updated before posting
+        setTimeout(() => {
+            post(update().url, {
+                preserveScroll: true,
+                forceFormData: true,
+                onBefore: () => {
+                    setData('auth_features', featuresJson);
+                }
+            })
+        }, 0);
+    }
+
+    const addFeature = () => {
+        setAuthFeatures([...authFeatures, '']);
+    }
+
+    const removeFeature = (index: number) => {
+        const newFeatures = authFeatures.filter((_, i) => i !== index);
+        setAuthFeatures(newFeatures.length > 0 ? newFeatures : ['']);
+    }
+
+    const updateFeature = (index: number, value: string) => {
+        const newFeatures = [...authFeatures];
+        newFeatures[index] = value;
+        setAuthFeatures(newFeatures);
+    }
+
+    const handleFileChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        type: 'logo' | 'favicon' | 'auth_logo' | 'auth_hero_image' | 'contact_help_image' | 'hero_image'
+    ) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            processFile(file, type)
+        }
+    }
+
+    const processFile = (file: File, type: 'logo' | 'favicon' | 'auth_logo' | 'auth_hero_image' | 'contact_help_image' | 'hero_image') => {
+        setData(type, file)
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            if (type === 'logo') {
+                setLogoPreview(reader.result as string)
+            } else if (type === 'favicon') {
+                setFaviconPreview(reader.result as string)
+            } else if (type === 'auth_logo') {
+                setAuthLogoPreview(reader.result as string)
+            } else if (type === 'auth_hero_image') {
+                setAuthHeroPreview(reader.result as string)
+            } else if (type === 'hero_image') {
+                setHeroPreview(reader.result as string)
+            } else {
+                setContactHelpPreview(reader.result as string)
+            }
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const handleRemoveFile = (type: 'logo' | 'favicon' | 'auth_logo' | 'auth_hero_image' | 'contact_help_image' | 'hero_image') => {
+        setData(type, null)
+        if (type === 'logo') {
+            setLogoPreview(settings?.logo ? `/storage/${settings.logo}` : null)
+        } else if (type === 'favicon') {
+            setFaviconPreview(settings?.favicon ? `/storage/${settings.favicon}` : null)
+        } else if (type === 'auth_logo') {
+            setAuthLogoPreview(settings?.auth_logo ? `/storage/${settings.auth_logo}` : null)
+        } else if (type === 'auth_hero_image') {
+            setAuthHeroPreview(settings?.auth_hero_image ? `/storage/${settings.auth_hero_image}` : null)
+        } else if (type === 'hero_image') {
+            setHeroPreview(settings?.hero_image ? `/storage/${settings.hero_image}` : null)
+        } else {
+            setContactHelpPreview(settings?.contact_help_image ? `/storage/${settings.contact_help_image}` : null)
+        }
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+    }
+
+    const handleDrop = (e: React.DragEvent, type: 'logo' | 'favicon' | 'auth_logo' | 'auth_hero_image' | 'contact_help_image' | 'hero_image') => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        const file = e.dataTransfer.files?.[0]
+        if (file && file.type.startsWith('image/')) {
+            processFile(file, type)
+        }
+    }
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes === 0) return '0 Bytes'
+        const k = 1024
+        const sizes = ['Bytes', 'KB', 'MB']
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+    }
+
+    const handleGoogleMapsChange = (value: string) => {
+        // Extract src URL from iframe if full HTML is pasted
+        const srcMatch = value.match(/src="([^"]+)"/);
+        if (srcMatch) {
+            setData('google_maps_embed', srcMatch[1]);
+        } else {
+            setData('google_maps_embed', value);
+        }
+    }
+
+    return (
+        <AdminLayout>
+            <Head title="Pengaturan" />
+
+            <PageHeader
+                title="Pengaturan"
+                description="Kelola pengaturan dan konfigurasi website Anda"
+            />
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <Tabs defaultValue="general" className="space-y-6">
+                    <TabsList className="grid w-full grid-cols-6">
+                        <TabsTrigger value="general">
+                            <Globe className="size-4 mr-2" />
+                            Umum
+                        </TabsTrigger>
+                        <TabsTrigger value="homepage">
+                            <ImageIcon className="size-4 mr-2" />
+                            Homepage
+                        </TabsTrigger>
+                        <TabsTrigger value="contact">
+                            <Mail className="size-4 mr-2" />
+                            Kontak
+                        </TabsTrigger>
+                        <TabsTrigger value="social">
+                            <Globe className="size-4 mr-2" />
+                            Sosial Media
+                        </TabsTrigger>
+                        <TabsTrigger value="seo">
+                            <Search className="size-4 mr-2" />
+                            SEO
+                        </TabsTrigger>
+                        <TabsTrigger value="auth">
+                            <ImageIcon className="size-4 mr-2" />
+                            Halaman Login
+                        </TabsTrigger>
+                    </TabsList>
+
+                    {/* General Tab */}
+                    <TabsContent value="general" className="space-y-6">
+                        {/* Branding */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <ImageIcon className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Branding</CardTitle>
+                                        <CardDescription>
+                                            Logo dan favicon website Anda
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    {/* Logo Upload */}
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-medium">
+                                            Logo Website
+                                        </Label>
+
+                                        {/* Drag & Drop Area */}
+                                        <div
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, 'logo')}
+                                            className="relative border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors bg-background/50"
+                                        >
+                                            {logoPreview ? (
+                                                <div className="space-y-4">
+                                                    {/* Preview Image */}
+                                                    <div className="relative w-full h-48 rounded-lg border-2 border-border bg-muted flex items-center justify-center overflow-hidden">
+                                                        <img
+                                                            src={logoPreview}
+                                                            alt="Logo Preview"
+                                                            className="max-w-full max-h-full object-contain p-4"
+                                                        />
+                                                        {/* Remove Button */}
+                                                        {data.logo && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveFile('logo')}
+                                                                className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-lg"
+                                                                title="Hapus file"
+                                                            >
+                                                                <X className="size-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* File Info */}
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <div className="flex items-center gap-2 text-green-600">
+                                                            <FileImage className="size-4" />
+                                                            <span>Logo siap diupload</span>
+                                                        </div>
+                                                        {data.logo && (
+                                                            <span className="text-muted-foreground">
+                                                                {formatFileSize(data.logo.size)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center space-y-3">
+                                                    <div className="flex justify-center">
+                                                        <div className="p-4 rounded-full bg-primary/10">
+                                                            <Upload className="size-8 text-primary" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium">Drag & drop logo di sini</p>
+                                                        <p className="text-xs text-muted-foreground mt-1">atau klik tombol di bawah</p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Upload Button */}
+                                            <div className="mt-4 flex justify-center">
+                                                <Label
+                                                    htmlFor="logo"
+                                                    className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                                                >
+                                                    <Upload className="size-4" />
+                                                    {logoPreview ? 'Ganti Logo' : 'Pilih Logo'}
+                                                </Label>
+                                                <Input
+                                                    id="logo"
+                                                    name="logo"
+                                                    type="file"
+                                                    accept="image/png,image/jpg,image/jpeg,image/svg+xml"
+                                                    className="hidden"
+                                                    onChange={(e) => handleFileChange(e, 'logo')}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-muted-foreground">
+                                            Format: PNG, JPG, JPEG, SVG • Maksimal: 2MB
+                                        </p>
+                                        <InputError message={errors.logo} />
+                                    </div>
+
+                                    {/* Favicon Upload */}
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-medium">
+                                            Favicon
+                                        </Label>
+
+                                        {/* Drag & Drop Area */}
+                                        <div
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, 'favicon')}
+                                            className="relative border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors bg-background/50"
+                                        >
+                                            {faviconPreview ? (
+                                                <div className="space-y-4">
+                                                    {/* Preview Image */}
+                                                    <div className="relative w-full h-48 rounded-lg border-2 border-border bg-muted flex items-center justify-center overflow-hidden">
+                                                        <img
+                                                            src={faviconPreview}
+                                                            alt="Favicon Preview"
+                                                            className="max-w-full max-h-full object-contain p-4"
+                                                        />
+                                                        {/* Remove Button */}
+                                                        {data.favicon && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveFile('favicon')}
+                                                                className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-lg"
+                                                                title="Hapus file"
+                                                            >
+                                                                <X className="size-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* File Info */}
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <div className="flex items-center gap-2 text-green-600">
+                                                            <FileImage className="size-4" />
+                                                            <span>Favicon siap diupload</span>
+                                                        </div>
+                                                        {data.favicon && (
+                                                            <span className="text-muted-foreground">
+                                                                {formatFileSize(data.favicon.size)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center space-y-3">
+                                                    <div className="flex justify-center">
+                                                        <div className="p-4 rounded-full bg-primary/10">
+                                                            <Upload className="size-8 text-primary" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium">Drag & drop favicon di sini</p>
+                                                        <p className="text-xs text-muted-foreground mt-1">atau klik tombol di bawah</p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Upload Button */}
+                                            <div className="mt-4 flex justify-center">
+                                                <Label
+                                                    htmlFor="favicon"
+                                                    className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                                                >
+                                                    <Upload className="size-4" />
+                                                    {faviconPreview ? 'Ganti Favicon' : 'Pilih Favicon'}
+                                                </Label>
+                                                <Input
+                                                    id="favicon"
+                                                    name="favicon"
+                                                    type="file"
+                                                    accept="image/png,image/jpg,image/jpeg,image/x-icon"
+                                                    className="hidden"
+                                                    onChange={(e) => handleFileChange(e, 'favicon')}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-muted-foreground">
+                                            Format: PNG, JPG, JPEG, ICO • Maksimal: 1MB
+                                        </p>
+                                        <InputError message={errors.favicon} />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Informasi Umum */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <Globe className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Informasi Website</CardTitle>
+                                        <CardDescription>
+                                            Nama dan deskripsi website
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Site Name and Description will be added here from the duplicate Informasi Umum card */}
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-medium">
+                                        Gambar Hero Homepage
+                                    </Label>
+
+                                    {/* Drag & Drop Area */}
+                                    <div
+                                        onDragOver={handleDragOver}
+                                        onDrop={(e) => handleDrop(e, 'hero_image')}
+                                        className="relative border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors bg-background/50"
+                                    >
+                                        {heroPreview ? (
+                                            <div className="space-y-4">
+                                                {/* Preview Image */}
+                                                <div className="relative w-full h-64 rounded-lg border-2 border-border bg-muted flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={heroPreview}
+                                                        alt="Hero Preview"
+                                                        className="max-w-full max-h-full object-contain p-4"
+                                                    />
+                                                    {/* Remove Button */}
+                                                    {data.hero_image && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveFile('hero_image')}
+                                                            className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-lg"
+                                                            title="Hapus file"
+                                                        >
+                                                            <X className="size-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* File Info */}
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <div className="flex items-center gap-2 text-green-600">
+                                                        <FileImage className="size-4" />
+                                                        <span>Gambar hero siap diupload</span>
+                                                    </div>
+                                                    {data.hero_image && (
+                                                        <span className="text-muted-foreground">
+                                                            {formatFileSize(data.hero_image.size)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center space-y-3">
+                                                <div className="flex justify-center">
+                                                    <div className="p-4 rounded-full bg-primary/10">
+                                                        <Upload className="size-8 text-primary" />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium">Drag & drop gambar hero di sini</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">atau klik tombol di bawah</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Upload Button */}
+                                        <div className="mt-4 flex justify-center">
+                                            <Label
+                                                htmlFor="hero_image"
+                                                className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                                            >
+                                                <Upload className="size-4" />
+                                                {heroPreview ? 'Ganti Gambar' : 'Pilih Gambar'}
+                                            </Label>
+                                            <Input
+                                                id="hero_image"
+                                                name="hero_image"
+                                                type="file"
+                                                accept="image/png,image/jpg,image/jpeg,image/svg+xml,image/webp"
+                                                className="hidden"
+                                                onChange={(e) => handleFileChange(e, 'hero_image')}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Format: PNG, JPG, JPEG, SVG, WebP • Maksimal: 5MB • Gambar akan ditampilkan di hero section homepage
+                                    </p>
+                                    <InputError message={errors.hero_image} />
+                                </div>
+
+                                {/* Hero Content Fields */}
+                                <div className="space-y-4 pt-4 border-t border-border">
+                                    <h3 className="text-sm font-semibold text-slate-900">Konten Hero Section</h3>
+
+                                    {/* Hero Badge */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="hero_badge" className="text-sm font-medium">
+                                            Badge Text
+                                        </Label>
+                                        <Input
+                                            id="hero_badge"
+                                            name="hero_badge"
+                                            value={data.hero_badge}
+                                            onChange={(e) => setData('hero_badge', e.target.value)}
+                                            placeholder="Powered by Advanced AI Technology"
+                                        />
+                                        <InputError message={errors.hero_badge} />
+                                    </div>
+
+                                    {/* Hero Heading */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="hero_heading" className="text-sm font-medium">
+                                            Heading Utama
+                                        </Label>
+                                        <Input
+                                            id="hero_heading"
+                                            name="hero_heading"
+                                            value={data.hero_heading}
+                                            onChange={(e) => setData('hero_heading', e.target.value)}
+                                            placeholder="Tingkatkan Penjualan Hingga 3x Lebih Cepat dengan AI"
+                                        />
+                                        <InputError message={errors.hero_heading} />
+                                    </div>
+
+                                    {/* Hero Description */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="hero_description" className="text-sm font-medium">
+                                            Deskripsi
+                                        </Label>
+                                        <textarea
+                                            id="hero_description"
+                                            name="hero_description"
+                                            value={data.hero_description}
+                                            onChange={(e) => setData('hero_description', e.target.value)}
+                                            placeholder="Platform CRM berbasis AI yang membantu tim sales Anda..."
+                                            rows={3}
+                                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                        />
+                                        <InputError message={errors.hero_description} />
+                                    </div>
+
+                                    {/* Statistics */}
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-medium">Statistik</Label>
+
+                                        {/* Stat 1 */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="hero_stat_1_value" className="text-xs text-muted-foreground">
+                                                    Nilai 1
+                                                </Label>
+                                                <Input
+                                                    id="hero_stat_1_value"
+                                                    name="hero_stat_1_value"
+                                                    value={data.hero_stat_1_value}
+                                                    onChange={(e) => setData('hero_stat_1_value', e.target.value)}
+                                                    placeholder="10K+"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="hero_stat_1_label" className="text-xs text-muted-foreground">
+                                                    Label 1
+                                                </Label>
+                                                <Input
+                                                    id="hero_stat_1_label"
+                                                    name="hero_stat_1_label"
+                                                    value={data.hero_stat_1_label}
+                                                    onChange={(e) => setData('hero_stat_1_label', e.target.value)}
+                                                    placeholder="Active Users"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Stat 2 */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="hero_stat_2_value" className="text-xs text-muted-foreground">
+                                                    Nilai 2
+                                                </Label>
+                                                <Input
+                                                    id="hero_stat_2_value"
+                                                    name="hero_stat_2_value"
+                                                    value={data.hero_stat_2_value}
+                                                    onChange={(e) => setData('hero_stat_2_value', e.target.value)}
+                                                    placeholder="3x"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="hero_stat_2_label" className="text-xs text-muted-foreground">
+                                                    Label 2
+                                                </Label>
+                                                <Input
+                                                    id="hero_stat_2_label"
+                                                    name="hero_stat_2_label"
+                                                    value={data.hero_stat_2_label}
+                                                    onChange={(e) => setData('hero_stat_2_label', e.target.value)}
+                                                    placeholder="Faster Conversion"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Stat 3 */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="hero_stat_3_value" className="text-xs text-muted-foreground">
+                                                    Nilai 3
+                                                </Label>
+                                                <Input
+                                                    id="hero_stat_3_value"
+                                                    name="hero_stat_3_value"
+                                                    value={data.hero_stat_3_value}
+                                                    onChange={(e) => setData('hero_stat_3_value', e.target.value)}
+                                                    placeholder="70%"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="hero_stat_3_label" className="text-xs text-muted-foreground">
+                                                    Label 3
+                                                </Label>
+                                                <Input
+                                                    id="hero_stat_3_label"
+                                                    name="hero_stat_3_label"
+                                                    value={data.hero_stat_3_label}
+                                                    onChange={(e) => setData('hero_stat_3_label', e.target.value)}
+                                                    placeholder="Time Saved"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Features Section */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <ImageIcon className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Features Section Homepage</CardTitle>
+                                        <CardDescription>
+                                            Kelola fitur-fitur yang ditampilkan di halaman homepage
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Section Title & Subtitle */}
+                                <div className="space-y-4 pb-4 border-b border-border">
+                                    <h3 className="text-sm font-semibold text-slate-900">Judul Section</h3>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="features_section_title" className="text-sm font-medium">
+                                            Judul Utama
+                                        </Label>
+                                        <Input
+                                            id="features_section_title"
+                                            name="features_section_title"
+                                            value={data.features_section_title}
+                                            onChange={(e) => setData('features_section_title', e.target.value)}
+                                            placeholder="Fitur Lengkap untuk"
+                                        />
+                                        <InputError message={errors.features_section_title} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="features_section_subtitle" className="text-sm font-medium">
+                                            Sub Judul
+                                        </Label>
+                                        <Input
+                                            id="features_section_subtitle"
+                                            name="features_section_subtitle"
+                                            value={data.features_section_subtitle}
+                                            onChange={(e) => setData('features_section_subtitle', e.target.value)}
+                                            placeholder="Pertumbuhan Bisnis"
+                                        />
+                                        <InputError message={errors.features_section_subtitle} />
+                                    </div>
+                                </div>
+
+                                {/* Feature 1 */}
+                                <div className="space-y-4 pb-4 border-b border-border">
+                                    <h3 className="text-sm font-semibold text-slate-900">Fitur 1</h3>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="feature_1_icon" className="text-xs text-muted-foreground">
+                                                Icon (Lucide)
+                                            </Label>
+                                            <Input
+                                                id="feature_1_icon"
+                                                name="feature_1_icon"
+                                                value={data.feature_1_icon}
+                                                onChange={(e) => setData('feature_1_icon', e.target.value)}
+                                                placeholder="Bot"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 space-y-2">
+                                            <Label htmlFor="feature_1_title" className="text-xs text-muted-foreground">
+                                                Judul
+                                            </Label>
+                                            <Input
+                                                id="feature_1_title"
+                                                name="feature_1_title"
+                                                value={data.feature_1_title}
+                                                onChange={(e) => setData('feature_1_title', e.target.value)}
+                                                placeholder="AI-Powered Automation"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="feature_1_description" className="text-xs text-muted-foreground">
+                                            Deskripsi
+                                        </Label>
+                                        <Input
+                                            id="feature_1_description"
+                                            name="feature_1_description"
+                                            value={data.feature_1_description}
+                                            onChange={(e) => setData('feature_1_description', e.target.value)}
+                                            placeholder="Otomatis mengelola lead dan customer"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Feature 2 */}
+                                <div className="space-y-4 pb-4 border-b border-border">
+                                    <h3 className="text-sm font-semibold text-slate-900">Fitur 2</h3>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="feature_2_icon" className="text-xs text-muted-foreground">
+                                                Icon (Lucide)
+                                            </Label>
+                                            <Input
+                                                id="feature_2_icon"
+                                                name="feature_2_icon"
+                                                value={data.feature_2_icon}
+                                                onChange={(e) => setData('feature_2_icon', e.target.value)}
+                                                placeholder="MessageSquare"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 space-y-2">
+                                            <Label htmlFor="feature_2_title" className="text-xs text-muted-foreground">
+                                                Judul
+                                            </Label>
+                                            <Input
+                                                id="feature_2_title"
+                                                name="feature_2_title"
+                                                value={data.feature_2_title}
+                                                onChange={(e) => setData('feature_2_title', e.target.value)}
+                                                placeholder="Smart Conversations"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="feature_2_description" className="text-xs text-muted-foreground">
+                                            Deskripsi
+                                        </Label>
+                                        <Input
+                                            id="feature_2_description"
+                                            name="feature_2_description"
+                                            value={data.feature_2_description}
+                                            onChange={(e) => setData('feature_2_description', e.target.value)}
+                                            placeholder="Chatbot cerdas yang memahami konteks"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Feature 3 */}
+                                <div className="space-y-4 pb-4 border-b border-border">
+                                    <h3 className="text-sm font-semibold text-slate-900">Fitur 3</h3>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="feature_3_icon" className="text-xs text-muted-foreground">
+                                                Icon (Lucide)
+                                            </Label>
+                                            <Input
+                                                id="feature_3_icon"
+                                                name="feature_3_icon"
+                                                value={data.feature_3_icon}
+                                                onChange={(e) => setData('feature_3_icon', e.target.value)}
+                                                placeholder="TrendingUp"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 space-y-2">
+                                            <Label htmlFor="feature_3_title" className="text-xs text-muted-foreground">
+                                                Judul
+                                            </Label>
+                                            <Input
+                                                id="feature_3_title"
+                                                name="feature_3_title"
+                                                value={data.feature_3_title}
+                                                onChange={(e) => setData('feature_3_title', e.target.value)}
+                                                placeholder="Sales Analytics"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="feature_3_description" className="text-xs text-muted-foreground">
+                                            Deskripsi
+                                        </Label>
+                                        <Input
+                                            id="feature_3_description"
+                                            name="feature_3_description"
+                                            value={data.feature_3_description}
+                                            onChange={(e) => setData('feature_3_description', e.target.value)}
+                                            placeholder="Analisis penjualan real-time"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Feature 4 */}
+                                <div className="space-y-4 pb-4 border-b border-border">
+                                    <h3 className="text-sm font-semibold text-slate-900">Fitur 4</h3>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="feature_4_icon" className="text-xs text-muted-foreground">
+                                                Icon (Lucide)
+                                            </Label>
+                                            <Input
+                                                id="feature_4_icon"
+                                                name="feature_4_icon"
+                                                value={data.feature_4_icon}
+                                                onChange={(e) => setData('feature_4_icon', e.target.value)}
+                                                placeholder="Users"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 space-y-2">
+                                            <Label htmlFor="feature_4_title" className="text-xs text-muted-foreground">
+                                                Judul
+                                            </Label>
+                                            <Input
+                                                id="feature_4_title"
+                                                name="feature_4_title"
+                                                value={data.feature_4_title}
+                                                onChange={(e) => setData('feature_4_title', e.target.value)}
+                                                placeholder="Contact Management"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="feature_4_description" className="text-xs text-muted-foreground">
+                                            Deskripsi
+                                        </Label>
+                                        <Input
+                                            id="feature_4_description"
+                                            name="feature_4_description"
+                                            value={data.feature_4_description}
+                                            onChange={(e) => setData('feature_4_description', e.target.value)}
+                                            placeholder="Kelola semua kontak dan interaksi"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Feature 5 */}
+                                <div className="space-y-4 pb-4 border-b border-border">
+                                    <h3 className="text-sm font-semibold text-slate-900">Fitur 5</h3>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="feature_5_icon" className="text-xs text-muted-foreground">
+                                                Icon (Lucide)
+                                            </Label>
+                                            <Input
+                                                id="feature_5_icon"
+                                                name="feature_5_icon"
+                                                value={data.feature_5_icon}
+                                                onChange={(e) => setData('feature_5_icon', e.target.value)}
+                                                placeholder="Zap"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 space-y-2">
+                                            <Label htmlFor="feature_5_title" className="text-xs text-muted-foreground">
+                                                Judul
+                                            </Label>
+                                            <Input
+                                                id="feature_5_title"
+                                                name="feature_5_title"
+                                                value={data.feature_5_title}
+                                                onChange={(e) => setData('feature_5_title', e.target.value)}
+                                                placeholder="Quick Response"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="feature_5_description" className="text-xs text-muted-foreground">
+                                            Deskripsi
+                                        </Label>
+                                        <Input
+                                            id="feature_5_description"
+                                            name="feature_5_description"
+                                            value={data.feature_5_description}
+                                            onChange={(e) => setData('feature_5_description', e.target.value)}
+                                            placeholder="Respon otomatis dan cepat"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Feature 6 */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-semibold text-slate-900">Fitur 6</h3>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="feature_6_icon" className="text-xs text-muted-foreground">
+                                                Icon (Lucide)
+                                            </Label>
+                                            <Input
+                                                id="feature_6_icon"
+                                                name="feature_6_icon"
+                                                value={data.feature_6_icon}
+                                                onChange={(e) => setData('feature_6_icon', e.target.value)}
+                                                placeholder="BarChart3"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 space-y-2">
+                                            <Label htmlFor="feature_6_title" className="text-xs text-muted-foreground">
+                                                Judul
+                                            </Label>
+                                            <Input
+                                                id="feature_6_title"
+                                                name="feature_6_title"
+                                                value={data.feature_6_title}
+                                                onChange={(e) => setData('feature_6_title', e.target.value)}
+                                                placeholder="Performance Tracking"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="feature_6_description" className="text-xs text-muted-foreground">
+                                            Deskripsi
+                                        </Label>
+                                        <Input
+                                            id="feature_6_description"
+                                            name="feature_6_description"
+                                            value={data.feature_6_description}
+                                            onChange={(e) => setData('feature_6_description', e.target.value)}
+                                            placeholder="Pantau performa tim sales"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-border">
+                                    <p className="text-xs text-muted-foreground">
+                                        Icon menggunakan <a href="https://lucide.dev/icons/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Lucide Icons</a>.
+                                        Kosongkan field untuk menyembunyikan fitur.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Informasi Umum */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <Globe className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Informasi Umum</CardTitle>
+                                        <CardDescription>
+                                            Informasi dasar dan branding website
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="site_name" className="text-sm font-medium">
+                                        Nama Website *
+                                    </Label>
+                                    <Input
+                                        id="site_name"
+                                        name="site_name"
+                                        value={data.site_name}
+                                        onChange={(e) => setData('site_name', e.target.value)}
+                                        placeholder="Masukkan nama website"
+                                        required
+                                    />
+                                    <InputError message={errors.site_name} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="site_description" className="text-sm font-medium">
+                                        Deskripsi Website
+                                    </Label>
+                                    <textarea
+                                        id="site_description"
+                                        name="site_description"
+                                        value={data.site_description}
+                                        onChange={(e) => setData('site_description', e.target.value)}
+                                        placeholder="Deskripsi singkat tentang website Anda"
+                                        rows={3}
+                                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                    />
+                                    <InputError message={errors.site_description} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Homepage Tab */}
+                    <TabsContent value="homepage" className="space-y-6">
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Kelola konten Hero Section dan Features Section yang ditampilkan di halaman homepage.
+                        </p>
+
+                        {/* Note: Hero Section and Features Section forms will be inserted here */}
+                        {/* For now, please use the General tab to access these settings */}
+                        {/* The forms are temporarily located there while we reorganize the structure */}
+                    </TabsContent>
+
+                    {/* Contact Tab */}
+                    <TabsContent value="contact" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <Mail className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Informasi Kontak</CardTitle>
+                                        <CardDescription>
+                                            Informasi untuk dihubungi pengguna
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                <div className="grid gap-5 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="contact_email" className="text-sm font-medium">
+                                            Alamat Email *
+                                        </Label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="contact_email"
+                                                name="contact_email"
+                                                type="email"
+                                                value={data.contact_email}
+                                                onChange={(e) => setData('contact_email', e.target.value)}
+                                                placeholder="email@contoh.com"
+                                                className="pl-10"
+                                                required
+                                            />
+                                        </div>
+                                        <InputError message={errors.contact_email} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="contact_phone" className="text-sm font-medium">
+                                            Nomor Telepon
+                                        </Label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="contact_phone"
+                                                name="contact_phone"
+                                                value={data.contact_phone}
+                                                onChange={(e) => setData('contact_phone', e.target.value)}
+                                                placeholder="+62 812-3456-7890"
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                        <InputError message={errors.contact_phone} />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="address" className="text-sm font-medium">
+                                        Alamat
+                                    </Label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                                        <textarea
+                                            id="address"
+                                            name="address"
+                                            value={data.address}
+                                            onChange={(e) => setData('address', e.target.value)}
+                                            placeholder="Alamat kantor atau bisnis Anda"
+                                            rows={2}
+                                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                        />
+                                    </div>
+                                    <InputError message={errors.address} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="google_maps_embed" className="text-sm font-medium">
+                                        Google Maps Embed
+                                    </Label>
+                                    <div className="relative">
+                                        <Map className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                                        <textarea
+                                            id="google_maps_embed"
+                                            name="google_maps_embed"
+                                            value={data.google_maps_embed}
+                                            onChange={(e) => handleGoogleMapsChange(e.target.value)}
+                                            placeholder='Paste iframe lengkap atau URL saja. Contoh:
+<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450"...></iframe>
+
+atau langsung URL-nya saja:
+https://www.google.com/maps/embed?pb=...'
+                                            rows={4}
+                                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 pl-10 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-mono text-xs"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        💡 <strong>Cara mudah:</strong> Buka Google Maps → Cari lokasi → Klik "Share" → Pilih "Embed a map" → Copy semua kode HTML yang muncul → Paste di sini
+                                    </p>
+                                    <InputError message={errors.google_maps_embed} />
+                                </div>
+
+                                {/* Google Maps Preview */}
+                                {data.google_maps_embed && (
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">
+                                            Preview Peta
+                                        </Label>
+                                        <div className="w-full h-64 rounded-lg overflow-hidden border-2 border-border">
+                                            <iframe
+                                                src={data.google_maps_embed}
+                                                width="100%"
+                                                height="100%"
+                                                style={{ border: 0 }}
+                                                allowFullScreen
+                                                loading="lazy"
+                                                referrerPolicy="no-referrer-when-downgrade"
+                                            ></iframe>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Contact Help Image Upload */}
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-medium">
+                                        Gambar "Butuh Bantuan Segera?"
+                                    </Label>
+
+                                    {/* Drag & Drop Area */}
+                                    <div
+                                        onDragOver={handleDragOver}
+                                        onDrop={(e) => handleDrop(e, 'contact_help_image')}
+                                        className="relative border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors bg-background/50"
+                                    >
+                                        {contactHelpPreview ? (
+                                            <div className="space-y-4">
+                                                {/* Preview Image */}
+                                                <div className="relative w-full h-48 rounded-lg border-2 border-border bg-muted flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={contactHelpPreview}
+                                                        alt="Contact Help Preview"
+                                                        className="max-w-full max-h-full object-contain p-4"
+                                                    />
+                                                    {/* Remove Button */}
+                                                    {data.contact_help_image && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveFile('contact_help_image')}
+                                                            className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-lg"
+                                                            title="Hapus file"
+                                                        >
+                                                            <X className="size-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* File Info */}
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <div className="flex items-center gap-2 text-green-600">
+                                                        <FileImage className="size-4" />
+                                                        <span>Gambar siap diupload</span>
+                                                    </div>
+                                                    {data.contact_help_image && (
+                                                        <span className="text-muted-foreground">
+                                                            {formatFileSize(data.contact_help_image.size)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center space-y-3">
+                                                <div className="flex justify-center">
+                                                    <div className="p-4 rounded-full bg-primary/10">
+                                                        <Upload className="size-8 text-primary" />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium">Drag & drop gambar di sini</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">atau klik tombol di bawah</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Upload Button */}
+                                        <div className="mt-4 flex justify-center">
+                                            <Label
+                                                htmlFor="contact_help_image"
+                                                className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                                            >
+                                                <Upload className="size-4" />
+                                                {contactHelpPreview ? 'Ganti Gambar' : 'Pilih Gambar'}
+                                            </Label>
+                                            <Input
+                                                id="contact_help_image"
+                                                name="contact_help_image"
+                                                type="file"
+                                                accept="image/png,image/jpg,image/jpeg,image/svg+xml,image/webp"
+                                                className="hidden"
+                                                onChange={(e) => handleFileChange(e, 'contact_help_image')}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Format: PNG, JPG, JPEG, SVG, WebP • Maksimal: 3MB • Gambar akan ditampilkan di halaman kontak
+                                    </p>
+                                    <InputError message={errors.contact_help_image} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Social Media Tab */}
+                    <TabsContent value="social" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <Globe className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Media Sosial</CardTitle>
+                                        <CardDescription>
+                                            Hubungkan akun media sosial Anda
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                <div className="grid gap-5 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="facebook_url" className="text-sm font-medium">
+                                            Facebook
+                                        </Label>
+                                        <div className="relative">
+                                            <Facebook className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="facebook_url"
+                                                name="facebook_url"
+                                                type="url"
+                                                value={data.facebook_url}
+                                                onChange={(e) => setData('facebook_url', e.target.value)}
+                                                placeholder="https://facebook.com/halamananda"
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                        <InputError message={errors.facebook_url} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="twitter_url" className="text-sm font-medium">
+                                            Twitter / X
+                                        </Label>
+                                        <div className="relative">
+                                            <Twitter className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="twitter_url"
+                                                name="twitter_url"
+                                                type="url"
+                                                value={data.twitter_url}
+                                                onChange={(e) => setData('twitter_url', e.target.value)}
+                                                placeholder="https://twitter.com/username"
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                        <InputError message={errors.twitter_url} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="instagram_url" className="text-sm font-medium">
+                                            Instagram
+                                        </Label>
+                                        <div className="relative">
+                                            <Instagram className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="instagram_url"
+                                                name="instagram_url"
+                                                type="url"
+                                                value={data.instagram_url}
+                                                onChange={(e) => setData('instagram_url', e.target.value)}
+                                                placeholder="https://instagram.com/username"
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                        <InputError message={errors.instagram_url} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="linkedin_url" className="text-sm font-medium">
+                                            LinkedIn
+                                        </Label>
+                                        <div className="relative">
+                                            <Linkedin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="linkedin_url"
+                                                name="linkedin_url"
+                                                type="url"
+                                                value={data.linkedin_url}
+                                                onChange={(e) => setData('linkedin_url', e.target.value)}
+                                                placeholder="https://linkedin.com/company/perusahaan"
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                        <InputError message={errors.linkedin_url} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="tiktok_url" className="text-sm font-medium">
+                                            TikTok
+                                        </Label>
+                                        <div className="relative">
+                                            <Globe className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="tiktok_url"
+                                                name="tiktok_url"
+                                                type="url"
+                                                value={data.tiktok_url}
+                                                onChange={(e) => setData('tiktok_url', e.target.value)}
+                                                placeholder="https://tiktok.com/@username"
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                        <InputError message={errors.tiktok_url} />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* SEO Tab */}
+                    <TabsContent value="seo" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <Search className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Pengaturan SEO</CardTitle>
+                                        <CardDescription>
+                                            Optimalkan website untuk mesin pencari
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="meta_keywords" className="text-sm font-medium">
+                                        Kata Kunci Meta
+                                    </Label>
+                                    <Input
+                                        id="meta_keywords"
+                                        name="meta_keywords"
+                                        value={data.meta_keywords}
+                                        onChange={(e) => setData('meta_keywords', e.target.value)}
+                                        placeholder="ai, chat, platform, komunikasi"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Pisahkan kata kunci dengan koma
+                                    </p>
+                                    <InputError message={errors.meta_keywords} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="meta_description" className="text-sm font-medium">
+                                        Deskripsi Meta
+                                    </Label>
+                                    <textarea
+                                        id="meta_description"
+                                        name="meta_description"
+                                        value={data.meta_description}
+                                        onChange={(e) => setData('meta_description', e.target.value)}
+                                        placeholder="Deskripsi singkat yang muncul di hasil pencarian"
+                                        rows={3}
+                                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Panjang yang disarankan: 150-160 karakter
+                                    </p>
+                                    <InputError message={errors.meta_description} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Auth Page Tab */}
+                    <TabsContent value="auth" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <ImageIcon className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Halaman Login Branding</CardTitle>
+                                        <CardDescription>
+                                            Kustomisasi tampilan halaman login/register
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                {/* Hero Image Upload */}
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-medium">
+                                        Gambar Hero Login
+                                    </Label>
+
+                                    {/* Drag & Drop Area */}
+                                    <div
+                                        onDragOver={handleDragOver}
+                                        onDrop={(e) => handleDrop(e, 'auth_hero_image')}
+                                        className="relative border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors bg-background/50"
+                                    >
+                                        {authHeroPreview ? (
+                                            <div className="space-y-4">
+                                                {/* Preview Image */}
+                                                <div className="relative w-full h-48 rounded-lg border-2 border-border bg-muted flex items-center justify-center overflow-hidden">
+                                                    <img
+                                                        src={authHeroPreview}
+                                                        alt="Hero Preview"
+                                                        className="max-w-full max-h-full object-contain p-4"
+                                                    />
+                                                    {/* Remove Button */}
+                                                    {data.auth_hero_image && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveFile('auth_hero_image')}
+                                                            className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-lg"
+                                                            title="Hapus file"
+                                                        >
+                                                            <X className="size-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
+
+                                                {/* File Info */}
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <div className="flex items-center gap-2 text-green-600">
+                                                        <FileImage className="size-4" />
+                                                        <span>Gambar hero siap diupload</span>
+                                                    </div>
+                                                    {data.auth_hero_image && (
+                                                        <span className="text-muted-foreground">
+                                                            {formatFileSize(data.auth_hero_image.size)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center space-y-3">
+                                                <div className="flex justify-center">
+                                                    <div className="p-4 rounded-full bg-primary/10">
+                                                        <Upload className="size-8 text-primary" />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium">Drag & drop gambar hero di sini</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">atau klik tombol di bawah</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Upload Button */}
+                                        <div className="mt-4 flex justify-center">
+                                            <Label
+                                                htmlFor="auth_hero_image"
+                                                className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                                            >
+                                                <Upload className="size-4" />
+                                                {authHeroPreview ? 'Ganti Gambar' : 'Pilih Gambar'}
+                                            </Label>
+                                            <Input
+                                                id="auth_hero_image"
+                                                name="auth_hero_image"
+                                                type="file"
+                                                accept="image/png,image/jpg,image/jpeg,image/svg+xml"
+                                                className="hidden"
+                                                onChange={(e) => handleFileChange(e, 'auth_hero_image')}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Format: PNG, JPG, JPEG, SVG • Maksimal: 5MB • Recommended: 1920x1080px
+                                    </p>
+                                    <InputError message={errors.auth_hero_image} />
+                                </div>
+
+                                <div className="grid gap-5 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="auth_logo_name" className="text-sm font-medium">
+                                            Nama Logo
+                                        </Label>
+                                        <Input
+                                            id="auth_logo_name"
+                                            name="auth_logo_name"
+                                            value={data.auth_logo_name}
+                                            onChange={(e) => setData('auth_logo_name', e.target.value)}
+                                            placeholder="ChatCepat"
+                                        />
+                                        <InputError message={errors.auth_logo_name} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="auth_tagline" className="text-sm font-medium">
+                                            Tagline
+                                        </Label>
+                                        <Input
+                                            id="auth_tagline"
+                                            name="auth_tagline"
+                                            value={data.auth_tagline}
+                                            onChange={(e) => setData('auth_tagline', e.target.value)}
+                                            placeholder="Smart, Fast & Reliable"
+                                        />
+                                        <InputError message={errors.auth_tagline} />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="auth_heading" className="text-sm font-medium">
+                                        Heading Utama
+                                    </Label>
+                                    <Input
+                                        id="auth_heading"
+                                        name="auth_heading"
+                                        value={data.auth_heading}
+                                        onChange={(e) => setData('auth_heading', e.target.value)}
+                                        placeholder="Kelola website Anda dengan mudah dan cepat"
+                                    />
+                                    <InputError message={errors.auth_heading} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="auth_description" className="text-sm font-medium">
+                                        Deskripsi
+                                    </Label>
+                                    <textarea
+                                        id="auth_description"
+                                        name="auth_description"
+                                        value={data.auth_description}
+                                        onChange={(e) => setData('auth_description', e.target.value)}
+                                        placeholder="Platform manajemen konten modern dengan fitur lengkap untuk mengembangkan bisnis Anda."
+                                        rows={3}
+                                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                                    />
+                                    <InputError message={errors.auth_description} />
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">
+                                            Fitur-fitur
+                                        </Label>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={addFeature}
+                                            className="h-8"
+                                        >
+                                            <Plus className="size-4 mr-1" />
+                                            Tambah Fitur
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {authFeatures.map((feature, index) => (
+                                            <div key={index} className="flex gap-2 items-start">
+                                                <div className="flex-1">
+                                                    <Input
+                                                        value={feature}
+                                                        onChange={(e) => updateFeature(index, e.target.value)}
+                                                        placeholder={`Fitur ${index + 1}`}
+                                                        className="w-full"
+                                                    />
+                                                </div>
+                                                {authFeatures.length > 1 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => removeFeature(index)}
+                                                        className="h-10 w-10 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Klik "Tambah Fitur" untuk menambah item baru, atau klik ikon sampah untuk menghapus
+                                    </p>
+                                    <InputError message={errors.auth_features} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="auth_copyright" className="text-sm font-medium">
+                                        Copyright Text
+                                    </Label>
+                                    <Input
+                                        id="auth_copyright"
+                                        name="auth_copyright"
+                                        value={data.auth_copyright}
+                                        onChange={(e) => setData('auth_copyright', e.target.value)}
+                                        placeholder="© 2025 ChatCepat. All rights reserved."
+                                    />
+                                    <InputError message={errors.auth_copyright} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+
+                {/* Tombol Aksi */}
+                <div className="flex items-center justify-end gap-4 sticky bottom-0 bg-background py-4 border-t">
+                    <Button
+                        type="submit"
+                        size="lg"
+                        disabled={!!processing}
+                    >
+                        <Save className="size-4" />
+                        <span>{String(processing ? 'Menyimpan...' : 'Simpan Perubahan')}</span>
+                    </Button>
+                </div>
+            </form>
+        </AdminLayout>
+    )
+}
