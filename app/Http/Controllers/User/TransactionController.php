@@ -100,7 +100,7 @@ class TransactionController extends Controller
                 'payment_code' => $transaction->payment_code,
                 'va_number' => $transaction->va_number,
                 'payment_url' => $transaction->payment_url,
-                'proof_image' => $transaction->proof_image,
+                'proof_image' => $transaction->proof_image ? '/storage/' . $transaction->proof_image : null,
                 'notes' => $transaction->notes,
                 'created_at' => $transaction->created_at->format('d/m/Y H:i'),
                 'paid_at' => $transaction->paid_at?->format('d/m/Y H:i'),
