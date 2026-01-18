@@ -119,9 +119,16 @@ class PaymentController extends Controller
             if (!$result['success']) {
                 DB::rollBack();
 
+                Log::error('Failed to create Duitku invoice', [
+                    'transaction_id' => $transaction->id ?? null,
+                    'merchant_order_id' => $merchantOrderId,
+                    'result' => $result,
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => $result['message'] ?? 'Failed to create payment',
+                    'error_details' => $result['data'] ?? null,
                 ], 400);
             }
 

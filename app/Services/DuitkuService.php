@@ -166,9 +166,18 @@ class DuitkuService
                 ];
             }
 
+            // Log detailed error information
+            Log::error('Duitku Create Invoice Failed', [
+                'http_status' => $response->status(),
+                'statusCode' => $result['statusCode'] ?? 'N/A',
+                'statusMessage' => $result['statusMessage'] ?? 'N/A',
+                'response_body' => $result,
+                'request_params' => array_merge($params, ['signature' => '***HIDDEN***']),
+            ]);
+
             return [
                 'success' => false,
-                'message' => $result['statusMessage'] ?? 'Failed to create invoice',
+                'message' => $result['statusMessage'] ?? 'Failed to create invoice (Status: ' . ($result['statusCode'] ?? 'unknown') . ')',
                 'data' => $result,
             ];
         } catch (\Exception $e) {

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, Package, User as UserIcon, Mail, Phone, CheckCircle, Building2, Upload, Copy, Check, Loader2 } from 'lucide-react';
+import { CreditCard, Package, User as UserIcon, Mail, Phone, CheckCircle, Building2, Upload, Copy, Check, Loader2, Wallet } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -174,11 +174,14 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                     }, 1000);
                 }
             } else {
-                toast.error(result.message || 'Gagal membuat pembayaran');
+                console.error('Payment error:', result);
+                const errorMsg = result.message || 'Gagal membuat pembayaran';
+                const errorDetails = result.error_details?.statusMessage || '';
+                toast.error(errorDetails ? `${errorMsg}: ${errorDetails}` : errorMsg);
             }
         } catch (error) {
             console.error('Payment creation failed:', error);
-            toast.error('Gagal membuat pembayaran');
+            toast.error('Gagal membuat pembayaran. Silakan coba lagi.');
         } finally {
             gatewayForm.setData('processing', false);
         }
@@ -379,11 +382,9 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                                         <CardContent>
                                             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                                                 <div className="flex items-center gap-3">
-                                                    <img
-                                                        src="https://images.duitku.com/hotlink-ok/DUITKU2.png"
-                                                        alt="Duitku"
-                                                        className="h-8 w-auto object-contain"
-                                                    />
+                                                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                        <Wallet className="size-5 text-primary" />
+                                                    </div>
                                                     <div>
                                                         <p className="font-medium">Duitku Payment Gateway</p>
                                                         <p className="text-xs text-muted-foreground">
