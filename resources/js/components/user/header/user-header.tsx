@@ -37,10 +37,11 @@ interface Notification {
 
 export function UserHeader() {
     const { url, props } = usePage<{
-        auth: { user: { id: number; name: string; email: string; role: string; avatar: string | null } };
+        auth?: { user?: { id: number; name: string; email: string; role: string; avatar: string | null } };
         notifications: Notification[];
     }>()
     const notifications = props.notifications || []
+    const user = props.auth?.user
 
     // Generate breadcrumbs from URL (strip query string first)
     const pathWithoutQuery = url.split('?')[0]
@@ -185,51 +186,55 @@ export function UserHeader() {
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Separator orientation="vertical" className="h-8" />
+                {user && (
+                    <>
+                        <Separator orientation="vertical" className="h-8" />
 
-                {/* User Avatar Dropdown */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger className="focus:outline-none">
-                        <div className="flex items-center gap-3 rounded-lg hover:bg-muted/50 transition-colors p-1.5 cursor-pointer">
-                            <Avatar className="size-9">
-                                <AvatarImage src={props.auth.user.avatar || undefined} alt={props.auth.user.name} />
-                                <AvatarFallback className="bg-primary/10 text-primary">
-                                    {getInitials(props.auth.user.name)}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col items-start">
-                                <span className="text-sm font-semibold leading-none">{props.auth.user.name}</span>
-                                <span className="text-xs text-muted-foreground mt-1">
-                                    {props.auth.user.role === 'admin' ? 'Admin' : 'User'}
-                                </span>
-                            </div>
-                        </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{props.auth.user.name}</p>
-                                <p className="text-xs leading-none text-muted-foreground">
-                                    {props.auth.user.email}
-                                </p>
-                            </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => router.visit('/user/dashboard')}>
-                            <UserCircle className="mr-2 size-4" />
-                            Dashboard
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.visit('/user/account')}>
-                            <Settings className="mr-2 size-4" />
-                            Pengaturan Akun
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleLogout} variant="destructive">
-                            <LogOut className="mr-2 size-4" />
-                            Keluar
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        {/* User Avatar Dropdown */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="focus:outline-none">
+                                <div className="flex items-center gap-3 rounded-lg hover:bg-muted/50 transition-colors p-1.5 cursor-pointer">
+                                    <Avatar className="size-9">
+                                        <AvatarImage src={user.avatar || undefined} alt={user.name} />
+                                        <AvatarFallback className="bg-primary/10 text-primary">
+                                            {getInitials(user.name)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-sm font-semibold leading-none">{user.name}</span>
+                                        <span className="text-xs text-muted-foreground mt-1">
+                                            {user.role === 'admin' ? 'Admin' : 'User'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                                <DropdownMenuLabel>
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                                        <p className="text-xs leading-none text-muted-foreground">
+                                            {user.email}
+                                        </p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => router.visit('/user/dashboard')}>
+                                    <UserCircle className="mr-2 size-4" />
+                                    Dashboard
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.visit('/user/account')}>
+                                    <Settings className="mr-2 size-4" />
+                                    Pengaturan Akun
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleLogout} variant="destructive">
+                                    <LogOut className="mr-2 size-4" />
+                                    Keluar
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </>
+                )}
             </div>
         </header>
     )
