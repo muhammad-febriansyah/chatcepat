@@ -107,6 +107,7 @@ class DuitkuService
 
     /**
      * Create invoice (user selects payment method on Duitku page)
+     * Using new Duitku POP API
      *
      * @param array $data
      * @return array
@@ -126,8 +127,14 @@ class DuitkuService
             $returnUrl = $data['returnUrl'] ?? config('services.duitku.return_url');
             $expiryPeriod = $data['expiryPeriod'] ?? 1440;
 
-            // Generate signature for createInvoice
-            $signature = md5($this->merchantCode . $merchantOrderId . $paymentAmount . $this->apiKey);
+            // New Duitku POP API URL
+            $popUrl = $this->sandbox
+                ? 'https://api-sandbox.duitku.com/api/merchant/createInvoice'
+                : 'https://api-prod.duitku.com/api/merchant/createInvoice';
+
+            // Generate signature for new POP API (SHA256 with timestamp)
+            $timestamp = round(microtime(true) * 1000);
+            $signature = hash('sha256', $this->merchantCode . $timestamp . $this->apiKey);
 
             $params = [
                 'merchantCode' => $this->merchantCode,
@@ -140,17 +147,19 @@ class DuitkuService
                 'itemDetails' => $itemDetails,
                 'callbackUrl' => $callbackUrl,
                 'returnUrl' => $returnUrl,
-                'signature' => $signature,
                 'expiryPeriod' => $expiryPeriod,
             ];
 
-            Log::info('Duitku Create Invoice Request', $params);
+            Log::info('Duitku Create Invoice Request', array_merge($params, ['url' => $popUrl]));
 
-            // Call Duitku createInvoice API (without payment method - user selects on Duitku page)
-            // Endpoint: /createInvoice for pop-up/redirect mode
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '/createInvoice', $params);
+            // Call Duitku POP API with required headers
+            $response = Http::asJson()
+                ->withHeaders([
+                    'x-duitku-signature' => $signature,
+                    'x-duitku-timestamp' => $timestamp,
+                    'x-duitku-merchantcode' => $this->merchantCode,
+                ])
+                ->post($popUrl, $params);
 
             $result = $response->json();
 
