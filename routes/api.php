@@ -32,3 +32,7 @@ Route::middleware('auth:sanctum')->prefix('whatsapp-gateway')->name('api.whatsap
     // Get session by ID
     Route::get('/sessions/{sessionId}', [WhatsAppGatewayController::class, 'getSession'])->name('get-session');
 });
+
+// Telegram Webhook - No auth required, validated by secret
+Route::post('/telegram/webhook/{botId}/{secret}', [App\Http\Controllers\Api\TelegramWebhookController::class, 'handle'])
+    ->name('api.telegram.webhook');

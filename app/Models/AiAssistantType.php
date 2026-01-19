@@ -10,6 +10,7 @@ class AiAssistantType extends Model
         'code',
         'name',
         'description',
+        'system_prompt',
         'icon',
         'color',
         'is_active',

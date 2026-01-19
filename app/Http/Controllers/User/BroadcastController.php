@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\WhatsappSession;
 use App\Models\WhatsappMessage;
 use App\Models\WhatsappContact;
+use App\Models\ContactGroup;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -56,10 +57,25 @@ class BroadcastController extends Controller
             ];
         });
 
+        // Get user's contact groups
+        $contactGroups = ContactGroup::where('user_id', $user->id)
+            ->withCount('members')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($group) {
+                return [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'source' => $group->source,
+                    'members_count' => $group->members_count,
+                ];
+            });
+
         return Inertia::render('user/broadcast', [
             'sessions' => $connectedSessions,
             'allSessions' => $allSessions, // Include all sessions for status info
             'contacts' => $contacts,
+            'contactGroups' => $contactGroups,
         ]);
     }
 

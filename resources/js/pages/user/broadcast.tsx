@@ -8,8 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Send, FileUp, MessageSquare, Users, X, UserPlus, Edit } from 'lucide-react';
-import { useState, FormEvent } from 'react';
+import { Send, FileUp, MessageSquare, Users, X, UserPlus, Edit, FolderOpen } from 'lucide-react';
+import { useState, FormEvent, useEffect } from 'react';
 
 interface WhatsAppSession {
     id: number;
@@ -25,16 +25,26 @@ interface Contact {
     display_name: string | null;
 }
 
+interface ContactGroup {
+    id: number;
+    name: string;
+    source: 'manual' | 'whatsapp';
+    members_count: number;
+}
+
 interface BroadcastPageProps {
     sessions: WhatsAppSession[];
     contacts: Contact[];
+    contactGroups: ContactGroup[];
 }
 
-export default function BroadcastPage({ sessions, contacts = [] }: BroadcastPageProps) {
+export default function BroadcastPage({ sessions, contacts = [], contactGroups = [] }: BroadcastPageProps) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [recipients, setRecipients] = useState<string[]>([]);
     const [recipientInput, setRecipientInput] = useState('');
     const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
+    const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
+    const [loadingGroupMembers, setLoadingGroupMembers] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         session_id: '',
@@ -85,6 +95,42 @@ export default function BroadcastPage({ sessions, contacts = [] }: BroadcastPage
                 ? prev.filter(id => id !== contactId)
                 : [...prev, contactId]
         );
+    };
+
+    const handleToggleGroup = (groupId: number) => {
+        setSelectedGroups(prev =>
+            prev.includes(groupId)
+                ? prev.filter(id => id !== groupId)
+                : [...prev, groupId]
+        );
+    };
+
+    const handleAddFromGroups = async () => {
+        if (selectedGroups.length === 0) return;
+
+        setLoadingGroupMembers(true);
+        try {
+            const allMembers: string[] = [];
+
+            for (const groupId of selectedGroups) {
+                const response = await fetch(`/user/contact-groups/${groupId}/members`);
+                const data = await response.json();
+                if (data.members) {
+                    data.members.forEach((member: { phone_number: string }) => {
+                        allMembers.push(member.phone_number);
+                    });
+                }
+            }
+
+            const newRecipients = [...new Set([...recipients, ...allMembers])];
+            setRecipients(newRecipients);
+            setData('recipients', newRecipients);
+            setSelectedGroups([]);
+        } catch (error) {
+            console.error('Failed to fetch group members:', error);
+        } finally {
+            setLoadingGroupMembers(false);
+        }
     };
 
     const handleSubmit = (e: FormEvent) => {
@@ -310,6 +356,80 @@ export default function BroadcastPage({ sessions, contacts = [] }: BroadcastPage
                                                 >
                                                     <UserPlus className="mr-2 size-4" />
                                                     Tambah {selectedContacts.length} Kontak
+                                                </Button>
+                                            </>
+                                        )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* Dari Grup Kontak */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <FolderOpen className="size-5 text-primary" />
+                                            Pilih dari Grup
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Pilih grup kontak untuk broadcast
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {contactGroups.length === 0 ? (
+                                            <div className="text-center p-6 border rounded-lg bg-muted/50">
+                                                <FolderOpen className="size-10 mx-auto text-muted-foreground mb-2" />
+                                                <p className="text-sm text-muted-foreground mb-3">
+                                                    Belum ada grup kontak
+                                                </p>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => router.visit('/user/contact-groups')}
+                                                >
+                                                    Buat Grup
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="max-h-48 overflow-y-auto space-y-2 rounded-lg border p-3">
+                                                    {contactGroups.map((group) => (
+                                                        <div
+                                                            key={group.id}
+                                                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                                                        >
+                                                            <Checkbox
+                                                                id={`group-${group.id}`}
+                                                                checked={selectedGroups.includes(group.id)}
+                                                                onCheckedChange={() => handleToggleGroup(group.id)}
+                                                            />
+                                                            <label
+                                                                htmlFor={`group-${group.id}`}
+                                                                className="flex-1 cursor-pointer"
+                                                            >
+                                                                <p className="text-sm font-medium">
+                                                                    {group.name}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {group.members_count} anggota
+                                                                    <Badge variant="outline" className="ml-2 text-xs">
+                                                                        {group.source === 'manual' ? 'Manual' : 'WhatsApp'}
+                                                                    </Badge>
+                                                                </p>
+                                                            </label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    onClick={handleAddFromGroups}
+                                                    disabled={selectedGroups.length === 0 || loadingGroupMembers}
+                                                    className="w-full"
+                                                    variant="secondary"
+                                                >
+                                                    <Users className="mr-2 size-4" />
+                                                    {loadingGroupMembers
+                                                        ? 'Memuat...'
+                                                        : `Tambah dari ${selectedGroups.length} Grup`}
                                                 </Button>
                                             </>
                                         )}

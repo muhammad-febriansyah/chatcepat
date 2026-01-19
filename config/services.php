@@ -39,12 +39,24 @@ return [
         'url' => env('WHATSAPP_GATEWAY_URL', 'http://localhost:3000'),
     ],
 
+    'telegram_service' => [
+        'url' => env('TELEGRAM_SERVICE_URL', 'http://localhost:8001'),
+        'secret_key' => env('TELEGRAM_SERVICE_SECRET_KEY', ''),
+    ],
+
     'duitku' => [
         'merchant_code' => env('DUITKU_MERCHANT_CODE'),
         'api_key' => env('DUITKU_API_KEY'),
         'callback_url' => env('DUITKU_CALLBACK_URL'),
         'return_url' => env('DUITKU_RETURN_URL'),
         'sandbox' => env('DUITKU_SANDBOX', true),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        'max_tokens' => env('OPENAI_MAX_TOKENS', 500),
+        'temperature' => env('OPENAI_TEMPERATURE', 0.7),
     ],
 
 ];

@@ -213,6 +213,19 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::post('/groups/send', [App\Http\Controllers\User\GroupBroadcastController::class, 'send'])->name('groups.send');
     });
 
+    // Contact Groups (untuk broadcast)
+    Route::prefix('contact-groups')->name('contact-groups.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\ContactGroupController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\User\ContactGroupController::class, 'store'])->name('store');
+        Route::put('/{contactGroup}', [App\Http\Controllers\User\ContactGroupController::class, 'update'])->name('update');
+        Route::delete('/{contactGroup}', [App\Http\Controllers\User\ContactGroupController::class, 'destroy'])->name('destroy');
+        Route::post('/{contactGroup}/members', [App\Http\Controllers\User\ContactGroupController::class, 'addMembers'])->name('members.add');
+        Route::delete('/{contactGroup}/members/{member}', [App\Http\Controllers\User\ContactGroupController::class, 'removeMember'])->name('members.remove');
+        Route::post('/sync-whatsapp', [App\Http\Controllers\User\ContactGroupController::class, 'syncFromWhatsApp'])->name('sync-whatsapp');
+        Route::get('/for-broadcast', [App\Http\Controllers\User\ContactGroupController::class, 'getGroupsForBroadcast'])->name('for-broadcast');
+        Route::get('/{contactGroup}/members', [App\Http\Controllers\User\ContactGroupController::class, 'getGroupMembers'])->name('members');
+    });
+
     // Reply Manual
     Route::prefix('reply-manual')->name('reply-manual.')->group(function () {
         Route::get('/', [App\Http\Controllers\User\ReplyManualController::class, 'index'])->name('index');
@@ -228,6 +241,39 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/', [App\Http\Controllers\User\ChatbotController::class, 'index'])->name('index');
         Route::post('/{session}/settings', [App\Http\Controllers\User\ChatbotController::class, 'updateSettings'])->name('settings');
         Route::post('/{session}/test', [App\Http\Controllers\User\ChatbotController::class, 'testChatbot'])->name('test');
+    });
+
+    // Telegram Bot Management
+    Route::prefix('telegram')->name('telegram.')->group(function () {
+        // Bot management
+        Route::get('/', [App\Http\Controllers\User\TelegramBotController::class, 'index'])->name('index');
+        Route::post('/bots', [App\Http\Controllers\User\TelegramBotController::class, 'store'])->name('bots.store');
+
+        // Session management (auto-create bot via Python service)
+        Route::post('/session/send-code', [App\Http\Controllers\User\TelegramSessionController::class, 'sendCode'])->name('session.send-code');
+        Route::post('/session/verify-code', [App\Http\Controllers\User\TelegramSessionController::class, 'verifyCode'])->name('session.verify-code');
+        Route::post('/session/create-bot', [App\Http\Controllers\User\TelegramSessionController::class, 'createBot'])->name('session.create-bot');
+        Route::get('/session/check', [App\Http\Controllers\User\TelegramSessionController::class, 'checkSession'])->name('session.check');
+        Route::post('/session/logout', [App\Http\Controllers\User\TelegramSessionController::class, 'logout'])->name('session.logout');
+        Route::post('/session/delete', [App\Http\Controllers\User\TelegramSessionController::class, 'deleteSession'])->name('session.delete');
+        Route::post('/bots/{telegramBot}/toggle-active', [App\Http\Controllers\User\TelegramBotController::class, 'toggleActive'])->name('bots.toggle-active');
+        Route::post('/bots/{telegramBot}/toggle-auto-reply', [App\Http\Controllers\User\TelegramBotController::class, 'toggleAutoReply'])->name('bots.toggle-auto-reply');
+        Route::post('/bots/{telegramBot}/toggle-ai', [App\Http\Controllers\User\TelegramBotController::class, 'toggleAI'])->name('bots.toggle-ai');
+        Route::post('/bots/{telegramBot}/ai-settings', [App\Http\Controllers\User\TelegramBotController::class, 'updateAISettings'])->name('bots.ai-settings');
+        Route::delete('/bots/{telegramBot}', [App\Http\Controllers\User\TelegramBotController::class, 'destroy'])->name('bots.destroy');
+        Route::get('/bots/{telegramBot}/contacts', [App\Http\Controllers\User\TelegramBotController::class, 'contacts'])->name('bots.contacts');
+
+        // Auto-reply management
+        Route::get('/bots/{telegramBot}/auto-replies', [App\Http\Controllers\User\TelegramBotController::class, 'autoReplies'])->name('auto-replies.index');
+        Route::post('/bots/{telegramBot}/auto-replies', [App\Http\Controllers\User\TelegramBotController::class, 'storeAutoReply'])->name('auto-replies.store');
+        Route::put('/bots/{telegramBot}/auto-replies/{autoReply}', [App\Http\Controllers\User\TelegramBotController::class, 'updateAutoReply'])->name('auto-replies.update');
+        Route::delete('/bots/{telegramBot}/auto-replies/{autoReply}', [App\Http\Controllers\User\TelegramBotController::class, 'destroyAutoReply'])->name('auto-replies.destroy');
+
+        // Broadcast
+        Route::get('/broadcast', [App\Http\Controllers\User\TelegramBroadcastController::class, 'index'])->name('broadcast.index');
+        Route::get('/broadcast/contacts/{telegramBot}', [App\Http\Controllers\User\TelegramBroadcastController::class, 'getContacts'])->name('broadcast.contacts');
+        Route::post('/broadcast/send', [App\Http\Controllers\User\TelegramBroadcastController::class, 'send'])->name('broadcast.send');
+        Route::get('/broadcast/history', [App\Http\Controllers\User\TelegramBroadcastController::class, 'history'])->name('broadcast.history');
     });
 
     // Top Up / Upgrade Package
@@ -296,6 +342,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Banks
     Route::resource('banks', App\Http\Controllers\Admin\BankController::class)->except(['show', 'create', 'edit']);
+
+    // AI Assistant Types
+    Route::resource('ai-assistant-types', App\Http\Controllers\Admin\AiAssistantTypeController::class)->except(['show', 'create', 'edit']);
 
     // Transactions
     Route::get('/transactions', [App\Http\Controllers\Admin\TransactionController::class, 'index'])->name('transactions.index');

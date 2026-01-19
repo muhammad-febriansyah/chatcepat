@@ -337,6 +337,21 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={Users} label="Broadcast Group WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('broadcast_wa') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={isActive('/user/contact-groups')}
+                                                    >
+                                                        <Link href="/user/contact-groups">
+                                                            <Database className="size-4" />
+                                                            <span>Kelola Grup Kontak</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={Database} label="Kelola Grup Kontak" />
+                                                )}
+                                            </SidebarMenuSubItem>
                                         </SidebarMenuSub>
                                     </CollapsibleContent>
                                 </SidebarMenuItem>
@@ -457,6 +472,21 @@ export function UserSidebar() {
                                                     </SidebarMenuSubButton>
                                                 ) : (
                                                     <LockedSubMenuButton icon={MessageCircle} label="WhatsApp Personal" iconColor="text-green-600" />
+                                                )}
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('platforms') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={url.startsWith('/user/telegram')}
+                                                    >
+                                                        <Link href="/user/telegram">
+                                                            <Bot className="size-4 text-blue-500" />
+                                                            <span>Telegram Bot</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={Bot} label="Telegram Bot" iconColor="text-blue-500" />
                                                 )}
                                             </SidebarMenuSubItem>
                                         </SidebarMenuSub>

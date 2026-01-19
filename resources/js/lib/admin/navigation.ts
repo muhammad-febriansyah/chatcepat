@@ -22,6 +22,7 @@ import {
     MailOpen,
     Landmark,
     Receipt,
+    Brain,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -190,6 +191,17 @@ export const adminNavigation: AdminNavGroup[] = [
                 title: 'Pesan Kontak',
                 href: '/admin/contacts',
                 icon: Mail,
+            },
+        ],
+    },
+    {
+        title: 'AI & Chatbot',
+        roles: ['admin'],
+        items: [
+            {
+                title: 'AI Assistant Types',
+                href: '/admin/ai-assistant-types',
+                icon: Brain,
             },
         ],
     },
