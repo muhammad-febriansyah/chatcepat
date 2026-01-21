@@ -63,11 +63,16 @@ export function UserHeader() {
             'transactions': 'Riwayat Transaksi',
             'topup': 'Top Up',
             'broadcast': 'Broadcast',
-            'groups': 'Group',
+            'groups': 'Grup',
             'chatbot': 'Chatbot',
             'templates': 'Template',
             'reply-manual': 'Reply Manual',
             'edit': 'Edit',
+            'contact-groups': 'Grup Kontak',
+            'telegram': 'Telegram',
+            'bots': 'Bot',
+            'auto-replies': 'Auto Reply',
+            'products': 'Katalog Produk',
         }
         // Check if segment is a numeric ID
         if (/^\d+$/.test(segment)) {
@@ -146,16 +151,15 @@ export function UserHeader() {
                                             className="flex items-start gap-3 py-3 cursor-pointer"
                                             onClick={() => router.visit(notif.url)}
                                         >
-                                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                                                notif.color === 'green' ? 'bg-green-100 text-green-600' :
-                                                notif.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
-                                                notif.color === 'red' ? 'bg-red-100 text-red-600' :
-                                                'bg-gray-100 text-gray-600'
-                                            }`}>
+                                            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${notif.color === 'green' ? 'bg-green-100 text-green-600' :
+                                                    notif.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
+                                                        notif.color === 'red' ? 'bg-red-100 text-red-600' :
+                                                            'bg-gray-100 text-gray-600'
+                                                }`}>
                                                 {notif.status === 'paid' ? <CheckCircle className="h-4 w-4" /> :
-                                                 notif.status === 'pending' ? <Clock className="h-4 w-4" /> :
-                                                 notif.status === 'failed' || notif.status === 'expired' ? <XCircle className="h-4 w-4" /> :
-                                                 <Receipt className="h-4 w-4" />}
+                                                    notif.status === 'pending' ? <Clock className="h-4 w-4" /> :
+                                                        notif.status === 'failed' || notif.status === 'expired' ? <XCircle className="h-4 w-4" /> :
+                                                            <Receipt className="h-4 w-4" />}
                                             </div>
                                             <div className="flex-1 space-y-1">
                                                 <p className="text-sm font-medium">{notif.title}</p>

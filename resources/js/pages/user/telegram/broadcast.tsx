@@ -2,7 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -182,19 +182,14 @@ export default function TelegramBroadcastPage({ bots }: TelegramBroadcastPagePro
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent>
-                                        <Textarea
+                                        <RichTextEditor
+                                            content={data.message}
+                                            onChange={(content) => setData('message', content)}
                                             placeholder="Ketik pesan Anda di sini..."
-                                            value={data.message}
-                                            onChange={(e) => setData('message', e.target.value)}
-                                            rows={8}
-                                            className="resize-none"
                                         />
                                         {errors.message && (
                                             <p className="text-sm text-destructive mt-2">{errors.message}</p>
                                         )}
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            Format: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;a href="url"&gt;link&lt;/a&gt;
-                                        </p>
                                     </CardContent>
                                 </Card>
                             </div>

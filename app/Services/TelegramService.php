@@ -6,6 +6,7 @@ use App\Models\TelegramBot;
 use App\Models\TelegramMessage;
 use App\Models\TelegramContact;
 use App\Models\TelegramAutoReply;
+use App\Services\RajaOngkirService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -161,6 +162,18 @@ class TelegramService
     }
 
     /**
+     * Send chat action (typing, etc)
+     */
+    public function sendChatAction(int|string $chatId, string $action = 'typing'): array
+    {
+        return $this->request('sendChatAction', [
+            'chat_id' => $chatId,
+            'action' => $action,
+        ]);
+    }
+
+
+    /**
      * Process incoming webhook update
      */
     public function processUpdate(array $update): void
@@ -243,18 +256,59 @@ class TelegramService
             ]
         );
 
-        // Process auto-reply if enabled (rule-based)
-        if ($this->bot->auto_reply_enabled && $content) {
-            $replied = $this->processAutoReply($chatId, $content);
+        // Process auto-reply if enabled
+        if ($content) {
+            // 1. Check Shipping Cost (Prioritas Tertinggi)
+            if (preg_match('/cek\s+ongkir\s+(?:dari\s+)?(.+?)\s+ke\s+(.+?)(?:\s+(\d+(?:\.\d+)?)\s*kg)?(?:\s+(jne|pos|tiki|jnt|sicepat|anteraja))?$/i', $content, $matches)) {
+                $this->processShippingCheck($chatId, $matches);
+                return;
+            }
 
-            // If no auto-reply matched and AI is enabled, use OpenAI
-            if (!$replied && $this->bot->ai_enabled) {
+            // 2. Rule-based Auto Reply
+            if ($this->bot->auto_reply_enabled) {
+                $replied = $this->processAutoReply($chatId, $content);
+                if ($replied) return;
+            }
+
+            // 3. AI Reply
+            if ($this->bot->ai_enabled) {
                 $this->processAIReply($chatId, $content, $fromUserId);
             }
         }
-        // AI-only mode (no auto-reply rules, just AI)
-        elseif ($this->bot->ai_enabled && $content) {
-            $this->processAIReply($chatId, $content, $fromUserId);
+    }
+
+    /**
+     * Process Shipping Cost Check
+     */
+    private function processShippingCheck(int|string $chatId, array $matches): void
+    {
+        $origin = trim($matches[1]);
+        $destination = trim($matches[2]);
+        $weightKg = isset($matches[3]) ? (float) $matches[3] : 1;
+        $courier = isset($matches[4]) ? strtolower($matches[4]) : 'jne';
+        $weightGrams = $weightKg * 1000;
+
+        $this->sendChatAction($chatId, 'typing');
+        
+        try {
+            $rajaOngkir = new RajaOngkirService();
+            $costs = $rajaOngkir->checkShippingCost($origin, $destination, $weightGrams, $courier);
+            $reply = $rajaOngkir->formatShippingCostReply($costs);
+            
+            // Add input info
+            if (!empty($costs) && $costs[0]['courier'] !== 'INFO') {
+                 $reply = "📦 *Informasi Ongkos Kirim*\n\n" .
+                          "*Asal:* {$origin}\n" .
+                          "*Tujuan:* {$destination}\n" .
+                          "*Berat:* {$weightKg} kg\n" .
+                          "*Kurir:* " . strtoupper($courier) . "\n\n" .
+                          substr($reply, strpos($reply, "\n\n") + 2);
+            }
+
+            $this->sendMessage($chatId, $reply);
+
+        } catch (\Exception $e) {
+            $this->sendMessage($chatId, "Maaf, gagal mengecek ongkir: " . $e->getMessage());
         }
     }
 
@@ -285,6 +339,8 @@ class TelegramService
     private function processAIReply(int|string $chatId, string $text, ?int $fromUserId): void
     {
         try {
+            $this->sendChatAction($chatId, 'typing');
+            
             $openAI = new OpenAIService();
 
             // Create session key for conversation history
@@ -336,6 +392,8 @@ class TelegramService
      */
     private function sendAutoReplyResponse(int|string $chatId, TelegramAutoReply $autoReply): void
     {
+        $this->sendChatAction($chatId, 'typing');
+        
         switch ($autoReply->response_type) {
             case 'photo':
                 if ($autoReply->response_media_url) {

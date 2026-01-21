@@ -27,7 +27,7 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bot, Plus, Trash2, Users, MessageSquare, Settings, Send, Zap, Phone, Key, Loader2, CheckCircle2, Smartphone, LogOut, User, Brain } from 'lucide-react';
+import { Bot, Plus, Trash2, Users, MessageSquare, Settings, Send, Zap, Phone, Key, Loader2, CheckCircle2, Smartphone, LogOut, User, Brain, PowerCircle } from 'lucide-react';
 import { useState, FormEvent, useEffect } from 'react';
 import axios from 'axios';
 
@@ -587,76 +587,133 @@ export default function TelegramBotsPage({ bots, aiAssistantTypes, telegramSessi
 
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Telegram Bots</h1>
-                        <p className="text-muted-foreground mt-2">
-                            Kelola bot Telegram untuk broadcast dan auto-reply
-                        </p>
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
+                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
+                    <div className="relative flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight text-foreground">Telegram Bots</h1>
+                            <p className="text-muted-foreground mt-1">
+                                Kelola bot Telegram untuk broadcast dan auto-reply
+                            </p>
+                        </div>
+                        <Dialog open={showAddDialog} onOpenChange={(open) => {
+                            setShowAddDialog(open);
+                            if (!open) resetAutoCreate();
+                        }}>
+                            <DialogTrigger asChild>
+                                <Button size="lg" className="gap-2">
+                                    <Plus className="size-4" />
+                                    Tambah Bot
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                {renderDialogContent()}
+                            </DialogContent>
+                        </Dialog>
                     </div>
-                    <Dialog open={showAddDialog} onOpenChange={(open) => {
-                        setShowAddDialog(open);
-                        if (!open) resetAutoCreate();
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="mr-2 size-4" />
-                                Tambah Bot
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            {renderDialogContent()}
-                        </DialogContent>
-                    </Dialog>
                 </div>
 
                 {/* Telegram Session Status */}
                 {telegramSession?.logged_in && telegramSession.user && (
-                    <Card className="border-blue-200 bg-blue-50/50">
-                        <CardContent className="pt-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
-                                        <User className="size-5 text-blue-600" />
+                    <Card className="overflow-hidden border-2 border-blue-200 bg-blue-50/30">
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center justify-between">
+                                Status Akun Personal
+                                <Badge variant="outline" className="border-blue-500 text-blue-600 bg-blue-100">
+                                    Terhubung
+                                </Badge>
+                            </CardTitle>
+                            <CardDescription>
+                                Akun ini digunakan untuk membuat bot dan menjalankan fitur Userbot (Auto-Reply Personal).
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
+                                        <User className="size-6 text-blue-600" />
                                     </div>
-                                    <div>
-                                        <p className="font-medium">
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-lg">
                                             {telegramSession.user.first_name} {telegramSession.user.last_name || ''}
                                         </p>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-muted-foreground font-mono">
                                             {telegramSession.user.username ? `@${telegramSession.user.username}` : telegramSession.user.phone}
                                         </p>
                                     </div>
-                                    <Badge variant="outline" className="ml-2 border-green-500 text-green-600">
-                                        Session Aktif
-                                    </Badge>
                                 </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="outline" size="sm" disabled={sessionLoading}>
-                                            {sessionLoading ? (
-                                                <Loader2 className="mr-2 size-4 animate-spin" />
-                                            ) : (
-                                                <LogOut className="mr-2 size-4" />
-                                            )}
-                                            Hapus Session
+
+                                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                                    <div className="flex gap-2 w-full">
+                                        <Button
+                                            onClick={async () => {
+                                                setSessionLoading(true);
+                                                try {
+                                                    await axios.post('/user/telegram/session/start-auto-reply');
+                                                    alert('Auto-reply personal berhasil diaktifkan!');
+                                                } catch (err: any) {
+                                                    alert(err.response?.data?.message || 'Gagal mengaktifkan auto-reply');
+                                                } finally {
+                                                    setSessionLoading(false);
+                                                }
+                                            }}
+                                            disabled={sessionLoading}
+                                            className="flex-1 bg-green-600 hover:bg-green-700"
+                                            size="sm"
+                                        >
+                                            <Zap className="mr-2 size-4" />
+                                            Start Auto-Reply
                                         </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Hapus Session Telegram?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Session akan dihapus dari server. Anda perlu login ulang jika ingin membuat bot baru via auto-create.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleLogoutSession}>
-                                                Hapus Session
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
+
+                                        <Button
+                                            onClick={async () => {
+                                                setSessionLoading(true);
+                                                try {
+                                                    await axios.post('/user/telegram/session/stop-auto-reply');
+                                                    alert('Auto-reply personal dihentikan.');
+                                                } catch (err: any) {
+                                                    alert(err.response?.data?.message || 'Gagal menghentikan auto-reply');
+                                                } finally {
+                                                    setSessionLoading(false);
+                                                }
+                                            }}
+                                            disabled={sessionLoading}
+                                            variant="secondary"
+                                            size="sm"
+                                            className="flex-1"
+                                        >
+                                            <PowerCircle className="mr-2 size-4" />
+                                            Stop
+                                        </Button>
+                                    </div>
+
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="sm" disabled={sessionLoading} className="w-full sm:w-auto">
+                                                {sessionLoading ? (
+                                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                                ) : (
+                                                    <LogOut className="mr-2 size-4" />
+                                                )}
+                                                Logout
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Hapus Session Telegram?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Session akan dihapus dari server. Fitur Userbot akan berhenti berfungsi.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleLogoutSession}>
+                                                    Hapus Session
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -682,7 +739,8 @@ export default function TelegramBotsPage({ bots, aiAssistantTypes, telegramSessi
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {bots.map((bot) => (
-                            <Card key={bot.id} className="flex flex-col">
+                            <Card key={bot.id} className="flex flex-col overflow-hidden border-2">
+                                <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                 <CardHeader>
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">

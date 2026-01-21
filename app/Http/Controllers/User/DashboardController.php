@@ -67,6 +67,11 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Get subscription info
+        $subscription = $user->getActiveSubscription();
+        $whatsappLimit = $user->getWhatsappSessionLimit();
+        $telegramLimit = $user->getTelegramBotLimit();
+
         return Inertia::render('user/dashboard', [
             'user' => [
                 'name' => $user->name,
@@ -75,6 +80,11 @@ class DashboardController extends Controller
                 'nama_bisnis' => $user->nama_bisnis,
                 'kategori_bisnis' => $user->businessCategory?->name ?? $user->kategori_bisnis,
                 'address' => $user->address,
+            ],
+            'subscription' => $subscription,
+            'limits' => [
+                'whatsapp_sessions' => $whatsappLimit === PHP_INT_MAX ? 'unlimited' : $whatsappLimit,
+                'telegram_bots' => $telegramLimit === PHP_INT_MAX ? 'unlimited' : $telegramLimit,
             ],
             'stats' => [
                 'whatsapp' => [

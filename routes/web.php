@@ -154,6 +154,14 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::post('/{session}/connect', [App\Http\Controllers\User\WhatsAppController::class, 'connect'])->name('connect');
         Route::post('/{session}/disconnect', [App\Http\Controllers\User\WhatsAppController::class, 'disconnect'])->name('disconnect');
         Route::delete('/{session}', [App\Http\Controllers\User\WhatsAppController::class, 'destroy'])->name('destroy');
+
+        // Auto-Reply Management
+        Route::get('/{session}/auto-replies', [App\Http\Controllers\User\WhatsAppController::class, 'autoReplies'])->name('auto-replies');
+        Route::post('/{session}/auto-replies', [App\Http\Controllers\User\WhatsAppController::class, 'storeAutoReply'])->name('auto-replies.store');
+        Route::put('/{session}/auto-replies/{autoReply}', [App\Http\Controllers\User\WhatsAppController::class, 'updateAutoReply'])->name('auto-replies.update');
+        Route::delete('/{session}/auto-replies/{autoReply}', [App\Http\Controllers\User\WhatsAppController::class, 'destroyAutoReply'])->name('auto-replies.destroy');
+        Route::post('/{session}/toggle-auto-reply', [App\Http\Controllers\User\WhatsAppController::class, 'toggleAutoReply'])->name('toggle-auto-reply');
+        Route::post('/{session}/settings', [App\Http\Controllers\User\WhatsAppController::class, 'updateSettings'])->name('settings.update');
     });
 
     // Scraper Management
@@ -229,6 +237,7 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
     // Reply Manual
     Route::prefix('reply-manual')->name('reply-manual.')->group(function () {
         Route::get('/', [App\Http\Controllers\User\ReplyManualController::class, 'index'])->name('index');
+        Route::get('/fullscreen', [App\Http\Controllers\User\ReplyManualController::class, 'fullscreen'])->name('fullscreen');
         Route::post('/messages', [App\Http\Controllers\User\ReplyManualController::class, 'getMessages'])->name('messages');
         Route::post('/contacts', [App\Http\Controllers\User\ReplyManualController::class, 'getContacts'])->name('contacts');
         Route::post('/send', [App\Http\Controllers\User\ReplyManualController::class, 'send'])->name('send');
@@ -241,6 +250,29 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/', [App\Http\Controllers\User\ChatbotController::class, 'index'])->name('index');
         Route::post('/{session}/settings', [App\Http\Controllers\User\ChatbotController::class, 'updateSettings'])->name('settings');
         Route::post('/{session}/test', [App\Http\Controllers\User\ChatbotController::class, 'testChatbot'])->name('test');
+    });
+
+    // Products Management
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\ProductController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\User\ProductController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\User\ProductController::class, 'store'])->name('store');
+        Route::get('/{product}/edit', [App\Http\Controllers\User\ProductController::class, 'edit'])->name('edit');
+        Route::put('/{product}', [App\Http\Controllers\User\ProductController::class, 'update'])->name('update');
+        Route::delete('/{product}', [App\Http\Controllers\User\ProductController::class, 'destroy'])->name('destroy');
+        Route::post('/{product}/toggle-status', [App\Http\Controllers\User\ProductController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/{product}/duplicate', [App\Http\Controllers\User\ProductController::class, 'duplicate'])->name('duplicate');
+        Route::get('/{product}/message', [App\Http\Controllers\User\ProductController::class, 'getMessage'])->name('message');
+        Route::get('/api/list', [App\Http\Controllers\User\ProductController::class, 'getProducts'])->name('api.list');
+    });
+
+    // Human Agents Management (CRM)
+    Route::prefix('human-agents')->name('human-agents.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\HumanAgentController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\User\HumanAgentController::class, 'store'])->name('store');
+        Route::put('/{humanAgent}', [App\Http\Controllers\User\HumanAgentController::class, 'update'])->name('update');
+        Route::delete('/{humanAgent}', [App\Http\Controllers\User\HumanAgentController::class, 'destroy'])->name('destroy');
+        Route::post('/{humanAgent}/toggle-status', [App\Http\Controllers\User\HumanAgentController::class, 'toggleStatus'])->name('toggle-status');
     });
 
     // Telegram Bot Management
@@ -256,6 +288,8 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/session/check', [App\Http\Controllers\User\TelegramSessionController::class, 'checkSession'])->name('session.check');
         Route::post('/session/logout', [App\Http\Controllers\User\TelegramSessionController::class, 'logout'])->name('session.logout');
         Route::post('/session/delete', [App\Http\Controllers\User\TelegramSessionController::class, 'deleteSession'])->name('session.delete');
+        Route::post('/session/start-auto-reply', [App\Http\Controllers\User\TelegramSessionController::class, 'startAutoReply'])->name('session.start-auto-reply');
+        Route::post('/session/stop-auto-reply', [App\Http\Controllers\User\TelegramSessionController::class, 'stopAutoReply'])->name('session.stop-auto-reply');
         Route::post('/bots/{telegramBot}/toggle-active', [App\Http\Controllers\User\TelegramBotController::class, 'toggleActive'])->name('bots.toggle-active');
         Route::post('/bots/{telegramBot}/toggle-auto-reply', [App\Http\Controllers\User\TelegramBotController::class, 'toggleAutoReply'])->name('bots.toggle-auto-reply');
         Route::post('/bots/{telegramBot}/toggle-ai', [App\Http\Controllers\User\TelegramBotController::class, 'toggleAI'])->name('bots.toggle-ai');
@@ -276,6 +310,18 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/broadcast/history', [App\Http\Controllers\User\TelegramBroadcastController::class, 'history'])->name('broadcast.history');
     });
 
+    // CRM Chat App
+    Route::prefix('crm-chat')->name('crm-chat.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\CrmChatController::class, 'index'])->name('index');
+        Route::get('/connect/whatsapp', [App\Http\Controllers\User\CrmChatController::class, 'connectWhatsAppForm'])->name('connect.whatsapp');
+        Route::post('/connect/whatsapp', [App\Http\Controllers\User\CrmChatController::class, 'storeWhatsApp'])->name('connect.whatsapp.store');
+        Route::get('/connect/instagram', [App\Http\Controllers\User\CrmChatController::class, 'connectInstagramForm'])->name('connect.instagram');
+        Route::post('/connect/instagram', [App\Http\Controllers\User\CrmChatController::class, 'storeInstagram'])->name('connect.instagram.store');
+        Route::get('/connect/messenger', [App\Http\Controllers\User\CrmChatController::class, 'connectMessengerForm'])->name('connect.messenger');
+        Route::post('/connect/messenger', [App\Http\Controllers\User\CrmChatController::class, 'storeMessenger'])->name('connect.messenger.store');
+        Route::delete('/disconnect/{id}', [App\Http\Controllers\User\CrmChatController::class, 'disconnect'])->name('disconnect');
+    });
+
     // Top Up / Upgrade Package
     Route::get('/topup', [App\Http\Controllers\User\TopUpController::class, 'index'])->name('topup');
 
@@ -294,6 +340,12 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::put('/{template}', [App\Http\Controllers\User\TemplateController::class, 'update'])->name('update');
         Route::delete('/{template}', [App\Http\Controllers\User\TemplateController::class, 'destroy'])->name('destroy');
         Route::post('/{template}/duplicate', [App\Http\Controllers\User\TemplateController::class, 'duplicate'])->name('duplicate');
+    });
+
+    // Guides / Bantuan
+    Route::prefix('guides')->name('guides.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\GuideController::class, 'index'])->name('index');
+        Route::get('/{slug}', [App\Http\Controllers\User\GuideController::class, 'show'])->name('show');
     });
 
     // SMTP Settings
@@ -326,6 +378,12 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // FAQs
     Route::resource('faqs', App\Http\Controllers\Admin\FaqController::class);
+
+    // Guides
+    Route::prefix('guides')->name('guides.')->group(function () {
+        Route::resource('categories', App\Http\Controllers\Admin\GuideCategoryController::class);
+        Route::resource('articles', App\Http\Controllers\Admin\GuideArticleController::class);
+    });
 
     // Contacts
     Route::resource('contacts', App\Http\Controllers\Admin\ContactController::class)->only(['index', 'show', 'destroy']);
@@ -438,3 +496,28 @@ Route::middleware(['auth'])->prefix('payment')->name('payment.')->group(function
 // Payment Callback & Return (no auth required)
 Route::post('/payment/callback', [App\Http\Controllers\PaymentController::class, 'callback'])->name('payment.callback');
 Route::get('/payment/return', [App\Http\Controllers\PaymentController::class, 'return'])->name('payment.return');
+
+// Agent Authentication Routes
+Route::prefix('agent')->name('agent.')->group(function () {
+    // Guest routes (login)
+    Route::middleware('guest:agent')->group(function () {
+        Route::get('/login', [App\Http\Controllers\Agent\AuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [App\Http\Controllers\Agent\AuthController::class, 'login'])->name('login.post');
+    });
+
+    // Protected agent routes
+    Route::middleware('agent')->group(function () {
+        Route::post('/logout', [App\Http\Controllers\Agent\AuthController::class, 'logout'])->name('logout');
+        Route::get('/dashboard', [App\Http\Controllers\Agent\DashboardController::class, 'index'])->name('dashboard');
+
+        // Chat operations
+        Route::prefix('chat')->name('chat.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Agent\ChatController::class, 'index'])->name('index');
+            Route::get('/conversations', [App\Http\Controllers\Agent\ChatController::class, 'getConversations'])->name('conversations');
+            Route::get('/conversations/{conversation}/messages', [App\Http\Controllers\Agent\ChatController::class, 'getMessages'])->name('messages');
+            Route::post('/conversations/{conversation}/send', [App\Http\Controllers\Agent\ChatController::class, 'sendMessage'])->name('send');
+            Route::put('/conversations/{conversation}/status', [App\Http\Controllers\Agent\ChatController::class, 'updateStatus'])->name('status');
+            Route::post('/conversations/{conversation}/transfer', [App\Http\Controllers\Agent\ChatController::class, 'transferConversation'])->name('transfer');
+        });
+    });
+});

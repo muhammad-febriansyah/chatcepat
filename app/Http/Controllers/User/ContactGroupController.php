@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ContactGroup;
 use App\Models\ContactGroupMember;
 use App\Models\WhatsappSession;
+use App\Models\WhatsappContact;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,9 +39,23 @@ class ContactGroupController extends Controller
             ->where('status', 'connected')
             ->get();
 
+        // Get user's WhatsApp contacts for selection
+        $contacts = WhatsappContact::where('user_id', $user->id)
+            ->where('is_group', false)
+            ->orderBy('push_name')
+            ->get()
+            ->map(function ($contact) {
+                return [
+                    'id' => $contact->id,
+                    'phone_number' => $contact->phone_number,
+                    'name' => $contact->push_name ?? $contact->display_name ?? $contact->phone_number,
+                ];
+            });
+
         return Inertia::render('user/contact-groups/index', [
             'groups' => $groups,
             'sessions' => $sessions,
+            'contacts' => $contacts,
         ]);
     }
 

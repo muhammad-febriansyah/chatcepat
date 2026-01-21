@@ -23,6 +23,7 @@ import {
     Landmark,
     Receipt,
     Brain,
+    BookOpen,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -130,6 +131,21 @@ export const adminNavigation: AdminNavGroup[] = [
             {
                 title: 'Kategori',
                 href: '/admin/blog/categories',
+                icon: FolderOpen,
+            },
+        ],
+    },
+    {
+        title: 'Panduan Ekosistem',
+        items: [
+            {
+                title: 'Artikel Panduan',
+                href: '/admin/guides/articles',
+                icon: BookOpen,
+            },
+            {
+                title: 'Kategori Panduan',
+                href: '/admin/guides/categories',
                 icon: FolderOpen,
             },
         ],

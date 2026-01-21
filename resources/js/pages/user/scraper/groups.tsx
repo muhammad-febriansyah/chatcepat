@@ -380,7 +380,7 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                                                             {session.status === 'connected' ? (
                                                                 <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 font-medium">
                                                                     <CheckCircle2 className="size-3" />
-                                                                    Connected
+                                                                    Terhubung
                                                                 </span>
                                                             ) : (
                                                                 <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">

@@ -37,6 +37,9 @@ import {
     Reply,
     Lock,
     Crown,
+    Package,
+    UserCog,
+    BookOpen,
 } from 'lucide-react'
 import { Link, router, usePage } from '@inertiajs/react'
 import { cn } from '@/lib/utils'
@@ -49,6 +52,7 @@ import { Badge } from '@/components/ui/badge'
 export function UserSidebar() {
     const { url, props } = usePage<SharedData>()
     const user = props.auth?.user
+    const settings = props.settings
     const hasSubscription = user?.subscription?.has_subscription ?? false
     const subscription = user?.subscription?.subscription
     const featureKeys = subscription?.feature_keys ?? []
@@ -61,12 +65,24 @@ export function UserSidebar() {
         return featureKeys.includes(key)
     }
 
+    // Helper to check if any path in array matches current URL
+    const isAnyActive = (paths: string[]): boolean => {
+        return paths.some(path => url.startsWith(path))
+    }
+
+    // Determine which sections should be open based on active URL
+    const isScrapingActive = isAnyActive(['/user/scraper'])
+    const isBroadcastActive = isAnyActive(['/user/broadcast', '/user/contact-groups'])
+    const isChatbotActive = isAnyActive(['/user/chatbot', '/user/reply-manual'])
+    const isPlatformsActive = isAnyActive(['/user/telegram', '/user/whatsapp'])
+    const isTemplatesActive = isAnyActive(['/user/templates', '/user/products'])
+
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-        scraping: true,
-        broadcast: true,
-        chatbot: false,
-        platforms: false,
-        templates: false,
+        scraping: isScrapingActive,
+        broadcast: isBroadcastActive,
+        chatbot: isChatbotActive,
+        platforms: isPlatformsActive,
+        templates: isTemplatesActive,
     })
 
     const handleLogout = () => {
@@ -81,7 +97,7 @@ export function UserSidebar() {
     }
 
     const isActive = (path: string) => {
-        return url === path
+        return url === path || url.startsWith(path + '/')
     }
 
     // Handle locked feature click - redirect to upgrade page
@@ -116,13 +132,23 @@ export function UserSidebar() {
 
     return (
         <Sidebar className="border-r">
-            <SidebarHeader className="border-b px-6 py-4">
-                <div className="flex items-center gap-2">
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-primary">
-                        <MessageCircle className="size-6 text-white" />
-                    </div>
-                    <span className="text-xl font-bold text-primary">ChatCepat</span>
-                </div>
+            <SidebarHeader className="border-b">
+                <Link
+                    href="/user/dashboard"
+                    className="group flex items-center justify-center px-4 py-4 transition-all"
+                >
+                    {settings?.logo ? (
+                        <img
+                            src={`/storage/${settings.logo}`}
+                            alt={settings.site_name || 'Logo'}
+                            className="h-8 w-auto object-contain transition-transform duration-150 group-hover:scale-[1.02]"
+                        />
+                    ) : (
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform duration-150 group-hover:scale-[1.02]">
+                            <MessageCircle className="h-5 w-5" strokeWidth={2} />
+                        </div>
+                    )}
+                </Link>
             </SidebarHeader>
 
             <SidebarContent className="px-3 py-2">
@@ -185,6 +211,8 @@ export function UserSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
+
+
                 {/* KOMUNIKASI & CHAT */}
                 <SidebarGroup>
                     <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider px-2">
@@ -194,8 +222,15 @@ export function UserSidebar() {
                         <SidebarMenu>
                             <SidebarMenuItem>
                                 {hasFeature('crm_chat') ? (
-                                    <SidebarMenuButton asChild className="h-10 rounded-lg">
-                                        <Link href="/user/whatsapp">
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith('/user/crm-chat')}
+                                        className={cn(
+                                            'h-10 rounded-lg',
+                                            url.startsWith('/user/crm-chat') && 'bg-primary/10 text-primary font-semibold'
+                                        )}
+                                    >
+                                        <Link href="/user/crm-chat">
                                             <MessageSquare className="size-5" />
                                             <span>CRM Chat App</span>
                                         </Link>
@@ -222,9 +257,16 @@ export function UserSidebar() {
                             >
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton className={cn('h-10 rounded-lg', !hasFeature('scraper_gmaps') && !hasFeature('scraper_contacts') && !hasFeature('scraper_groups') && 'opacity-50')}>
+                                        <SidebarMenuButton
+                                            isActive={isScrapingActive}
+                                            className={cn(
+                                                'h-10 rounded-lg',
+                                                isScrapingActive && 'bg-primary/10 text-primary font-semibold',
+                                                !hasFeature('scraper_gmaps') && !hasFeature('scraper_contacts') && !hasFeature('scraper_groups') && 'opacity-50'
+                                            )}
+                                        >
                                             <Users className="size-5" />
-                                            <span>Scraping Contacts</span>
+                                            <span>Scraping Kontak</span>
                                             {!hasFeature('scraper_gmaps') && !hasFeature('scraper_contacts') && !hasFeature('scraper_groups') && <Lock className="size-4 text-muted-foreground" />}
                                             <ChevronRight
                                                 className={cn(
@@ -241,6 +283,9 @@ export function UserSidebar() {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={isActive('/user/scraper')}
+                                                        className={cn(
+                                                            isActive('/user/scraper') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
                                                     >
                                                         <Link href="/user/scraper">
                                                             <MapPin className="size-4" />
@@ -256,14 +301,17 @@ export function UserSidebar() {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={isActive('/user/scraper/contacts')}
+                                                        className={cn(
+                                                            isActive('/user/scraper/contacts') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
                                                     >
                                                         <Link href="/user/scraper/contacts">
                                                             <User className="size-4" />
-                                                            <span>Contacts HP</span>
+                                                            <span>Kontak HP</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={User} label="Contacts HP" />
+                                                    <LockedSubMenuButton icon={User} label="Kontak HP" />
                                                 )}
                                             </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
@@ -271,14 +319,17 @@ export function UserSidebar() {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={isActive('/user/scraper/groups')}
+                                                        className={cn(
+                                                            isActive('/user/scraper/groups') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
                                                     >
                                                         <Link href="/user/scraper/groups">
                                                             <MessageCircle className="size-4" />
-                                                            <span>Group WhatsApp</span>
+                                                            <span>Grup WhatsApp</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={MessageCircle} label="Group WhatsApp" />
+                                                    <LockedSubMenuButton icon={MessageCircle} label="Grup WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
                                         </SidebarMenuSub>
@@ -293,7 +344,14 @@ export function UserSidebar() {
                             >
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton className={cn('h-10 rounded-lg', !hasFeature('broadcast_wa') && !hasFeature('broadcast_group') && 'opacity-50')}>
+                                        <SidebarMenuButton
+                                            isActive={isBroadcastActive}
+                                            className={cn(
+                                                'h-10 rounded-lg',
+                                                isBroadcastActive && 'bg-primary/10 text-primary font-semibold',
+                                                !hasFeature('broadcast_wa') && !hasFeature('broadcast_group') && 'opacity-50'
+                                            )}
+                                        >
                                             <Megaphone className="size-5" />
                                             <span>Broadcast Pesan</span>
                                             {!hasFeature('broadcast_wa') && !hasFeature('broadcast_group') && <Lock className="size-4 text-muted-foreground" />}
@@ -312,6 +370,9 @@ export function UserSidebar() {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={isActive('/user/broadcast')}
+                                                        className={cn(
+                                                            isActive('/user/broadcast') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
                                                     >
                                                         <Link href="/user/broadcast">
                                                             <MessageCircle className="size-4" />
@@ -327,14 +388,17 @@ export function UserSidebar() {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={isActive('/user/broadcast/groups')}
+                                                        className={cn(
+                                                            isActive('/user/broadcast/groups') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
                                                     >
                                                         <Link href="/user/broadcast/groups">
                                                             <Users className="size-4" />
-                                                            <span>Broadcast Group WhatsApp</span>
+                                                            <span>Broadcast Grup WhatsApp</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={Users} label="Broadcast Group WhatsApp" />
+                                                    <LockedSubMenuButton icon={Users} label="Broadcast Grup WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
@@ -342,6 +406,9 @@ export function UserSidebar() {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={isActive('/user/contact-groups')}
+                                                        className={cn(
+                                                            isActive('/user/contact-groups') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
                                                     >
                                                         <Link href="/user/contact-groups">
                                                             <Database className="size-4" />
@@ -373,7 +440,14 @@ export function UserSidebar() {
                             >
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton className={cn('h-10 rounded-lg', !hasFeature('reply_manual') && !hasFeature('chatbot_ai') && 'opacity-50')}>
+                                        <SidebarMenuButton
+                                            isActive={isChatbotActive}
+                                            className={cn(
+                                                'h-10 rounded-lg',
+                                                isChatbotActive && 'bg-primary/10 text-primary font-semibold',
+                                                !hasFeature('reply_manual') && !hasFeature('chatbot_ai') && 'opacity-50'
+                                            )}
+                                        >
                                             <Bot className="size-5" />
                                             <span>Chat Otomatis</span>
                                             {!hasFeature('reply_manual') && !hasFeature('chatbot_ai') && <Lock className="size-4 text-muted-foreground" />}
@@ -431,6 +505,27 @@ export function UserSidebar() {
                                     </CollapsibleContent>
                                 </SidebarMenuItem>
                             </Collapsible>
+
+                            {/* Human Agents - CRM */}
+                            <SidebarMenuItem>
+                                {hasFeature('human_agents') ? (
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith('/user/human-agents')}
+                                        className={cn(
+                                            'h-10 rounded-lg',
+                                            url.startsWith('/user/human-agents') && 'bg-primary/10 text-primary font-semibold'
+                                        )}
+                                    >
+                                        <Link href="/user/human-agents">
+                                            <UserCog className="size-5" />
+                                            <span>Human Agents</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                ) : (
+                                    <LockedMenuButton icon={UserCog} label="Human Agents" />
+                                )}
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
@@ -448,7 +543,14 @@ export function UserSidebar() {
                             >
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton className={cn('h-10 rounded-lg', !hasFeature('platforms') && 'opacity-50')}>
+                                        <SidebarMenuButton
+                                            isActive={isPlatformsActive}
+                                            className={cn(
+                                                'h-10 rounded-lg',
+                                                isPlatformsActive && 'bg-primary/10 text-primary font-semibold',
+                                                !hasFeature('platforms') && 'opacity-50'
+                                            )}
+                                        >
                                             <Layers className="size-5" />
                                             <span>Kelola Platforms</span>
                                             {!hasFeature('platforms') && <Lock className="size-4 text-muted-foreground" />}
@@ -464,7 +566,13 @@ export function UserSidebar() {
                                         <SidebarMenuSub>
                                             <SidebarMenuSubItem>
                                                 {hasFeature('platforms') ? (
-                                                    <SidebarMenuSubButton asChild>
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={url.startsWith('/user/whatsapp')}
+                                                        className={cn(
+                                                            url.startsWith('/user/whatsapp') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
                                                         <Link href="/user/whatsapp">
                                                             <MessageCircle className="size-4 text-green-600" />
                                                             <span>WhatsApp Personal</span>
@@ -479,6 +587,9 @@ export function UserSidebar() {
                                                     <SidebarMenuSubButton
                                                         asChild
                                                         isActive={url.startsWith('/user/telegram')}
+                                                        className={cn(
+                                                            url.startsWith('/user/telegram') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
                                                     >
                                                         <Link href="/user/telegram">
                                                             <Bot className="size-4 text-blue-500" />
@@ -510,7 +621,14 @@ export function UserSidebar() {
                             >
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
-                                        <SidebarMenuButton className={cn('h-10 rounded-lg', !hasFeature('templates') && 'opacity-50')}>
+                                        <SidebarMenuButton
+                                            isActive={isTemplatesActive}
+                                            className={cn(
+                                                'h-10 rounded-lg',
+                                                isTemplatesActive && 'bg-primary/10 text-primary font-semibold',
+                                                !hasFeature('templates') && 'opacity-50'
+                                            )}
+                                        >
                                             <FileText className="size-5" />
                                             <span>Template Pesan</span>
                                             {!hasFeature('templates') && <Lock className="size-4 text-muted-foreground" />}
@@ -526,7 +644,13 @@ export function UserSidebar() {
                                         <SidebarMenuSub>
                                             <SidebarMenuSubItem>
                                                 {hasFeature('templates') ? (
-                                                    <SidebarMenuSubButton asChild>
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={url.startsWith('/user/templates')}
+                                                        className={cn(
+                                                            url.startsWith('/user/templates') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
                                                         <Link href="/user/templates?type=whatsapp">
                                                             <MessageCircle className="size-4" />
                                                             <span>Template WhatsApp</span>
@@ -536,6 +660,23 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={MessageCircle} label="Template WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
+                                            {/* Katalog Produk - Hidden for now
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('templates') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={url.startsWith('/user/products')}
+                                                    >
+                                                        <Link href="/user/products">
+                                                            <Package className="size-4" />
+                                                            <span>Katalog Produk</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={Package} label="Katalog Produk" />
+                                                )}
+                                            </SidebarMenuSubItem>
+                                            */}
                                         </SidebarMenuSub>
                                     </CollapsibleContent>
                                 </SidebarMenuItem>
@@ -544,7 +685,7 @@ export function UserSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* Master Data */}
+                {/* Daftar Kontak */}
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
@@ -553,15 +694,18 @@ export function UserSidebar() {
                                     <SidebarMenuButton
                                         asChild
                                         isActive={isActive('/user/contacts')}
-                                        className="h-10 rounded-lg"
+                                        className={cn(
+                                            'h-10 rounded-lg',
+                                            isActive('/user/contacts') && 'bg-primary/10 text-primary font-semibold'
+                                        )}
                                     >
                                         <Link href="/user/contacts">
-                                            <Database className="size-5" />
-                                            <span>Master Data</span>
+                                            <Users className="size-5" />
+                                            <span>Daftar Kontak</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 ) : (
-                                    <LockedMenuButton icon={Database} label="Master Data" />
+                                    <LockedMenuButton icon={Users} label="Daftar Kontak" />
                                 )}
                             </SidebarMenuItem>
                         </SidebarMenu>
@@ -579,7 +723,10 @@ export function UserSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={isActive('/user/topup')}
-                                    className="h-10 rounded-lg"
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        isActive('/user/topup') && 'bg-primary/10 text-primary font-semibold'
+                                    )}
                                 >
                                     <Link href="/user/topup">
                                         <ArrowUpCircle className="size-5" />
@@ -591,12 +738,41 @@ export function UserSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={isActive('/user/transactions') || url.startsWith('/user/transactions/')}
-                                    className="h-10 rounded-lg"
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        (isActive('/user/transactions') || url.startsWith('/user/transactions/')) && 'bg-primary/10 text-primary font-semibold'
+                                    )}
                                 >
                                     <Link href="/user/transactions">
                                         <Receipt className="size-5" />
                                         <span>Riwayat Transaksi</span>
                                     </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                {/* DUKUNGAN */}
+                <SidebarGroup>
+                    <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider px-2">
+                        Dukungan
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={url.startsWith('/user/guides')}
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        url.startsWith('/user/guides') && 'bg-primary/10 text-primary font-semibold'
+                                    )}
+                                >
+                                    <a href="/user/guides" target="_blank" rel="noopener noreferrer">
+                                        <BookOpen className="size-5" />
+                                        <span>Pusat Bantuan</span>
+                                    </a>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>
@@ -610,7 +786,7 @@ export function UserSidebar() {
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-{/* SMTP Settings - Hidden for now
+                            {/* SMTP Settings - Hidden for now
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
@@ -619,7 +795,7 @@ export function UserSidebar() {
                                 >
                                     <Link href="/user/smtp-settings">
                                         <Mail className="size-5" />
-                                        <span>SMTP Settings</span>
+                                        <span>Pengaturan SMTP</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
@@ -628,7 +804,10 @@ export function UserSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={isActive('/user/account')}
-                                    className="h-10 rounded-lg"
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        isActive('/user/account') && 'bg-primary/10 text-primary font-semibold'
+                                    )}
                                 >
                                     <Link href="/user/account">
                                         <Settings className="size-5" />
@@ -639,6 +818,7 @@ export function UserSidebar() {
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+
             </SidebarContent>
 
             <SidebarFooter className="border-t p-3">

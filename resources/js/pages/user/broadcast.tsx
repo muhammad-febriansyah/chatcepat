@@ -167,11 +167,15 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
 
             <div className="space-y-6">
                 {/* Header */}
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">WhatsApp Broadcast</h1>
-                    <p className="text-muted-foreground mt-2">
-                        Kirim pesan massal dengan text dan file
-                    </p>
+                {/* Header */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
+                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
+                    <div className="relative">
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">WhatsApp Broadcast</h1>
+                        <p className="text-muted-foreground mt-1">
+                            Kirim pesan massal dengan text dan file
+                        </p>
+                    </div>
                 </div>
 
                 {connectedSessions.length === 0 ? (
@@ -195,7 +199,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                             {/* Left Column - Form */}
                             <div className="space-y-6">
                                 {/* Session Selection */}
-                                <Card>
+                                <Card className="overflow-hidden border-2">
+                                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                     <CardHeader>
                                         <CardTitle>Pilih Sesi WhatsApp</CardTitle>
                                         <CardDescription>
@@ -225,7 +230,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                 </Card>
 
                                 {/* Message */}
-                                <Card>
+                                <Card className="overflow-hidden border-2">
+                                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                     <CardHeader>
                                         <CardTitle>Pesan</CardTitle>
                                         <CardDescription>
@@ -294,7 +300,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                             {/* Right Column - Recipients */}
                             <div className="space-y-4">
                                 {/* Dari Kontak */}
-                                <Card>
+                                <Card className="overflow-hidden border-2">
+                                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <UserPlus className="size-5 text-primary" />
@@ -363,7 +370,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                 </Card>
 
                                 {/* Dari Grup Kontak */}
-                                <Card>
+                                <Card className="overflow-hidden border-2">
+                                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <FolderOpen className="size-5 text-primary" />
@@ -437,7 +445,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                 </Card>
 
                                 {/* Input Manual */}
-                                <Card>
+                                <Card className="overflow-hidden border-2">
+                                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <Edit className="size-5 text-primary" />
@@ -475,7 +484,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                 </Card>
 
                                 {/* Recipients List */}
-                                <Card>
+                                <Card className="overflow-hidden border-2">
+                                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
                                             <div>
@@ -536,7 +546,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                         </div>
 
                         {/* Submit Button */}
-                        <Card>
+                        <Card className="overflow-hidden border-2">
+                            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                             <CardContent className="pt-6">
                                 <div className="flex items-center justify-between">
                                     <div>

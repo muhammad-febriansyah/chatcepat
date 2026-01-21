@@ -107,7 +107,8 @@ export default function TemplatesIndex({ templates, stats, currentType }: Templa
 
                 {/* Statistics */}
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card>
+                    <Card className="overflow-hidden border-2">
+                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Template</CardTitle>
                             <FileText className="size-4 text-muted-foreground" />
@@ -120,7 +121,8 @@ export default function TemplatesIndex({ templates, stats, currentType }: Templa
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="overflow-hidden border-2">
+                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Template WhatsApp</CardTitle>
                             <MessageCircle className="size-4 text-green-600" />
@@ -133,7 +135,8 @@ export default function TemplatesIndex({ templates, stats, currentType }: Templa
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="overflow-hidden border-2">
+                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Template Email</CardTitle>
                             <Mail className="size-4 text-blue-600" />

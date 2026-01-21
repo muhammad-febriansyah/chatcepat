@@ -22,7 +22,12 @@ import {
     Plus,
     Trash2,
     WifiOff,
+    Smartphone,
+    Wifi,
+    Settings,
+    Zap,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface WhatsAppSession {
     id: number;
@@ -53,44 +58,52 @@ export default function WhatsAppIndex({
         }
     };
 
-    const getStatusBadge = (status: string) => {
+    // Calculate max slots to show based on session limit
+    const maxSlots = userRole === 'admin' ? Math.max(6, sessions.length + 3) :
+        typeof sessionLimit === 'number' ? Math.max(sessionLimit, sessions.length) : 6;
+
+    // Create array of slots with sessions and empty slots
+    const slots = Array.from({ length: maxSlots }, (_, index) => {
+        return sessions[index] || null;
+    });
+
+    const getStatusInfo = (status: string) => {
         switch (status) {
             case 'connected':
-                return (
-                    <Badge className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
-                        <CheckCircle2 className="size-3" />
-                        Terhubung
-                    </Badge>
-                );
+                return {
+                    badge: <Badge className="bg-green-500 hover:bg-green-600"><Wifi className="size-3 mr-1" />Terhubung</Badge>,
+                    color: 'border-green-500',
+                    bg: 'bg-green-50',
+                    icon: 'bg-green-100 text-green-600',
+                };
             case 'qr_pending':
-                return (
-                    <Badge className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-600">
-                        <Clock className="size-3" />
-                        Menunggu QR
-                    </Badge>
-                );
+                return {
+                    badge: <Badge className="bg-yellow-500 hover:bg-yellow-600"><Clock className="size-3 mr-1" />Menunggu QR</Badge>,
+                    color: 'border-yellow-500',
+                    bg: 'bg-yellow-50',
+                    icon: 'bg-yellow-100 text-yellow-600',
+                };
             case 'disconnected':
-                return (
-                    <Badge
-                        variant="secondary"
-                        className="flex items-center gap-1"
-                    >
-                        <WifiOff className="size-3" />
-                        Terputus
-                    </Badge>
-                );
+                return {
+                    badge: <Badge variant="secondary"><WifiOff className="size-3 mr-1" />Terputus</Badge>,
+                    color: 'border-gray-300',
+                    bg: 'bg-gray-50',
+                    icon: 'bg-gray-100 text-gray-600',
+                };
             case 'failed':
-                return (
-                    <Badge
-                        variant="destructive"
-                        className="flex items-center gap-1"
-                    >
-                        <AlertCircle className="size-3" />
-                        Gagal
-                    </Badge>
-                );
+                return {
+                    badge: <Badge variant="destructive"><AlertCircle className="size-3 mr-1" />Gagal</Badge>,
+                    color: 'border-red-500',
+                    bg: 'bg-red-50',
+                    icon: 'bg-red-100 text-red-600',
+                };
             default:
-                return <Badge variant="outline">{status}</Badge>;
+                return {
+                    badge: <Badge variant="outline">{status}</Badge>,
+                    color: 'border-gray-300',
+                    bg: 'bg-gray-50',
+                    icon: 'bg-gray-100 text-gray-600',
+                };
         }
     };
 
@@ -98,214 +111,216 @@ export default function WhatsAppIndex({
         <UserLayout>
             <Head title="WhatsApp Management" />
 
-            <div className="space-y-6">
-                {/* Header with gradient background */}
-                <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 p-8 text-white shadow-lg">
-                    <div className="relative z-10 flex items-center justify-between">
+            <div className="space-y-4">
+                {/* Header */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
+                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
+                    <div className="relative flex items-center justify-between">
                         <div>
-                            <div className="mb-2 flex items-center gap-3">
-                                <div className="rounded-lg bg-white/20 p-2 backdrop-blur-sm">
-                                    <MessageSquare className="size-6" />
-                                </div>
-                                <h1 className="text-3xl font-bold tracking-tight">
-                                    WhatsApp Management
-                                </h1>
-                            </div>
-                            <p className="mt-2 flex items-center gap-2 text-green-50">
-                                <span>
-                                    Kelola sesi WhatsApp Anda dengan mudah
-                                </span>
-                                {userRole !== 'admin' && (
-                                    <Badge
-                                        variant="secondary"
-                                        className="border-white/30 bg-white/20 text-white"
-                                    >
-                                        {sessions.length}/{sessionLimit} Sesi
-                                    </Badge>
-                                )}
+                            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                                Koneksi Platform
+                            </h1>
+                            <p className="text-muted-foreground mt-1">
+                                Kelola koneksi WhatsApp dan status perangkat Anda
                             </p>
                         </div>
-                        {canCreateMore ? (
-                            <Link href="/user/whatsapp/create">
-                                <Button
-                                    size="lg"
-                                    className="bg-white text-green-600 shadow-md hover:bg-green-50"
-                                >
-                                    <Plus className="mr-2 size-5" />
-                                    Buat Sesi Baru
-                                </Button>
-                            </Link>
-                        ) : (
-                            <Button
-                                size="lg"
-                                disabled
-                                className="bg-white/50 text-green-800"
-                                title="Anda sudah mencapai batas maksimal sesi"
-                            >
-                                <Plus className="mr-2 size-5" />
-                                Buat Sesi Baru
-                            </Button>
-                        )}
+                        <div className="flex gap-3">
+                            {userRole !== 'admin' && (
+                                <Badge variant="secondary" className="px-3">
+                                    Kuota: {sessions.length} / {sessionLimit}
+                                </Badge>
+                            )}
+                            {canCreateMore && (
+                                <Link href="/user/whatsapp/create">
+                                    <Button size="lg" className="gap-2">
+                                        <Plus className="size-4" />
+                                        Tambah Perangkat
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
                     </div>
-                    {/* Decorative elements */}
-                    <div className="absolute top-0 right-0 -mt-4 -mr-4 size-32 rounded-full bg-white/10 blur-3xl"></div>
-                    <div className="absolute bottom-0 left-0 -mb-4 -ml-4 size-24 rounded-full bg-white/10 blur-2xl"></div>
                 </div>
+
+                {/* Device Slots Grid */}
+                <Card className="overflow-hidden border-2">
+                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                    <CardHeader className="border-b pb-3">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Smartphone className="size-5 text-primary" />
+                                    Perangkat WhatsApp
+                                </CardTitle>
+                                <CardDescription>
+                                    {sessions.filter(s => s.status === 'connected').length} dari {sessions.length} perangkat terhubung
+                                </CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                            {slots.map((session, index) => (
+                                session ? (
+                                    // Connected/Active Session Card
+                                    <Card
+                                        key={session.id}
+                                        className={cn(
+                                            "border-l-4 transition-all hover:shadow-md cursor-pointer",
+                                            getStatusInfo(session.status).color,
+                                            getStatusInfo(session.status).bg
+                                        )}
+                                        onClick={() => router.visit(`/user/whatsapp/${session.id}`)}
+                                    >
+                                        <CardContent className="p-4">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className={cn(
+                                                    "p-2 rounded-lg",
+                                                    getStatusInfo(session.status).icon
+                                                )}>
+                                                    <Phone className="size-5" />
+                                                </div>
+                                                {getStatusInfo(session.status).badge}
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <h3 className="font-semibold text-base truncate">
+                                                    {session.name}
+                                                </h3>
+                                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                    <Phone className="size-3" />
+                                                    {session.phone_number || 'Tidak ada nomor'}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-3 mt-3 pt-3 border-t text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-1">
+                                                    <MessageSquare className="size-3" />
+                                                    <span>{session.messages_count || 0}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Calendar className="size-3" />
+                                                    <span>
+                                                        {format(new Date(session.created_at), 'dd MMM', { locale: id })}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2 mt-3">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1 h-8 text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.visit(`/user/whatsapp/${session.id}`);
+                                                    }}
+                                                >
+                                                    <Settings className="size-3 mr-1" />
+                                                    Kelola
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1 h-8 text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.visit(`/user/whatsapp/${session.id}/auto-replies`);
+                                                    }}
+                                                >
+                                                    <Zap className="size-3 mr-1" />
+                                                    Auto Reply
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-destructive hover:bg-red-50 h-8 px-2"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(session.id);
+                                                    }}
+                                                >
+                                                    <Trash2 className="size-3" />
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ) : (
+                                    // Empty Slot Card
+                                    <Card
+                                        key={`empty-${index}`}
+                                        className="border-2 border-dashed border-gray-200 bg-gray-50/50 hover:border-green-300 hover:bg-green-50/30 transition-all"
+                                    >
+                                        <CardContent className="flex flex-col items-center justify-center py-8">
+                                            <div className="p-3 rounded-full bg-gray-100 mb-3">
+                                                <Plus className="size-6 text-gray-400" />
+                                            </div>
+                                            <p className="text-muted-foreground text-sm font-medium mb-3">
+                                                Slot Kosong
+                                            </p>
+                                            {canCreateMore ? (
+                                                <Link href="/user/whatsapp/create">
+                                                    <Button variant="outline" size="sm">
+                                                        Tambah Akun
+                                                    </Button>
+                                                </Link>
+                                            ) : (
+                                                <Button variant="outline" size="sm" disabled>
+                                                    Slot Penuh
+                                                </Button>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                )
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Session Limit Warning */}
                 {!canCreateMore && userRole !== 'admin' && (
-                    <Card className="border-yellow-500 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950">
-                        <CardContent className="pt-6">
+                    <Card className="border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50">
+                        <CardContent className="p-4">
                             <div className="flex items-start gap-3">
-                                <AlertCircle className="mt-0.5 size-5 flex-shrink-0 text-yellow-600 dark:text-yellow-400" />
-                                <div>
-                                    <p className="mb-1 font-semibold text-yellow-900 dark:text-yellow-100">
-                                        Batas Sesi Tercapai
+                                <AlertCircle className="mt-0.5 size-4 flex-shrink-0 text-yellow-600" />
+                                <div className="flex-1">
+                                    <p className="mb-1 font-semibold text-sm text-yellow-900">
+                                        Batas Slot Tercapai
                                     </p>
-                                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                                        Anda sudah mencapai batas maksimal{' '}
-                                        {sessionLimit} sesi WhatsApp untuk akun
-                                        user biasa. Untuk membuat lebih banyak
-                                        sesi, silakan hubungi admin atau upgrade
-                                        ke akun premium.
+                                    <p className="text-xs text-yellow-800">
+                                        Anda sudah mencapai batas maksimal {sessionLimit} slot WhatsApp.
+                                        Untuk menambah slot, silakan upgrade ke paket yang lebih tinggi.
                                     </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Sessions List */}
-                {sessions.length > 0 ? (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {sessions.map((session) => (
-                            <Card
-                                key={session.id}
-                                className="group border-l-4 border-l-green-500 transition-all duration-300 hover:shadow-lg"
-                            >
-                                <CardHeader className="pb-3">
-                                    <div className="mb-3 flex items-start justify-between">
-                                        <div className="flex flex-1 items-start gap-3">
-                                            <div
-                                                className={`rounded-lg p-2 ${session.status === 'connected' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}
-                                            >
-                                                <Phone className="size-5" />
-                                            </div>
-                                            <div className="min-w-0 flex-1 space-y-1">
-                                                <CardTitle className="truncate text-lg transition-colors group-hover:text-green-600">
-                                                    {session.name}
-                                                </CardTitle>
-                                                <CardDescription className="flex items-center gap-1">
-                                                    <Phone className="size-3" />
-                                                    {session.phone_number}
-                                                </CardDescription>
-                                            </div>
-                                        </div>
-                                        {getStatusBadge(session.status)}
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {/* Stats */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="rounded-lg border border-blue-100 bg-gradient-to-br from-blue-50 to-cyan-50 p-3 dark:border-blue-900 dark:from-blue-950/50 dark:to-cyan-950/50">
-                                            <div className="mb-1 flex items-center gap-2">
-                                                <MessageSquare className="size-4 text-blue-600 dark:text-blue-400" />
-                                                <span className="text-xs text-muted-foreground">
-                                                    Pesan
-                                                </span>
-                                            </div>
-                                            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                                                {session.messages_count || 0}
-                                            </p>
-                                        </div>
-                                        <div className="rounded-lg border border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50 p-3 dark:border-purple-900 dark:from-purple-950/50 dark:to-pink-950/50">
-                                            <div className="mb-1 flex items-center gap-2">
-                                                <Calendar className="size-4 text-purple-600 dark:text-purple-400" />
-                                                <span className="text-xs text-muted-foreground">
-                                                    Dibuat
-                                                </span>
-                                            </div>
-                                            <p className="text-xs font-medium text-purple-600 dark:text-purple-400">
-                                                {format(
-                                                    new Date(
-                                                        session.created_at,
-                                                    ),
-                                                    'dd MMM yyyy',
-                                                    { locale: id },
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex gap-2 pt-2">
-                                        <Link
-                                            href={`/user/whatsapp/${session.id}`}
-                                            className="flex-1"
-                                        >
-                                            <Button
-                                                variant="default"
-                                                className="w-full bg-green-600 hover:bg-green-700"
-                                                size="sm"
-                                            >
-                                                <Eye className="mr-2 size-4" />
-                                                Kelola Sesi
-                                            </Button>
-                                        </Link>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-destructive hover:bg-red-50 hover:text-destructive dark:hover:bg-red-950/20"
-                                            onClick={() =>
-                                                handleDelete(session.id)
-                                            }
-                                        >
-                                            <Trash2 className="size-4" />
+                                    <Link href="/user/topup" className="mt-2 inline-block">
+                                        <Button size="sm" variant="outline" className="h-8 text-xs border-yellow-600 text-yellow-700 hover:bg-yellow-100">
+                                            Upgrade Paket
                                         </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                ) : (
-                    <Card className="border-2 border-dashed bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-                        <CardContent className="flex flex-col items-center justify-center py-20">
-                            <div className="mb-4 rounded-full bg-green-100 p-4 dark:bg-green-900/30">
-                                <MessageSquare className="size-16 text-green-600 dark:text-green-400" />
-                            </div>
-                            <h3 className="mb-2 text-center text-2xl font-bold">
-                                Belum Ada Sesi WhatsApp
-                            </h3>
-                            <p className="mb-6 max-w-md text-center text-muted-foreground">
-                                Mulai dengan membuat sesi WhatsApp pertama Anda
-                                untuk mengelola pesan dan kontak dengan mudah
-                            </p>
-                            <Link href="/user/whatsapp/create">
-                                <Button
-                                    size="lg"
-                                    className="bg-green-600 shadow-md hover:bg-green-700"
-                                >
-                                    <Plus className="mr-2 size-5" />
-                                    Buat Sesi Pertama
-                                </Button>
-                            </Link>
-                            <div className="mt-8 flex items-center gap-8 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 text-green-600" />
-                                    <span>Mudah digunakan</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 text-green-600" />
-                                    <span>Aman & Terpercaya</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <CheckCircle2 className="size-4 text-green-600" />
-                                    <span>Kelola Pesan</span>
+                                    </Link>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Quick Tips */}
+                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                    <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-full bg-green-100">
+                                <CheckCircle2 className="size-4 text-green-600" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-sm text-green-900 mb-1.5">Tips Penggunaan</h3>
+                                <ul className="text-xs text-green-800 space-y-0.5">
+                                    <li>• Klik "Tambah Perangkat" untuk menambah WhatsApp baru</li>
+                                    <li>• Scan QR Code dari aplikasi WhatsApp di HP Anda</li>
+                                    <li>• Setelah terhubung, atur Auto-Reply dan fitur lainnya</li>
+                                    <li>• Gunakan "Reply Manual" untuk chat langsung dengan pelanggan</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </UserLayout>
     );

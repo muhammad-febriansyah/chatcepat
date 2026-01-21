@@ -35,13 +35,16 @@ export default function TopUp({ packages }: TopUpProps) {
 
             <div className="space-y-6 md:space-y-8">
                 {/* Header Section */}
-                <div className="flex flex-col gap-2 px-1">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-                        Upgrade Paket
-                    </h1>
-                    <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
-                        Pilih paket yang sesuai dengan kebutuhan bisnis Anda
-                    </p>
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border mb-8">
+                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
+                    <div className="relative">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+                            Upgrade Paket
+                        </h1>
+                        <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-2">
+                            Pilih paket yang sesuai dengan kebutuhan bisnis Anda
+                        </p>
+                    </div>
                 </div>
 
                 {/* Pricing Cards */}

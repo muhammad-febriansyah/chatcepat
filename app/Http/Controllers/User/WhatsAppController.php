@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\WhatsappSession;
 use App\Models\WhatsappMessage;
 use App\Models\WhatsappContact;
+use App\Models\WhatsappAutoReply;
 use App\Models\AiAssistantType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,14 +29,15 @@ class WhatsAppController extends Controller
             ->latest()
             ->get();
 
-        // Check session limit
-        $canCreateMore = $user->role === 'admin' || $sessions->count() < 1;
+        // Get session limit from user's subscription package
+        $sessionLimit = $user->getWhatsappSessionLimit();
+        $canCreateMore = $user->canCreateMoreWhatsappSessions();
 
         return Inertia::render('user/whatsapp/index', [
             'sessions' => $sessions,
             'canCreateMore' => $canCreateMore,
             'userRole' => $user->role,
-            'sessionLimit' => $user->role === 'admin' ? 'unlimited' : 1,
+            'sessionLimit' => $sessionLimit === PHP_INT_MAX ? 'unlimited' : $sessionLimit,
         ]);
     }
 
@@ -46,14 +48,13 @@ class WhatsAppController extends Controller
     {
         $user = auth()->user();
 
-        // Check if user already has a session (unless admin)
-        if ($user->role !== 'admin') {
-            $existingSessionCount = WhatsappSession::where('user_id', $user->id)->count();
+        // Check if user can create more sessions based on their subscription
+        if (!$user->canCreateMoreWhatsappSessions()) {
+            $limit = $user->getWhatsappSessionLimit();
+            $limitText = $limit === PHP_INT_MAX ? 'unlimited' : $limit;
 
-            if ($existingSessionCount >= 1) {
-                return redirect()->route('user.whatsapp.index')
-                    ->with('error', 'Anda sudah memiliki 1 sesi WhatsApp. User biasa hanya dapat memiliki 1 sesi. Hubungi admin untuk upgrade.');
-            }
+            return redirect()->route('user.whatsapp.index')
+                ->with('error', "Anda sudah mencapai batas maksimal {$limitText} sesi WhatsApp untuk paket Anda. Silakan upgrade paket untuk menambah slot.");
         }
 
         // Get AI assistant types from database
@@ -61,8 +62,15 @@ class WhatsAppController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        // Get user's products
+        $products = \App\Models\Product::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->select('id', 'name', 'price', 'sale_price', 'short_description', 'description')
+            ->get();
+
         return Inertia::render('user/whatsapp/create', [
             'aiAssistantTypes' => $aiAssistantTypes,
+            'products' => $products,
         ]);
     }
 
@@ -86,7 +94,18 @@ class WhatsAppController extends Controller
         $validated = $request->validate([
             'phone_number' => 'required|string|max:20',
             'name' => 'required|string|max:255',
+            'creation_method' => 'required|in:manual,ai',
             'ai_assistant_type' => 'required|string|exists:ai_assistant_types,code',
+            'agent_category' => 'nullable|string',
+            'communication_tone' => 'nullable|string',
+            'primary_language' => 'nullable|string',
+            'ai_description' => 'nullable|string',
+            'products' => 'nullable|array',
+            'products.*.name' => 'required_with:products|string',
+            'products.*.price' => 'required_with:products|numeric',
+            'products.*.description' => 'nullable|string',
+            'products.*.purchase_link' => 'nullable|url',
+            'products.*.is_active' => 'boolean',
         ]);
 
         // Disconnect any existing sessions that are still in qr_pending or connecting status
@@ -133,10 +152,20 @@ class WhatsAppController extends Controller
                     ->withErrors(['error' => 'Session dibuat di gateway tapi tidak ditemukan di database']);
             }
 
-            // Update phone number and AI assistant type (gateway doesn't know these fields)
+            // Update phone number, AI assistant type, and AI configuration (gateway doesn't know these fields)
+            $aiConfig = [
+                'creation_method' => $validated['creation_method'],
+                'agent_category' => $validated['agent_category'] ?? null,
+                'communication_tone' => $validated['communication_tone'] ?? 'professional',
+                'primary_language' => $validated['primary_language'] ?? 'id',
+                'ai_description' => $validated['ai_description'] ?? null,
+                'products' => $validated['products'] ?? [],
+            ];
+
             $session->update([
                 'phone_number' => $validated['phone_number'],
                 'ai_assistant_type' => $validated['ai_assistant_type'],
+                'ai_config' => $aiConfig,
             ]);
 
             return redirect()->route('user.whatsapp.show', $session)
@@ -373,5 +402,156 @@ class WhatsAppController extends Controller
 
         return redirect()->route('user.whatsapp.index')
             ->with('success', 'WhatsApp session deleted successfully.');
+    }
+
+    /**
+     * Display auto-replies for a session
+     */
+    public function autoReplies(WhatsappSession $session): Response
+    {
+        if ($session->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to this session.');
+        }
+
+        $autoReplies = $session->autoReplies()
+            ->orderByDesc('priority')
+            ->get();
+
+        return Inertia::render('user/whatsapp/auto-replies', [
+            'session' => $session,
+            'autoReplies' => $autoReplies,
+        ]);
+    }
+
+    /**
+     * Store a new auto-reply rule
+     */
+    public function storeAutoReply(Request $request, WhatsappSession $session): RedirectResponse
+    {
+        if ($session->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to this session.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'trigger_type' => 'required|in:exact,contains,starts_with,regex,all',
+            'trigger_value' => 'nullable|required_unless:trigger_type,all|string|max:500',
+            'reply_type' => 'required|in:custom,openai',
+            'response_type' => 'required|in:text,photo,document',
+            'custom_reply' => 'required|string',
+            'response_media_url' => 'nullable|url|max:500',
+            'priority' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        $session->autoReplies()->create([
+            'name' => $validated['name'],
+            'trigger_type' => $validated['trigger_type'],
+            'trigger_value' => $validated['trigger_value'] ?? null,
+            'reply_type' => $validated['reply_type'],
+            'response_type' => $validated['response_type'],
+            'custom_reply' => $validated['custom_reply'],
+            'response_media_url' => $validated['response_media_url'] ?? null,
+            'priority' => $validated['priority'] ?? 0,
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'Auto-reply berhasil ditambahkan.');
+    }
+
+    /**
+     * Update an auto-reply rule
+     */
+    public function updateAutoReply(Request $request, WhatsappSession $session, WhatsappAutoReply $autoReply): RedirectResponse
+    {
+        if ($session->user_id !== auth()->id() || $autoReply->whatsapp_session_id !== $session->id) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'trigger_type' => 'required|in:exact,contains,starts_with,regex,all',
+            'trigger_value' => 'nullable|required_unless:trigger_type,all|string|max:500',
+            'reply_type' => 'required|in:custom,openai',
+            'response_type' => 'required|in:text,photo,document',
+            'custom_reply' => 'required|string',
+            'response_media_url' => 'nullable|url|max:500',
+            'priority' => 'nullable|integer|min:0|max:100',
+            'is_active' => 'boolean',
+        ]);
+
+        $autoReply->update([
+            'name' => $validated['name'],
+            'trigger_type' => $validated['trigger_type'],
+            'trigger_value' => $validated['trigger_value'] ?? null,
+            'reply_type' => $validated['reply_type'],
+            'response_type' => $validated['response_type'],
+            'custom_reply' => $validated['custom_reply'],
+            'response_media_url' => $validated['response_media_url'] ?? null,
+            'priority' => $validated['priority'] ?? 0,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
+
+        return redirect()->back()->with('success', 'Auto-reply berhasil diperbarui.');
+    }
+
+    /**
+     * Delete an auto-reply rule
+     */
+    public function destroyAutoReply(WhatsappSession $session, WhatsappAutoReply $autoReply): RedirectResponse
+    {
+        if ($session->user_id !== auth()->id() || $autoReply->whatsapp_session_id !== $session->id) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $autoReply->delete();
+
+        return redirect()->back()->with('success', 'Auto-reply berhasil dihapus.');
+    }
+
+    /**
+     * Toggle auto-reply for session
+     */
+    public function toggleAutoReply(WhatsappSession $session): RedirectResponse
+    {
+        if ($session->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to this session.');
+        }
+
+        $settings = $session->settings ?? [];
+        $settings['autoReplyEnabled'] = !($settings['autoReplyEnabled'] ?? false);
+
+        $session->update(['settings' => $settings]);
+
+        $status = $settings['autoReplyEnabled'] ? 'diaktifkan' : 'dinonaktifkan';
+
+        return redirect()->back()->with('success', "Auto-reply berhasil {$status}.");
+    }
+
+    /**
+     * Update session settings
+     */
+    public function updateSettings(Request $request, WhatsappSession $session): RedirectResponse
+    {
+        if ($session->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to this session.');
+        }
+
+        $validated = $request->validate([
+            'autoReplyEnabled' => 'boolean',
+            'autoSaveContacts' => 'boolean',
+        ]);
+
+        $settings = $session->settings ?? [];
+
+        if (isset($validated['autoReplyEnabled'])) {
+            $settings['autoReplyEnabled'] = $validated['autoReplyEnabled'];
+        }
+        if (isset($validated['autoSaveContacts'])) {
+            $settings['autoSaveContacts'] = $validated['autoSaveContacts'];
+        }
+
+        $session->update(['settings' => $settings]);
+
+        return redirect()->back()->with('success', 'Pengaturan berhasil disimpan.');
     }
 }

@@ -227,41 +227,44 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
             <TooltipProvider>
                 <div className="space-y-6">
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-primary/10">
-                                    <Bot className="size-7 text-primary" />
-                                </div>
-                                Chatbot AI
-                            </h1>
-                            <p className="text-muted-foreground mt-2">
-                                Atur chatbot AI untuk membalas pesan WhatsApp secara otomatis
-                            </p>
-                        </div>
-                        {selectedSession && (
-                            <div className="flex items-center gap-2">
-                                <Badge
-                                    variant={autoReplyEnabled ? 'default' : 'secondary'}
-                                    className={cn(
-                                        "px-3 py-1",
-                                        autoReplyEnabled && "bg-green-500 hover:bg-green-600"
-                                    )}
-                                >
-                                    {autoReplyEnabled ? (
-                                        <>
-                                            <Zap className="size-3 mr-1" />
-                                            Auto-Reply Aktif
-                                        </>
-                                    ) : (
-                                        <>
-                                            <XCircle className="size-3 mr-1" />
-                                            Auto-Reply Nonaktif
-                                        </>
-                                    )}
-                                </Badge>
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
+                        <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
+                        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-primary/10">
+                                        <Bot className="size-7 text-primary" />
+                                    </div>
+                                    Chatbot AI
+                                </h1>
+                                <p className="text-muted-foreground mt-1">
+                                    Atur chatbot AI untuk membalas pesan WhatsApp secara otomatis
+                                </p>
                             </div>
-                        )}
+                            {selectedSession && (
+                                <div className="flex items-center gap-2">
+                                    <Badge
+                                        variant={autoReplyEnabled ? 'default' : 'secondary'}
+                                        className={cn(
+                                            "px-3 py-1",
+                                            autoReplyEnabled && "bg-green-500 hover:bg-green-600"
+                                        )}
+                                    >
+                                        {autoReplyEnabled ? (
+                                            <>
+                                                <Zap className="size-3 mr-1" />
+                                                Auto-Reply Aktif
+                                            </>
+                                        ) : (
+                                            <>
+                                                <XCircle className="size-3 mr-1" />
+                                                Auto-Reply Nonaktif
+                                            </>
+                                        )}
+                                    </Badge>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* No Sessions Alert */}
@@ -321,12 +324,13 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
                             </Card>
 
                             {/* Session Selector */}
-                            <Card>
+                            <Card className="overflow-hidden border-2">
+                                <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                 <CardHeader className="pb-3">
-                                    <div className="flex items-center gap-2">
+                                    <CardTitle className="flex items-center gap-2">
                                         <MessageCircle className="size-5 text-primary" />
-                                        <CardTitle>Pilih Sesi WhatsApp</CardTitle>
-                                    </div>
+                                        Pilih Sesi WhatsApp
+                                    </CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

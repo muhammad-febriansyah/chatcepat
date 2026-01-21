@@ -59,4 +59,8 @@ return [
         'temperature' => env('OPENAI_TEMPERATURE', 0.7),
     ],
 
+    'rajaongkir' => [
+        'key' => env('RAJAONGKIR_API_KEY_SHIPPING', ''),
+    ],
+
 ];

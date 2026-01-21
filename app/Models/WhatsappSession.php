@@ -20,6 +20,7 @@ class WhatsappSession extends Model
         'name',
         'status',
         'ai_assistant_type',
+        'ai_config',
         'qr_code',
         'qr_expires_at',
         'webhook_url',
@@ -31,6 +32,7 @@ class WhatsappSession extends Model
 
     protected $casts = [
         'settings' => 'array',
+        'ai_config' => 'array',
         'qr_expires_at' => 'datetime',
         'last_connected_at' => 'datetime',
         'last_disconnected_at' => 'datetime',

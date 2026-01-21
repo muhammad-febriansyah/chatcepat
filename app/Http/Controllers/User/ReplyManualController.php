@@ -39,6 +39,30 @@ class ReplyManualController extends Controller
     }
 
     /**
+     * Display fullscreen WhatsApp Web style chat
+     */
+    public function fullscreen(): Response
+    {
+        $user = auth()->user();
+
+        // Get connected sessions
+        $connectedSessions = WhatsappSession::where('user_id', $user->id)
+            ->where('status', 'connected')
+            ->select('id', 'session_id', 'name', 'phone_number', 'status')
+            ->get();
+
+        // Get all sessions
+        $allSessions = WhatsappSession::where('user_id', $user->id)
+            ->select('id', 'session_id', 'name', 'phone_number', 'status')
+            ->get();
+
+        return Inertia::render('user/reply-manual/fullscreen', [
+            'sessions' => $connectedSessions,
+            'allSessions' => $allSessions,
+        ]);
+    }
+
+    /**
      * Get incoming messages for a session
      */
     public function getMessages(Request $request): JsonResponse

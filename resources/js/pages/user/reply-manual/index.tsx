@@ -421,9 +421,9 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
             >
                 <div
                     className={cn(
-                        'max-w-[70%] rounded-2xl p-3 shadow-sm',
+                        'max-w-[70%] rounded-2xl p-3 shadow-md',
                         isOutgoing
-                            ? 'bg-primary text-primary-foreground rounded-br-sm'
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-sm'
                             : 'bg-white border rounded-bl-sm'
                     )}
                 >
@@ -475,72 +475,99 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
             <Head title="Reply Manual" />
 
             <div className="space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Reply Manual</h1>
-                        <p className="text-muted-foreground mt-2">
-                            Balas pesan WhatsApp secara manual dari dashboard
-                        </p>
-                    </div>
-                    {selectedSession && (
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => loadConversations()}
-                                disabled={loading}
-                            >
-                                <RefreshCw className={cn("size-4 mr-2", loading && "animate-spin")} />
-                                Refresh
-                            </Button>
-                            <div className="flex items-center gap-2 text-sm">
-                                <div className={cn(
-                                    "size-2 rounded-full",
-                                    autoRefresh ? "bg-green-500 animate-pulse" : "bg-gray-400"
-                                )} />
-                                <span className="text-muted-foreground">
-                                    {autoRefresh ? "Auto-refresh aktif" : "Manual"}
-                                </span>
-                            </div>
+                {/* Header with Gradient */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
+                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
+                    <div className="relative flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight text-foreground">Reply Manual</h1>
+                            <p className="text-muted-foreground mt-1">
+                                Balas pesan WhatsApp secara manual dari dashboard
+                            </p>
                         </div>
-                    )}
+                        <div className="flex items-center gap-3">
+                            <a
+                                href="/user/reply-manual/fullscreen"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                >
+                                    <ExternalLink className="size-4" />
+                                    WhatsApp Web Style
+                                </Button>
+                            </a>
+                            {selectedSession && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => loadConversations()}
+                                        disabled={loading}
+                                        className="gap-2"
+                                    >
+                                        <RefreshCw className={cn("size-4", loading && "animate-spin")} />
+                                        Refresh
+                                    </Button>
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border">
+                                        <div className={cn(
+                                            "size-2.5 rounded-full",
+                                            autoRefresh ? "bg-green-500 animate-pulse" : "bg-gray-300"
+                                        )} />
+                                        <span className="text-sm font-medium">
+                                            {autoRefresh ? "Auto-refresh" : "Manual"}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* No Sessions Alert */}
                 {sessions.length === 0 && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Tidak Ada Sesi Terhubung</AlertTitle>
-                        <AlertDescription>
-                            Anda perlu memiliki minimal 1 sesi WhatsApp yang terhubung.
-                            <div className="mt-4">
-                                <Link href="/user/whatsapp">
-                                    <Button variant="outline" size="sm">
-                                        <Wifi className="size-4 mr-2" />
-                                        Hubungkan WhatsApp
-                                    </Button>
-                                </Link>
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-start gap-4">
+                            <div className="flex size-10 items-center justify-center rounded-full bg-red-100">
+                                <AlertCircle className="size-5 text-red-600" />
                             </div>
-                        </AlertDescription>
-                    </Alert>
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-red-900">Tidak Ada Sesi Terhubung</h3>
+                                <p className="mt-1 text-sm text-red-700">
+                                    Anda perlu memiliki minimal 1 sesi WhatsApp yang terhubung.
+                                </p>
+                                <div className="mt-3">
+                                    <Link href="/user/whatsapp">
+                                        <Button size="sm" variant="destructive" className="gap-2">
+                                            <Wifi className="size-4" />
+                                            Hubungkan WhatsApp
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {/* Session Selector */}
                 {sessions.length > 0 && (
-                    <Card>
-                        <CardHeader>
+                    <Card className="overflow-hidden border-2">
+                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                        <CardHeader className="border-b">
                             <CardTitle className="flex items-center gap-2">
-                                <Wifi className="size-5 text-green-500" />
+                                <Wifi className="size-5 text-primary" />
                                 Pilih Sesi WhatsApp
                             </CardTitle>
                             <CardDescription>
                                 Pilih sesi WhatsApp yang akan digunakan untuk membalas pesan
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="pt-6">
                             <div className="max-w-md">
-                                <Label>Sesi WhatsApp</Label>
+                                <Label className="text-base font-semibold mb-3 block">Sesi WhatsApp</Label>
                                 <Select
                                     value={selectedSession?.toString()}
                                     onValueChange={(value) => {
@@ -548,16 +575,16 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                         setSelectedConversation(null);
                                     }}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-12 border-2 hover:border-primary/50 transition-colors">
                                         <SelectValue placeholder="Pilih sesi..." />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {sessions.map((session) => (
                                             <SelectItem key={session.id} value={session.id.toString()}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="size-2 rounded-full bg-green-500" />
-                                                    <MessageCircle className="size-4" />
-                                                    <span>{session.name}</span>
+                                                <div className="flex items-center gap-3 py-1">
+                                                    <div className="size-2.5 rounded-full bg-green-500 animate-pulse" />
+                                                    <MessageCircle className="size-4 text-primary" />
+                                                    <span className="font-medium">{session.name}</span>
                                                     {session.phone_number && (
                                                         <span className="text-muted-foreground text-xs">
                                                             ({session.phone_number})
@@ -575,7 +602,8 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
 
                 {/* Chat Interface */}
                 {selectedSession && (
-                    <Card className="h-[calc(100vh-24rem)]">
+                    <Card className="h-[calc(100vh-24rem)] overflow-hidden border-2">
+                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                         <div className="flex h-full">
                             {/* Conversations List */}
                             <div className="w-80 border-r flex flex-col">
@@ -583,7 +611,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                     {/* New Conversation Button */}
                                     <Dialog open={showNewConversation} onOpenChange={setShowNewConversation}>
                                         <DialogTrigger asChild>
-                                            <Button className="w-full" size="sm">
+                                            <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/30" size="sm">
                                                 <Plus className="size-4 mr-2" />
                                                 Percakapan Baru
                                             </Button>
@@ -637,8 +665,8 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                                     onClick={() => handleSelectContact(contact)}
                                                                     className="w-full p-3 border rounded-lg hover:bg-muted/50 transition-colors text-left flex items-center gap-3"
                                                                 >
-                                                                    <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                                        <User className="size-5 text-primary" />
+                                                                    <div className="size-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                                                        <User className="size-5 text-white" />
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
                                                                         <p className="font-medium truncate">{contact.name}</p>
@@ -672,7 +700,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                     <Button
                                                         onClick={handleStartManualConversation}
                                                         disabled={!manualNumber.trim()}
-                                                        className="w-full"
+                                                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
                                                     >
                                                         <MessageCircle className="size-4 mr-2" />
                                                         Mulai Percakapan
@@ -719,8 +747,8 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                 )}
                                             >
                                                 <div className="flex items-start gap-3">
-                                                    <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                        <User className="size-5 text-primary" />
+                                                    <div className="size-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                                                        <User className="size-5 text-white" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center justify-between gap-2 mb-1">
@@ -743,7 +771,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                                 {conv.last_message?.content || 'Mulai percakapan'}
                                                             </p>
                                                             {conv.unread_count > 0 && (
-                                                                <Badge variant="default" className="flex-shrink-0">
+                                                                <Badge className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-purple-600 border-0 shadow-md">
                                                                     {conv.unread_count}
                                                                 </Badge>
                                                             )}
@@ -761,10 +789,10 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                 {selectedConversationData ? (
                                     <>
                                         {/* Chat Header */}
-                                        <div className="p-4 border-b">
+                                        <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
                                             <div className="flex items-center gap-3">
-                                                <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <User className="size-5 text-primary" />
+                                                <div className="size-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                                    <User className="size-6 text-white" />
                                                 </div>
                                                 <div className="flex-1">
                                                     {editingContact === selectedConversationData.contact_number ? (
@@ -841,13 +869,13 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
 
                                         {/* File Preview */}
                                         {selectedFile && (
-                                            <div className="p-3 border-t bg-muted/50">
+                                            <div className="p-3 border-t bg-gradient-to-r from-blue-50 to-purple-50">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="size-12 rounded bg-primary/10 flex items-center justify-center">
+                                                    <div className="size-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
                                                         {selectedFile.type.startsWith('image/') ? (
-                                                            <Image className="size-6 text-primary" />
+                                                            <Image className="size-6 text-white" />
                                                         ) : (
-                                                            <FileText className="size-6 text-primary" />
+                                                            <FileText className="size-6 text-white" />
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -871,7 +899,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                         onChange={(e) => setFileCaption(e.target.value)}
                                                         className="flex-1"
                                                     />
-                                                    <Button onClick={handleSendMedia} disabled={uploadingFile}>
+                                                    <Button onClick={handleSendMedia} disabled={uploadingFile} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                                                         {uploadingFile ? (
                                                             <RefreshCw className="size-4 animate-spin" />
                                                         ) : (
@@ -921,7 +949,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                     onClick={handleSendMessage}
                                                     disabled={sending || !messageText.trim()}
                                                     size="icon"
-                                                    className="h-[60px] w-[60px]"
+                                                    className="h-[60px] w-[60px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/30"
                                                 >
                                                     <Send className="size-5" />
                                                 </Button>

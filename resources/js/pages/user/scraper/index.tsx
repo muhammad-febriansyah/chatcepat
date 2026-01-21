@@ -65,36 +65,32 @@ export default function ScraperIndex({ places, categories, stats }: ScraperIndex
 
             <div className="space-y-8">
                 {/* Header */}
-                <div className="relative overflow-hidden rounded-2xl bg-primary p-8 shadow-lg">
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
+                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
                     <div className="relative flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20">
-                                <Database className="h-8 w-8 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-bold text-white">Scraping Management</h1>
-                                <p className="mt-1 text-white/90">
-                                    Kelola dan analisis hasil scraping Google Maps Anda
-                                </p>
-                            </div>
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight text-foreground">Scraping Management</h1>
+                            <p className="text-muted-foreground mt-1">
+                                Kelola dan analisis hasil scraping Google Maps Anda
+                            </p>
                         </div>
                         <div className="flex gap-3">
                             <Link href="/user/scraper/maps">
                                 <Button
-                                    variant="secondary"
+                                    variant="outline"
                                     size="lg"
-                                    className="bg-white/20 text-white border-white/30 hover:bg-white/30"
+                                    className="gap-2"
                                 >
-                                    <Map className="mr-2 h-5 w-5" />
+                                    <Map className="size-4" />
                                     Lihat Peta
                                 </Button>
                             </Link>
                             <Link href="/user/scraper/create">
                                 <Button
                                     size="lg"
-                                    className="bg-white text-primary hover:bg-white/90 shadow-lg"
+                                    className="gap-2"
                                 >
-                                    <Plus className="mr-2 h-5 w-5" />
+                                    <Plus className="size-4" />
                                     Scraping Baru
                                 </Button>
                             </Link>
@@ -179,14 +175,15 @@ export default function ScraperIndex({ places, categories, stats }: ScraperIndex
 
                 {/* Places List */}
                 {places.length > 0 ? (
-                    <Card className="shadow-lg border-2">
-                        <CardHeader className="border-b bg-slate-50">
+                    <Card className="overflow-hidden border-2">
+                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                        <CardHeader>
                             <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                                    <Database className="h-6 w-6 text-primary" />
-                                </div>
                                 <div>
-                                    <CardTitle className="text-xl">Hasil Scraping</CardTitle>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Database className="size-5 text-primary" />
+                                        Hasil Scraping
+                                    </CardTitle>
                                     <CardDescription className="mt-1">
                                         Menampilkan {places.length} tempat dari database
                                     </CardDescription>

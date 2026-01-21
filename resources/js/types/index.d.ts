@@ -58,6 +58,7 @@ export type FeatureKey =
     | 'broadcast_group'
     | 'reply_manual'
     | 'chatbot_ai'
+    | 'human_agents'
     | 'platforms'
     | 'templates'
     | 'master_data';

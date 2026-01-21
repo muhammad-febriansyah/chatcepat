@@ -307,6 +307,77 @@ class TelegramSessionController extends Controller
     }
 
     /**
+     * Start Userbot Auto Reply Listener
+     */
+    public function startAutoReply(): JsonResponse
+    {
+        $user = auth()->user();
+        $sessionData = Cache::get("telegram_session_{$user->id}");
+
+        if (!$sessionData || !($sessionData['verified'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session tidak valid, silakan login ulang',
+            ], 400);
+        }
+
+        try {
+            $response = Http::withHeaders($this->serviceHeaders())
+                ->timeout(10)
+                ->post($this->serviceUrl() . '/listener/start', [
+                    'session_id' => $sessionData['session_id'],
+                ]);
+
+            $result = $response->json();
+
+            if ($result['success'] ?? false) {
+                 return response()->json([
+                    'success' => true,
+                    'message' => 'Auto-reply listener berhasil dijalankan!',
+                ]);
+            }
+             
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Gagal menjalankan listener',
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('Telegram start listener error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghubungi service: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Stop Userbot Auto Reply Listener
+     */
+    public function stopAutoReply(): JsonResponse
+    {
+        $user = auth()->user();
+        $sessionData = Cache::get("telegram_session_{$user->id}");
+
+        if ($sessionData) {
+            try {
+                Http::withHeaders($this->serviceHeaders())
+                    ->timeout(10)
+                    ->post($this->serviceUrl() . '/listener/stop', [
+                        'session_id' => $sessionData['session_id'],
+                    ]);
+            } catch (\Exception $e) {
+                // Ignore errors on stop
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Auto-reply listener dihentikan',
+        ]);
+    }
+
+    /**
      * Force delete session (cleanup)
      */
     public function deleteSession(): JsonResponse

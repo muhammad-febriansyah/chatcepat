@@ -9,6 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { DataTable } from '@/components/ui/data-table';
 import { columns, Message } from './columns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { io, Socket } from 'socket.io-client';
 import {
     ArrowLeft,
@@ -32,7 +34,11 @@ import {
     Inbox,
     List,
     AlertTriangle,
-    X
+    X,
+    Zap,
+    Bot,
+    Settings,
+    UserPlus
 } from 'lucide-react';
 
 interface WhatsAppSession {
@@ -45,6 +51,10 @@ interface WhatsAppSession {
     created_at: string;
     updated_at: string;
     messages?: Message[];
+    settings?: {
+        autoReplyEnabled?: boolean;
+        autoSaveContacts?: boolean;
+    };
 }
 
 interface ShowProps {
@@ -413,6 +423,22 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
                                 </Button>
                             )}
                             <Button
+                                variant="outline"
+                                onClick={() => router.visit(`/user/whatsapp/${session.id}/auto-replies`)}
+                                className="flex-1 sm:flex-none"
+                            >
+                                <Zap className="mr-2 size-4" />
+                                Auto Reply
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => router.visit('/user/chatbot')}
+                                className="flex-1 sm:flex-none"
+                            >
+                                <Bot className="mr-2 size-4" />
+                                Chatbot AI
+                            </Button>
+                            <Button
                                 variant="destructive"
                                 onClick={handleDelete}
                                 className="flex-1 sm:flex-none"
@@ -420,6 +446,63 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
                                 <Trash2 className="mr-2 size-4" />
                                 Hapus Sesi
                             </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Settings Card */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Settings className="size-5" />
+                            Pengaturan Session
+                        </CardTitle>
+                        <CardDescription>
+                            Kelola fitur otomatis untuk session ini
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-green-100">
+                                    <Zap className="size-5 text-green-600" />
+                                </div>
+                                <div>
+                                    <Label className="font-medium">Auto-Reply</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Balas pesan masuk secara otomatis
+                                    </p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={session.settings?.autoReplyEnabled ?? false}
+                                onCheckedChange={(checked) => {
+                                    router.post(`/user/whatsapp/${session.id}/settings`, {
+                                        autoReplyEnabled: checked
+                                    }, { preserveScroll: true });
+                                }}
+                            />
+                        </div>
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-blue-100">
+                                    <UserPlus className="size-5 text-blue-600" />
+                                </div>
+                                <div>
+                                    <Label className="font-medium">Auto-Save Kontak</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Simpan kontak otomatis dari setiap chat masuk
+                                    </p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={session.settings?.autoSaveContacts ?? true}
+                                onCheckedChange={(checked) => {
+                                    router.post(`/user/whatsapp/${session.id}/settings`, {
+                                        autoSaveContacts: checked
+                                    }, { preserveScroll: true });
+                                }}
+                            />
                         </div>
                     </CardContent>
                 </Card>
@@ -493,6 +576,21 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
                                                     <li>Arahkan kamera ke QR code di atas</li>
                                                 </ol>
                                             </div>
+                                        </AlertDescription>
+                                    </Alert>
+
+                                    {/* Warning Alert Non Official */}
+                                    <Alert className="bg-yellow-50 border-yellow-300">
+                                        <AlertTriangle className="size-4 text-yellow-600" />
+                                        <AlertTitle className="text-yellow-900 font-semibold">
+                                            ⚠️ Peringatan Non Official
+                                        </AlertTitle>
+                                        <AlertDescription className="text-yellow-800">
+                                            <p className="text-sm mt-1">
+                                                Koneksi menggunakan <strong>Non Official</strong> berpotensi terkena banned.
+                                                Jika nomor Anda sudah terhubung di WhatsApp Business Platform (WABA),
+                                                <strong className="text-red-600"> dilarang keras</strong> mengkoneksikan di Non Official.
+                                            </p>
                                         </AlertDescription>
                                     </Alert>
 

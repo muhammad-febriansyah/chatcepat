@@ -152,4 +152,73 @@ class User extends Authenticatable
             'subscription' => $subscription,
         ];
     }
+
+    /**
+     * Get WhatsApp session limit based on subscription package.
+     * Returns the number of allowed sessions or PHP_INT_MAX for unlimited.
+     */
+    public function getWhatsappSessionLimit(): int
+    {
+        // Admin always has unlimited
+        if ($this->role === 'admin') {
+            return PHP_INT_MAX;
+        }
+
+        $subscription = $this->getActiveSubscription();
+
+        if (!$subscription) {
+            // No subscription = no access or minimal (1)
+            return 1;
+        }
+
+        // Map package slug/name to WA session limit
+        $packageLimits = [
+            'basic' => 1,
+            'medium' => 3,
+            'pro' => 5,
+            'enterprise' => PHP_INT_MAX, // unlimited
+        ];
+
+        $packageSlug = strtolower($subscription['package_slug'] ?? $subscription['package_name'] ?? '');
+
+        return $packageLimits[$packageSlug] ?? 1;
+    }
+
+    /**
+     * Check if user can create more WhatsApp sessions.
+     */
+    public function canCreateMoreWhatsappSessions(): bool
+    {
+        $currentCount = $this->whatsappSessions()->count();
+        $limit = $this->getWhatsappSessionLimit();
+
+        return $currentCount < $limit;
+    }
+
+    /**
+     * Get Telegram bot limit based on subscription package.
+     */
+    public function getTelegramBotLimit(): int
+    {
+        if ($this->role === 'admin') {
+            return PHP_INT_MAX;
+        }
+
+        $subscription = $this->getActiveSubscription();
+
+        if (!$subscription) {
+            return 1;
+        }
+
+        $packageLimits = [
+            'basic' => 1,
+            'medium' => 2,
+            'pro' => 5,
+            'enterprise' => PHP_INT_MAX,
+        ];
+
+        $packageSlug = strtolower($subscription['package_slug'] ?? $subscription['package_name'] ?? '');
+
+        return $packageLimits[$packageSlug] ?? 1;
+    }
 }

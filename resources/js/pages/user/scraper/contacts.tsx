@@ -231,37 +231,7 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                     {/* Tab 1: Scraping */}
                     <TabsContent value="scrape" className="space-y-6 mt-6">
                         {/* Info Cards */}
-                        <div className="grid gap-4 md:grid-cols-3">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        Rate Limit
-                                    </CardTitle>
-                                    <Clock className="size-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-green-600">3x / Hari</div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Maksimal scraping per hari (Profil Aman)
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        Cooldown
-                                    </CardTitle>
-                                    <Clock className="size-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-blue-600">2 Jam</div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Waktu tunggu antar scraping
-                                    </p>
-                                </CardContent>
-                            </Card>
-
+                        <div className="grid gap-4">
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
@@ -272,7 +242,7 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                                 <CardContent>
                                     <div className="text-2xl font-bold text-purple-600">200</div>
                                     <p className="text-xs text-muted-foreground">
-                                        Kontak per sesi scraping (Anti-Ban)
+                                        Kontak per sesi scraping
                                     </p>
                                 </CardContent>
                             </Card>
@@ -372,7 +342,7 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                                                             {session.status === 'connected' ? (
                                                                 <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 font-medium">
                                                                     <CheckCircle2 className="size-3" />
-                                                                    Connected
+                                                                    Terhubung
                                                                 </span>
                                                             ) : (
                                                                 <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
@@ -529,11 +499,10 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                                                     <SelectItem key={session.id} value={session.session_id}>
                                                         <div className="flex items-center gap-2">
                                                             <span className="font-medium">{session.name}</span>
-                                                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
-                                                                session.status === 'connected'
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-gray-100 text-gray-600'
-                                                            }`}>
+                                                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${session.status === 'connected'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-gray-100 text-gray-600'
+                                                                }`}>
                                                                 {session.status}
                                                             </span>
                                                         </div>

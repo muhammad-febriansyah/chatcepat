@@ -127,7 +127,7 @@ class ContactController extends Controller
                 'id' => $contact->id,
                 'phone_number' => $contact->phone_number,
                 'display_name' => $contact->display_name,
-                'created_at' => $contact->created_at->toISOString(),
+                'created_at' => $contact->created_at?->toISOString(),
             ],
         ]);
     }

@@ -112,7 +112,8 @@ export default function ContactCreate() {
                         </Card>
 
                         {/* Action Buttons */}
-                        <Card>
+                        <Card className="overflow-hidden border-2">
+                            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                             <CardContent className="pt-6">
                                 <div className="flex items-center justify-between gap-4">
                                     <Button
