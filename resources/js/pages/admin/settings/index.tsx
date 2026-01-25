@@ -89,6 +89,14 @@ interface SettingsProps {
         why_choose_subheading: string
         why_choose_image: string
         why_choose_features: string
+        footer_tagline: string
+        footer_company_name: string
+        footer_address: string
+        google_play_url: string
+        app_store_url: string
+        youtube_url: string
+        whatsapp_support: string
+        email_support: string
     }
 }
 
@@ -188,6 +196,14 @@ export default function Settings({ settings }: SettingsProps) {
         why_choose_subheading: settings?.why_choose_subheading || 'Menggunakan ChatCepat',
         why_choose_image: null as File | null,
         why_choose_features: '',
+        footer_tagline: settings?.footer_tagline || 'Omnichannel + CRM',
+        footer_company_name: settings?.footer_company_name || 'PT Teknologi ChatCepat Indonesia',
+        footer_address: settings?.footer_address || 'Ruko Hampton Avenue Blok A no.10. Paramount - Gading Serpong. Tangerang, 15810',
+        google_play_url: settings?.google_play_url || '#',
+        app_store_url: settings?.app_store_url || '#',
+        youtube_url: settings?.youtube_url || 'https://youtube.com',
+        whatsapp_support: settings?.whatsapp_support || '6281234567890',
+        email_support: settings?.email_support || 'support@chatcepat.com',
         _method: 'PUT' as const,
     })
 
@@ -381,7 +397,7 @@ export default function Settings({ settings }: SettingsProps) {
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Tabs defaultValue="general" className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-6">
+                    <TabsList className="grid w-full grid-cols-7">
                         <TabsTrigger value="general">
                             <Globe className="size-4 mr-2" />
                             Umum
@@ -405,6 +421,10 @@ export default function Settings({ settings }: SettingsProps) {
                         <TabsTrigger value="auth">
                             <ImageIcon className="size-4 mr-2" />
                             Halaman Login
+                        </TabsTrigger>
+                        <TabsTrigger value="footer">
+                            <FileImage className="size-4 mr-2" />
+                            Footer
                         </TabsTrigger>
                     </TabsList>
 
@@ -2077,6 +2097,168 @@ https://www.google.com/maps/embed?pb=...'
                                         placeholder="© 2025 ChatCepat. All rights reserved."
                                     />
                                     <InputError message={errors.auth_copyright} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Footer Tab */}
+                    <TabsContent value="footer" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <FileImage className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Pengaturan Footer</CardTitle>
+                                        <CardDescription>
+                                            Kelola informasi yang ditampilkan di footer website
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="footer_tagline" className="text-sm font-medium">
+                                        Tagline Footer
+                                    </Label>
+                                    <Input
+                                        id="footer_tagline"
+                                        name="footer_tagline"
+                                        value={data.footer_tagline}
+                                        onChange={(e) => setData('footer_tagline', e.target.value)}
+                                        placeholder="Omnichannel + CRM"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Tagline atau slogan yang akan ditampilkan di bawah logo
+                                    </p>
+                                    <InputError message={errors.footer_tagline} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="footer_company_name" className="text-sm font-medium">
+                                        Nama Perusahaan
+                                    </Label>
+                                    <Input
+                                        id="footer_company_name"
+                                        name="footer_company_name"
+                                        value={data.footer_company_name}
+                                        onChange={(e) => setData('footer_company_name', e.target.value)}
+                                        placeholder="PT Teknologi ChatCepat Indonesia"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Nama lengkap perusahaan yang akan ditampilkan di footer
+                                    </p>
+                                    <InputError message={errors.footer_company_name} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="footer_address" className="text-sm font-medium">
+                                        Alamat Perusahaan
+                                    </Label>
+                                    <textarea
+                                        id="footer_address"
+                                        name="footer_address"
+                                        value={data.footer_address}
+                                        onChange={(e) => setData('footer_address', e.target.value)}
+                                        placeholder="Ruko Hampton Avenue Blok A no.10. Paramount - Gading Serpong. Tangerang, 15810"
+                                        rows={3}
+                                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Alamat lengkap kantor perusahaan
+                                    </p>
+                                    <InputError message={errors.footer_address} />
+                                </div>
+
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="google_play_url" className="text-sm font-medium">
+                                            Google Play URL
+                                        </Label>
+                                        <Input
+                                            id="google_play_url"
+                                            name="google_play_url"
+                                            value={data.google_play_url}
+                                            onChange={(e) => setData('google_play_url', e.target.value)}
+                                            placeholder="https://play.google.com/store/apps/details?id=..."
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Link ke aplikasi di Google Play Store
+                                        </p>
+                                        <InputError message={errors.google_play_url} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="app_store_url" className="text-sm font-medium">
+                                            App Store URL
+                                        </Label>
+                                        <Input
+                                            id="app_store_url"
+                                            name="app_store_url"
+                                            value={data.app_store_url}
+                                            onChange={(e) => setData('app_store_url', e.target.value)}
+                                            placeholder="https://apps.apple.com/id/app/..."
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Link ke aplikasi di App Store
+                                        </p>
+                                        <InputError message={errors.app_store_url} />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="youtube_url" className="text-sm font-medium">
+                                        YouTube URL
+                                    </Label>
+                                    <Input
+                                        id="youtube_url"
+                                        name="youtube_url"
+                                        value={data.youtube_url}
+                                        onChange={(e) => setData('youtube_url', e.target.value)}
+                                        placeholder="https://youtube.com/@channel"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Link ke channel YouTube perusahaan
+                                    </p>
+                                    <InputError message={errors.youtube_url} />
+                                </div>
+
+                                <div className="grid gap-6 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="whatsapp_support" className="text-sm font-medium">
+                                            WhatsApp Support
+                                        </Label>
+                                        <Input
+                                            id="whatsapp_support"
+                                            name="whatsapp_support"
+                                            value={data.whatsapp_support}
+                                            onChange={(e) => setData('whatsapp_support', e.target.value)}
+                                            placeholder="6281234567890"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Nomor WhatsApp support (format: 628xxx tanpa +)
+                                        </p>
+                                        <InputError message={errors.whatsapp_support} />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email_support" className="text-sm font-medium">
+                                            Email Support
+                                        </Label>
+                                        <Input
+                                            id="email_support"
+                                            name="email_support"
+                                            value={data.email_support}
+                                            onChange={(e) => setData('email_support', e.target.value)}
+                                            placeholder="support@chatcepat.com"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Email untuk customer support
+                                        </p>
+                                        <InputError message={errors.email_support} />
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

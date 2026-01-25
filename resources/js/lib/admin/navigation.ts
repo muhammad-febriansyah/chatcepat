@@ -24,6 +24,7 @@ import {
     Receipt,
     Brain,
     BookOpen,
+    Building,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -66,6 +67,11 @@ export const adminNavigation: AdminNavGroup[] = [
                 title: 'Fitur Unggulan',
                 href: '/admin/fitur-unggulan',
                 icon: Sparkles,
+            },
+            {
+                title: 'Partner',
+                href: '/admin/partners',
+                icon: Building,
             },
             {
                 title: 'Paket Harga',

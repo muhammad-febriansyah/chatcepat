@@ -97,7 +97,7 @@ export const TestimonialsSection = ({ testimonials }: TestimonialsSectionProps) 
                         <Star className="h-4 w-4 fill-blue-700" />
                         <span className="text-sm">Testimonial</span>
                     </div>
-                    <h2 className="mb-4 text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900">
+                    <h2 className="font-display mb-4 text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900">
                         Apa Kata Mereka?
                     </h2>
                     <p className="mx-auto max-w-2xl text-base sm:text-lg text-slate-600">

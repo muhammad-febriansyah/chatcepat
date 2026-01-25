@@ -7,7 +7,7 @@ import { type FiturUnggulan } from '@/types/fitur-unggulan';
 import { type Faq } from '@/types/faq';
 import {
     HeroSection,
-    WorldMapSection,
+    PartnersSection,
     FeaturesSection,
     WhyChooseSection,
     FiturUnggulanSection,
@@ -32,18 +32,28 @@ interface Testimonial {
     user: User;
 }
 
+interface Partner {
+    id: number;
+    name: string;
+    image: string;
+    order: number;
+    is_active: boolean;
+}
+
 export default function Landing({
     canRegister = true,
     features = [],
     fiturUnggulans = [],
     faqs = [],
     testimonials = [],
+    partners = [],
 }: {
     canRegister?: boolean;
     features?: Feature[];
     fiturUnggulans?: FiturUnggulan[];
     faqs?: Faq[];
     testimonials?: Testimonial[];
+    partners?: Partner[];
 }) {
     const { settings } = usePage<SharedData>().props;
 
@@ -54,7 +64,7 @@ export default function Landing({
             canRegister={canRegister}
         >
             <HeroSection settings={settings} canRegister={canRegister} />
-            <WorldMapSection />
+            <PartnersSection partners={partners} />
             <FeaturesSection features={features} settings={settings} />
             <WhyChooseSection settings={settings} />
             <FiturUnggulanSection fiturUnggulans={fiturUnggulans} />

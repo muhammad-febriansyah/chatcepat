@@ -17,7 +17,7 @@ export function FaqSection({ faqs, settings }: FaqSectionProps) {
         <section className="bg-white px-6 py-20">
             <div className="container mx-auto max-w-4xl">
                 <div className="mb-12 space-y-3 text-center">
-                    <h2 className="text-3xl font-bold text-slate-900 leading-tight md:text-4xl md:leading-tight">
+                    <h2 className="font-display text-3xl font-bold text-slate-900 leading-tight md:text-4xl md:leading-tight">
                         {(settings.faq_heading as string) || 'Pertanyaan yang Sering Diajukan'}
                     </h2>
                     <p className="mx-auto max-w-2xl text-lg text-slate-600 leading-relaxed">

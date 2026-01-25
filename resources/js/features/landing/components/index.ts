@@ -1,5 +1,6 @@
 export { HeroSection } from './HeroSection';
 export { WorldMapSection } from './WorldMapSection';
+export { PartnersSection } from './PartnersSection';
 export { FeaturesSection } from './FeaturesSection';
 export { WhyChooseSection } from './WhyChooseSection';
 export { FiturUnggulanSection } from './FiturUnggulanSection';

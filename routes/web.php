@@ -18,12 +18,14 @@ Route::get('/', function () {
         ->with('user')
         ->latest()
         ->get();
+    $partners = App\Models\Partner::active()->ordered()->get();
     return Inertia::render('landing', [
         'canRegister' => Features::enabled(Features::registration()),
         'features' => $features,
         'fiturUnggulans' => $fiturUnggulans,
         'faqs' => $faqs,
         'testimonials' => $testimonials,
+        'partners' => $partners,
     ]);
 })->name('home');
 
@@ -394,6 +396,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Fitur Unggulan
     Route::resource('fitur-unggulan', App\Http\Controllers\Admin\FiturUnggulanController::class)->except(['show']);
+
+    // Partners
+    Route::resource('partners', App\Http\Controllers\Admin\PartnerController::class)->except(['show', 'create', 'edit']);
 
     // Pricing Packages
     Route::resource('pricing-packages', App\Http\Controllers\Admin\PricingPackageController::class)->except(['show']);

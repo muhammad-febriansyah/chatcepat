@@ -86,6 +86,14 @@ class SettingController extends Controller
             'why_choose_subheading' => 'nullable|string|max:255',
             'why_choose_image' => 'nullable|image|mimes:png,jpg,jpeg,svg,webp|max:5120',
             'why_choose_features' => 'nullable|string',
+            'footer_tagline' => 'nullable|string|max:255',
+            'footer_company_name' => 'nullable|string|max:255',
+            'footer_address' => 'nullable|string',
+            'google_play_url' => 'nullable|string',
+            'app_store_url' => 'nullable|string',
+            'youtube_url' => 'nullable|url',
+            'whatsapp_support' => 'nullable|string|max:20',
+            'email_support' => 'nullable|email',
         ]);
 
         foreach ($validated as $key => $value) {
@@ -135,7 +143,7 @@ class SettingController extends Controller
             }
 
             // Handle text settings
-            $type = in_array($key, ['site_description', 'address', 'google_maps_embed', 'meta_keywords', 'meta_description', 'auth_description'])
+            $type = in_array($key, ['site_description', 'address', 'google_maps_embed', 'meta_keywords', 'meta_description', 'auth_description', 'footer_address'])
                 ? 'text'
                 : 'string';
 

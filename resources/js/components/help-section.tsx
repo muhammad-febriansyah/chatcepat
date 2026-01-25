@@ -127,7 +127,7 @@ export default function HelpSection({
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.6, delay: 0.3 }}
                             >
-                                <h3 className={`mb-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-3xl font-bold leading-tight text-transparent sm:text-4xl sm:leading-tight ${imageUrl ? 'lg:text-left' : 'text-center'}`}>
+                                <h3 className={`font-display mb-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-3xl font-bold leading-tight text-transparent sm:text-4xl sm:leading-tight ${imageUrl ? 'lg:text-left' : 'text-center'}`}>
                                     {title}
                                 </h3>
                                 <p className={`mb-8 text-base leading-relaxed text-slate-600 sm:text-lg sm:leading-relaxed ${imageUrl ? 'lg:text-left' : 'text-center'}`}>

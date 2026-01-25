@@ -58,7 +58,7 @@ export function HeroSection({ settings, canRegister }: HeroSectionProps) {
                             </AnimatedShinyText>
                         </div>
 
-                        <h1 className="text-3xl leading-snug font-bold text-slate-900 md:text-4xl md:leading-snug lg:text-5xl lg:leading-snug">
+                        <h1 className="font-display text-3xl leading-snug font-bold text-slate-900 md:text-4xl md:leading-snug lg:text-5xl lg:leading-snug">
                             {parts.map((part, index) => {
                                 if (
                                     /dengan Customer Service & Sales AI/i.test(
@@ -107,16 +107,8 @@ export function HeroSection({ settings, canRegister }: HeroSectionProps) {
                                 href={`https://wa.me/${settings.contact_phone?.replace(/\D/g, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="rounded-xl border-2 bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-200"
-                                style={{ borderColor: 'transparent' }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor =
-                                        '#2547F9';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor =
-                                        'transparent';
-                                }}
+                                className="rounded-xl border-2 bg-white px-6 py-3 text-sm font-semibold transition-all hover:bg-slate-50"
+                                style={{ borderColor: '#2547F9', color: '#2547F9' }}
                             >
                                 <span className="flex items-center gap-2">
                                     <MessageCircle className="h-4 w-4" />

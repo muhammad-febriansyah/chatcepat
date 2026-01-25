@@ -60,7 +60,7 @@ export function WhyChooseSection({ settings }: WhyChooseSectionProps) {
                     {/* Right Content */}
                     <div className="order-1 lg:order-2 space-y-8">
                         <div className="space-y-3">
-                            <h2 className="text-3xl font-bold text-slate-900 leading-tight md:text-4xl md:leading-tight">
+                            <h2 className="font-display text-3xl font-bold text-slate-900 leading-tight md:text-4xl md:leading-tight">
                                 {(settings.why_choose_heading as string) || 'Kenapa Ribuan Bisnis'}
                                 <span className="block mt-2" style={{ color: '#2547F9' }}>
                                     {(settings.why_choose_subheading as string) || 'Menggunakan ChatCepat'}
@@ -82,7 +82,7 @@ export function WhyChooseSection({ settings }: WhyChooseSectionProps) {
                                             <IconComponent className="h-6 w-6" style={{ color: '#2547F9' }} />
                                         </div>
                                         <div className="flex-1 space-y-2">
-                                            <h3 className="text-lg font-semibold text-slate-900">
+                                            <h3 className="font-display text-lg font-semibold text-slate-900">
                                                 {feature.title}
                                             </h3>
                                             <p className="text-slate-600 leading-relaxed">

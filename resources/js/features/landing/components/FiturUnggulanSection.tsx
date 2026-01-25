@@ -15,7 +15,7 @@ export function FiturUnggulanSection({ fiturUnggulans }: FiturUnggulanSectionPro
             <div className="container mx-auto max-w-6xl">
                 {/* Section Header */}
                 <div className="mb-12 space-y-4 text-center sm:mb-16">
-                    <h2 className="text-3xl font-bold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
+                    <h2 className="font-display text-3xl font-bold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
                         Fitur Unggulan{' '}
                         <span style={{ color: '#2547F9' }}>ChatCepat</span>
                     </h2>

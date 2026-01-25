@@ -15,7 +15,7 @@ export function FeaturesSection({ features, settings }: FeaturesSectionProps) {
         <section className="px-6 py-20" style={{ backgroundColor: '#F7F8FD' }}>
             <div className="container mx-auto max-w-6xl">
                 <div className="mb-16 space-y-4 text-center">
-                    <h2 className="text-3xl font-bold text-slate-900 leading-tight md:text-4xl md:leading-tight">
+                    <h2 className="font-display text-3xl font-bold text-slate-900 leading-tight md:text-4xl md:leading-tight">
                         {(settings.features_heading as string) || 'Customer Kabur Gara-Gara Balas Chat Kelamaan ?'}
                         <span className="block mt-2" style={{ color: '#2547F9' }}>
                             {(settings.features_heading_highlight as string) || 'Saatnya Beralih ke ChatCepat !'}
@@ -51,7 +51,7 @@ export function FeaturesSection({ features, settings }: FeaturesSectionProps) {
                                 </div>
 
                                 {/* Content */}
-                                <h3 className="mb-3 text-lg font-bold text-slate-900 group-hover:text-[#2547F9] transition-colors">
+                                <h3 className="font-display mb-3 text-lg font-bold text-slate-900 group-hover:text-[#2547F9] transition-colors">
                                     {feature.title}
                                 </h3>
                                 <p className="text-sm leading-relaxed text-slate-600 mb-4">
