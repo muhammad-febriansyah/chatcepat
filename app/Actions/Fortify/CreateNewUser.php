@@ -3,10 +3,13 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Models\PricingPackage;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Carbon\Carbon;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -70,7 +73,7 @@ class CreateNewUser implements CreatesNewUsers
             Session::flash('selected_package_id', $input['pricing_package_id']);
         }
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'phone' => $input['phone'] ?? null,
@@ -80,5 +83,38 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
             'role' => 'user', // Default role for new users
         ]);
+
+        // Auto-activate Trial package if selected
+        if (isset($input['pricing_package_id'])) {
+            $package = PricingPackage::find($input['pricing_package_id']);
+
+            // If trial package (free), auto-activate immediately
+            if ($package && $package->slug === 'trial' && $package->price == 0) {
+                $now = Carbon::now();
+                $expiresAt = match ($package->period_unit) {
+                    'day' => $now->copy()->addDays($package->period),
+                    'month' => $now->copy()->addMonths($package->period),
+                    'year' => $now->copy()->addYears($package->period),
+                    default => $now->copy()->addDays($package->period),
+                };
+
+                Transaction::create([
+                    'user_id' => $user->id,
+                    'pricing_package_id' => $package->id,
+                    'invoice_number' => Transaction::generateInvoiceNumber(),
+                    'merchant_order_id' => Transaction::generateMerchantOrderId(),
+                    'amount' => 0,
+                    'payment_method' => 'free_trial',
+                    'status' => 'paid',
+                    'paid_at' => $now,
+                    'subscription_expires_at' => $expiresAt,
+                ]);
+
+                // Clear session since trial is auto-activated
+                Session::forget('selected_package_id');
+            }
+        }
+
+        return $user;
     }
 }

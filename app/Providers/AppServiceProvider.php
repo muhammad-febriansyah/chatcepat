@@ -3,6 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Setting;
+use App\Listeners\LogAuthenticationActivity;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,5 +35,10 @@ class AppServiceProvider extends ServiceProvider
                 'siteLogo' => Setting::get('logo'),
             ]);
         });
+
+        // Register authentication event listeners
+        Event::listen(Login::class, [LogAuthenticationActivity::class, 'handleLogin']);
+        Event::listen(Logout::class, [LogAuthenticationActivity::class, 'handleLogout']);
+        Event::listen(Failed::class, [LogAuthenticationActivity::class, 'handleFailed']);
     }
 }

@@ -753,6 +753,47 @@ export function UserSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
+                {/* LAPORAN & MONITORING - Always accessible */}
+                <SidebarGroup>
+                    <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider px-2">
+                        Laporan & Monitoring
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive('/user/reports') || url.startsWith('/user/reports/')}
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        (isActive('/user/reports') || url.startsWith('/user/reports/')) && 'bg-primary/10 text-primary font-semibold'
+                                    )}
+                                >
+                                    <Link href="/user/reports">
+                                        <BarChart3 className="size-5" />
+                                        <span>Laporan</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive('/user/activity-logs') || url.startsWith('/user/activity-logs/')}
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        (isActive('/user/activity-logs') || url.startsWith('/user/activity-logs/')) && 'bg-primary/10 text-primary font-semibold'
+                                    )}
+                                >
+                                    <Link href="/user/activity-logs">
+                                        <FileText className="size-5" />
+                                        <span>Log Aktivitas</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
                 {/* DUKUNGAN */}
                 <SidebarGroup>
                     <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider px-2">

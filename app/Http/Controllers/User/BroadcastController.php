@@ -7,6 +7,7 @@ use App\Models\WhatsappSession;
 use App\Models\WhatsappMessage;
 use App\Models\WhatsappContact;
 use App\Models\ContactGroup;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 
 class BroadcastController extends Controller
 {
+    use LogsActivity;
     /**
      * Get WhatsApp Gateway URL
      */
@@ -171,6 +173,21 @@ class BroadcastController extends Controller
         $message = "Broadcast selesai! Terkirim: {$successCount}, Gagal: {$failedCount}. Waktu: {$totalTime} menit";
 
         Log::info("Broadcast completed. Success: {$successCount}, Failed: {$failedCount}");
+
+        $this->logActivity(
+            action: 'send',
+            resourceType: 'WhatsappBroadcast',
+            resourceId: null,
+            resourceName: "Broadcast ke {$totalRecipients} penerima",
+            metadata: [
+                'session_id' => $session->id,
+                'session_name' => $session->name,
+                'total_recipients' => $totalRecipients,
+                'success_count' => $successCount,
+                'failed_count' => $failedCount,
+                'duration_minutes' => $totalTime,
+            ]
+        );
 
         return redirect()->back()->with('success', $message);
     }

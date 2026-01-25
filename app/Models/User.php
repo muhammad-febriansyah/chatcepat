@@ -83,6 +83,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all activity logs for the user.
+     */
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    /**
      * Get the active subscription (latest paid transaction with valid period).
      * Uses subscription_expires_at for accurate expiration tracking (supports extension).
      */

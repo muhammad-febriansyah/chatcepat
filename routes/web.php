@@ -367,6 +367,21 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/history', [App\Http\Controllers\User\EmailBroadcastController::class, 'history'])->name('history');
         Route::get('/{broadcast}', [App\Http\Controllers\User\EmailBroadcastController::class, 'show'])->name('show');
     });
+
+    // Reports
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\ReportController::class, 'index'])->name('index');
+        Route::get('/broadcast', [App\Http\Controllers\User\ReportController::class, 'broadcast'])->name('broadcast');
+        Route::get('/scraping', [App\Http\Controllers\User\ReportController::class, 'scraping'])->name('scraping');
+        Route::get('/chatbot', [App\Http\Controllers\User\ReportController::class, 'chatbot'])->name('chatbot');
+        Route::get('/general', [App\Http\Controllers\User\ReportController::class, 'general'])->name('general');
+    });
+
+    // Activity Logs
+    Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\ActivityLogController::class, 'index'])->name('index');
+        Route::get('/{activityLog}', [App\Http\Controllers\User\ActivityLogController::class, 'show'])->name('show');
+    });
 });
 
 // Legacy dashboard route (redirect to new route)

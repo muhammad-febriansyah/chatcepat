@@ -71,6 +71,15 @@ class PaymentController extends Controller
             $user = Auth::user();
             $package = PricingPackage::findOrFail($request->package_id);
 
+            // Check if user already has active subscription for the same package
+            $activeSubscription = $user->getActiveSubscription();
+            if ($activeSubscription && $activeSubscription['package_id'] == $package->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda sudah memiliki paket ' . $package->name . ' yang masih aktif. Silakan tunggu hingga paket berakhir atau pilih paket lain.',
+                ], 400);
+            }
+
             // Generate unique identifiers
             $invoiceNumber = Transaction::generateInvoiceNumber();
             $merchantOrderId = Transaction::generateMerchantOrderId();
@@ -201,6 +210,15 @@ class PaymentController extends Controller
             $user = Auth::user();
             $package = PricingPackage::findOrFail($request->package_id);
             $bank = Bank::findOrFail($request->bank_id);
+
+            // Check if user already has active subscription for the same package
+            $activeSubscription = $user->getActiveSubscription();
+            if ($activeSubscription && $activeSubscription['package_id'] == $package->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda sudah memiliki paket ' . $package->name . ' yang masih aktif. Silakan tunggu hingga paket berakhir atau pilih paket lain.',
+                ], 400);
+            }
 
             // Upload proof image
             $proofPath = $request->file('proof_image')->store('payment-proofs', 'public');

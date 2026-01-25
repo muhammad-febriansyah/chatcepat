@@ -33,22 +33,22 @@ export default function TopUp({ packages }: TopUpProps) {
         <UserLayout>
             <Head title="Upgrade Paket" />
 
-            <div className="space-y-6 md:space-y-8">
+            <div className="space-y-8">
                 {/* Header Section */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border mb-8">
-                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
-                    <div className="relative">
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-                            Upgrade Paket
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-blue-950/20 dark:via-background dark:to-blue-950/20 p-8 border-2 shadow-sm">
+                    <div className="absolute inset-0 bg-grid-slate-900/[0.04] [mask-image:radial-gradient(white,transparent_85%)]" />
+                    <div className="relative text-center">
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                            Pilih Paket Terbaik untuk Bisnis Anda
                         </h1>
-                        <p className="text-sm sm:text-base md:text-lg text-muted-foreground mt-2">
-                            Pilih paket yang sesuai dengan kebutuhan bisnis Anda
+                        <p className="text-base md:text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
+                            Tingkatkan produktivitas dengan fitur lengkap dan dukungan terbaik
                         </p>
                     </div>
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="grid gap-4 sm:gap-5 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                     {packages.map((pkg) => {
                         const isFeatured = pkg.is_featured;
 
@@ -56,73 +56,78 @@ export default function TopUp({ packages }: TopUpProps) {
                             <Card
                                 key={pkg.id}
                                 className={cn(
-                                    "relative flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl",
-                                    isFeatured && "border-2 border-primary shadow-lg xl:scale-105"
+                                    "relative flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group",
+                                    isFeatured ? "border-2 border-primary shadow-xl ring-2 ring-primary/20" : "hover:border-primary/50"
                                 )}
                             >
                                 {isFeatured && (
-                                    <div className="absolute right-3 top-3 sm:right-4 sm:top-4 z-10">
-                                        <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 text-xs">
-                                            <Star className="size-3 fill-current" />
-                                            Populer
-                                        </Badge>
-                                    </div>
+                                    <>
+                                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-blue-500 to-primary" />
+                                        <div className="absolute right-4 top-4 z-10">
+                                            <Badge className="bg-primary text-primary-foreground border-0 gap-1 text-xs font-semibold shadow-lg">
+                                                <Star className="size-3 fill-current" />
+                                                Populer
+                                            </Badge>
+                                        </div>
+                                    </>
                                 )}
 
                                 <CardHeader className={cn(
-                                    "pb-6 sm:pb-8 space-y-2",
-                                    isFeatured && "bg-primary/5"
+                                    "pb-8 space-y-3 relative",
+                                    isFeatured && "bg-gradient-to-br from-primary/5 via-blue-50/50 to-transparent dark:from-primary/10 dark:via-blue-950/50"
                                 )}>
-                                    <CardTitle className="text-xl sm:text-2xl pr-16 sm:pr-0">
+                                    <CardTitle className="text-2xl font-bold pr-20">
                                         {pkg.name}
                                     </CardTitle>
-                                    <CardDescription className="text-xs sm:text-sm min-h-[36px] sm:min-h-[40px] line-clamp-2">
+                                    <CardDescription className="text-sm min-h-[44px] line-clamp-2 leading-relaxed">
                                         {pkg.description}
                                     </CardDescription>
 
-                                    <div className="pt-3 sm:pt-4">
-                                        <div className="flex items-baseline gap-1.5 sm:gap-2">
-                                            <span className="text-sm text-muted-foreground">Rp</span>
-                                            <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                                    <div className="pt-4 !mt-4 border-t border-border/50">
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-sm font-medium text-muted-foreground">Rp</span>
+                                            <span className="text-4xl font-extrabold tracking-tight">
                                                 {Number(pkg.price).toLocaleString('id-ID', {
                                                     minimumFractionDigits: 0,
                                                     maximumFractionDigits: 0
                                                 })}
                                             </span>
                                         </div>
-                                        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                                        <p className="text-sm text-muted-foreground mt-1.5 font-medium">
                                             per {pkg.period_text}
                                         </p>
                                     </div>
                                 </CardHeader>
 
-                                <CardContent className="flex-1 pb-4 sm:pb-6 px-4 sm:px-6">
-                                    <div className="space-y-2 sm:space-y-3">
-                                        <p className="text-xs sm:text-sm font-semibold text-muted-foreground mb-3 sm:mb-4">
-                                            Fitur yang didapatkan:
+                                <CardContent className="flex-1 pb-6 px-6">
+                                    <div className="space-y-3">
+                                        <p className="text-xs font-bold text-foreground uppercase tracking-wide mb-4">
+                                            Fitur Lengkap
                                         </p>
-                                        <ul className="space-y-2">
+                                        <ul className="space-y-2.5">
                                             {pkg.features.map((feature, index) => (
-                                                <li key={index} className="flex items-start gap-2">
-                                                    <Check className="size-3.5 sm:size-4 text-primary mt-0.5 flex-shrink-0" />
-                                                    <span className="text-xs sm:text-sm leading-relaxed">{feature}</span>
+                                                <li key={index} className="flex items-start gap-2.5">
+                                                    <div className="mt-0.5">
+                                                        <Check className="size-4 text-primary" strokeWidth={3} />
+                                                    </div>
+                                                    <span className="text-sm leading-relaxed text-foreground/90">{feature}</span>
                                                 </li>
                                             ))}
                                         </ul>
                                     </div>
                                 </CardContent>
 
-                                <CardFooter className="pt-4 sm:pt-6 pb-4 sm:pb-6 px-4 sm:px-6 border-t bg-muted/20">
+                                <CardFooter className="pt-6 pb-6 px-6 border-t bg-gradient-to-br from-muted/30 to-transparent">
                                     {pkg.slug === 'enterprise' ? (
                                         <Button
                                             asChild
                                             variant="outline"
-                                            className="w-full text-sm sm:text-base"
-                                            size="default"
+                                            className="w-full font-semibold group-hover:border-primary group-hover:text-primary transition-all"
+                                            size="lg"
                                         >
                                             <Link href={pkg.button_url}>
                                                 {pkg.button_text}
-                                                <ArrowRight className="ml-2 size-4" />
+                                                <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
                                             </Link>
                                         </Button>
                                     ) : (
@@ -130,14 +135,14 @@ export default function TopUp({ packages }: TopUpProps) {
                                             asChild
                                             variant={isFeatured ? "default" : "outline"}
                                             className={cn(
-                                                "w-full text-sm sm:text-base",
-                                                isFeatured && "bg-primary hover:bg-primary/90"
+                                                "w-full font-semibold transition-all",
+                                                isFeatured ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30" : "group-hover:border-primary group-hover:text-primary"
                                             )}
-                                            size="default"
+                                            size="lg"
                                         >
                                             <Link href={`/payment?package_id=${pkg.id}`}>
                                                 {pkg.button_text}
-                                                <ArrowRight className="ml-2 size-4" />
+                                                <ArrowRight className="ml-2 size-4 group-hover:translate-x-1 transition-transform" />
                                             </Link>
                                         </Button>
                                     )}
@@ -148,43 +153,60 @@ export default function TopUp({ packages }: TopUpProps) {
                 </div>
 
                 {/* Additional Info */}
-                <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-primary/20">
-                    <CardHeader className="pb-4 sm:pb-6">
-                        <CardTitle className="text-base sm:text-lg md:text-xl">
+                <Card className="bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-blue-950/20 dark:via-background dark:to-blue-950/20 border-2 shadow-sm">
+                    <CardHeader className="pb-6">
+                        <CardTitle className="text-xl md:text-2xl font-bold">
                             Informasi Pembayaran
                         </CardTitle>
+                        <CardDescription>
+                            Segala hal yang perlu Anda ketahui tentang pembayaran
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm px-4 sm:px-6">
-                        <div className="flex items-start gap-2">
-                            <Check className="size-4 text-primary mt-0.5 flex-shrink-0" />
-                            <p className="leading-relaxed">Pembayaran dapat dilakukan melalui berbagai metode: Transfer Bank, E-Wallet, Virtual Account, dan lainnya</p>
+                    <CardContent className="space-y-4 px-6">
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 p-1.5 rounded-full bg-primary/10">
+                                <Check className="size-4 text-primary" strokeWidth={3} />
+                            </div>
+                            <p className="text-sm leading-relaxed">Pembayaran dapat dilakukan melalui berbagai metode: Transfer Bank, E-Wallet, Virtual Account, QRIS, dan lainnya</p>
                         </div>
-                        <div className="flex items-start gap-2">
-                            <Check className="size-4 text-primary mt-0.5 flex-shrink-0" />
-                            <p className="leading-relaxed">Paket akan aktif otomatis setelah pembayaran terverifikasi (maksimal 5 menit)</p>
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 p-1.5 rounded-full bg-primary/10">
+                                <Check className="size-4 text-primary" strokeWidth={3} />
+                            </div>
+                            <p className="text-sm leading-relaxed">Paket akan aktif otomatis setelah pembayaran terverifikasi (maksimal 5 menit)</p>
                         </div>
-                        <div className="flex items-start gap-2">
-                            <Check className="size-4 text-primary mt-0.5 flex-shrink-0" />
-                            <p className="leading-relaxed">Upgrade paket dapat dilakukan kapan saja, sisa masa aktif paket lama akan diakumulasikan</p>
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 p-1.5 rounded-full bg-primary/10">
+                                <Check className="size-4 text-primary" strokeWidth={3} />
+                            </div>
+                            <p className="text-sm leading-relaxed">Upgrade paket dapat dilakukan kapan saja, sisa masa aktif paket lama akan terakumulasi</p>
                         </div>
-                        <div className="flex items-start gap-2">
-                            <Check className="size-4 text-primary mt-0.5 flex-shrink-0" />
-                            <p className="leading-relaxed">Untuk paket Enterprise atau pertanyaan lainnya, hubungi tim support kami</p>
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 p-1.5 rounded-full bg-primary/10">
+                                <Check className="size-4 text-primary" strokeWidth={3} />
+                            </div>
+                            <p className="text-sm leading-relaxed">Untuk paket Enterprise atau pertanyaan lainnya, hubungi tim support kami</p>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Support Section */}
-                <div className="bg-muted/50 rounded-lg p-4 sm:p-6 text-center">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-3">
-                        Butuh bantuan memilih paket yang tepat?
-                    </p>
-                    <Button asChild variant="outline" size="sm" className="text-xs sm:text-sm">
-                        <Link href="/contact">
-                            Hubungi Support
-                            <ArrowRight className="ml-2 size-4" />
-                        </Link>
-                    </Button>
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/20 p-8 text-center shadow-lg">
+                    <div className="absolute inset-0 bg-grid-slate-900/[0.04] [mask-image:radial-gradient(white,transparent_85%)]" />
+                    <div className="relative">
+                        <p className="text-base font-semibold text-foreground mb-2">
+                            Butuh bantuan memilih paket yang tepat?
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                            Tim support kami siap membantu Anda menemukan solusi terbaik untuk bisnis Anda
+                        </p>
+                        <Button asChild variant="default" size="lg" className="shadow-lg shadow-primary/30 font-semibold">
+                            <Link href="/contact">
+                                Hubungi Support
+                                <ArrowRight className="ml-2 size-4" />
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
             </div>
         </UserLayout>

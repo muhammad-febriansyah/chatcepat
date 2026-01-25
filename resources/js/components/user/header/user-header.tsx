@@ -97,35 +97,37 @@ export function UserHeader() {
     return (
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-white px-4">
             <SidebarTrigger className="-ml-1 hover:bg-accent" />
-            <Separator orientation="vertical" className="mr-2 h-6" />
-            <Breadcrumb>
-                <BreadcrumbList>
-                    {pathSegments.map((segment, index) => {
-                        const isLast = index === pathSegments.length - 1
-                        const href = '/' + pathSegments.slice(0, index + 1).join('/')
+            <Separator orientation="vertical" className="mr-2 h-6 hidden lg:block" />
+            <div className="hidden lg:block">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        {pathSegments.map((segment, index) => {
+                            const isLast = index === pathSegments.length - 1
+                            const href = '/' + pathSegments.slice(0, index + 1).join('/')
 
-                        return (
-                            <Fragment key={`breadcrumb-${index}-${segment}`}>
-                                <BreadcrumbItem>
-                                    {!isLast ? (
-                                        <BreadcrumbLink
-                                            href={href}
-                                            className="font-medium transition-colors hover:text-primary"
-                                        >
-                                            {getBreadcrumbLabel(segment)}
-                                        </BreadcrumbLink>
-                                    ) : (
-                                        <BreadcrumbPage className="font-semibold text-foreground">
-                                            {getBreadcrumbLabel(segment)}
-                                        </BreadcrumbPage>
-                                    )}
-                                </BreadcrumbItem>
-                                {!isLast && <BreadcrumbSeparator />}
-                            </Fragment>
-                        )
-                    })}
-                </BreadcrumbList>
-            </Breadcrumb>
+                            return (
+                                <Fragment key={`breadcrumb-${index}-${segment}`}>
+                                    <BreadcrumbItem>
+                                        {!isLast ? (
+                                            <BreadcrumbLink
+                                                href={href}
+                                                className="font-medium transition-colors hover:text-primary"
+                                            >
+                                                {getBreadcrumbLabel(segment)}
+                                            </BreadcrumbLink>
+                                        ) : (
+                                            <BreadcrumbPage className="font-semibold text-foreground">
+                                                {getBreadcrumbLabel(segment)}
+                                            </BreadcrumbPage>
+                                        )}
+                                    </BreadcrumbItem>
+                                    {!isLast && <BreadcrumbSeparator />}
+                                </Fragment>
+                            )
+                        })}
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
 
             <div className="ml-auto flex items-center gap-3">
                 {/* Notification Bell Dropdown */}
@@ -204,7 +206,7 @@ export function UserHeader() {
                                             {getInitials(user.name)}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="flex flex-col items-start">
+                                    <div className="hidden lg:flex flex-col items-start">
                                         <span className="text-sm font-semibold leading-none">{user.name}</span>
                                         <span className="text-xs text-muted-foreground mt-1">
                                             {user.role === 'admin' ? 'Admin' : 'User'}

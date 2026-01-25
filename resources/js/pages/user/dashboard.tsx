@@ -6,7 +6,9 @@ import {
     Plus,
     Megaphone,
     FileText,
-    Play
+    Play,
+    Clock,
+    ArrowUpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -110,11 +112,40 @@ export default function Dashboard({ user, subscription, limits, stats, recentSes
         return limit === 'unlimited' ? '∞' : limit;
     };
 
+    // Check if user is on trial
+    const isTrialUser = subscription && subscription.package_slug === 'trial';
+    const daysRemaining = subscription ? Math.ceil(subscription.days_remaining) : 0;
+
     return (
         <UserLayout>
             <Head title="Dashboard" />
 
             <div className="space-y-8">
+                {/* Trial Countdown Alert */}
+                {isTrialUser && daysRemaining > 0 && (
+                    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-transparent p-6 border-2 border-amber-500/50">
+                        <div className="flex items-center gap-4">
+                            <div className="flex size-12 items-center justify-center rounded-lg bg-amber-500/20">
+                                <Clock className="size-6 text-amber-600" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-amber-900">
+                                    Masa Trial Anda akan berakhir dalam {daysRemaining} hari
+                                </h3>
+                                <p className="text-sm text-amber-700">
+                                    Segera lakukan Upgrade Paket untuk menggunakan fitur-fitur terbaik dari ChatCepat.
+                                </p>
+                            </div>
+                            <Link href="/user/topup">
+                                <Button className="gap-2 bg-amber-600 hover:bg-amber-700">
+                                    <ArrowUpCircle className="size-4" />
+                                    Upgrade Sekarang
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
                 {/* Welcome Section */}
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
                     <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\WhatsappContact;
 use App\Models\WhatsappSession;
 use App\Imports\WhatsappContactsImport;
+use App\Traits\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,7 @@ use Inertia\Inertia;
 
 class ContactController extends Controller
 {
+    use LogsActivity;
     public function index(Request $request)
     {
         // Get user's sessions for dropdown
@@ -104,12 +106,20 @@ class ContactController extends Controller
             ]);
         }
 
-        WhatsappContact::create([
+        $contact = WhatsappContact::create([
             'user_id' => auth()->id(),
             'whatsapp_session_id' => $session->id,
             'phone_number' => $validated['phone_number'],
             'display_name' => $validated['display_name'],
         ]);
+
+        $this->logActivity(
+            action: 'create',
+            resourceType: 'WhatsappContact',
+            resourceId: $contact->id,
+            resourceName: $contact->display_name ?: $contact->phone_number,
+            newValues: $contact->toArray()
+        );
 
         return redirect()->route('user.contacts.index')
             ->with('success', 'Kontak berhasil ditambahkan.');
@@ -156,7 +166,17 @@ class ContactController extends Controller
             ]);
         }
 
+        $oldValues = $contact->toArray();
         $contact->update($validated);
+
+        $this->logActivity(
+            action: 'update',
+            resourceType: 'WhatsappContact',
+            resourceId: $contact->id,
+            resourceName: $contact->display_name ?: $contact->phone_number,
+            oldValues: $oldValues,
+            newValues: $contact->fresh()->toArray()
+        );
 
         return redirect()->route('user.contacts.index')
             ->with('success', 'Kontak berhasil diperbarui.');
@@ -168,6 +188,14 @@ class ContactController extends Controller
         if ($contact->session->user_id !== auth()->id()) {
             abort(403);
         }
+
+        $this->logActivity(
+            action: 'delete',
+            resourceType: 'WhatsappContact',
+            resourceId: $contact->id,
+            resourceName: $contact->display_name ?: $contact->phone_number,
+            oldValues: $contact->toArray()
+        );
 
         $contact->delete();
 
