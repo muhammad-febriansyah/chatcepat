@@ -10,6 +10,11 @@ Route::get('/csrf-token', function () {
     return response()->json(['token' => csrf_token()]);
 })->name('csrf.token');
 
+// SEO Routes - Sitemap
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('/sitemap-main.xml', [App\Http\Controllers\SitemapController::class, 'main'])->name('sitemap.main');
+Route::get('/sitemap-blog.xml', [App\Http\Controllers\SitemapController::class, 'blog'])->name('sitemap.blog');
+
 Route::get('/', function () {
     $features = App\Models\Feature::active()->ordered()->get();
     $fiturUnggulans = App\Models\FiturUnggulan::active()->ordered()->get();

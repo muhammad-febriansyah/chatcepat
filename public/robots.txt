@@ -1,2 +1,18 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Directories
+Disallow: /admin/
+Disallow: /user/
+Disallow: /payment/
+Disallow: /agent/
+
+# Files
+Disallow: /storage/private/
+Disallow: /*.json$
+Disallow: /*.xml$
+Allow: /sitemap.xml
+Allow: /sitemap-*.xml
+
+# Sitemap
+Sitemap: https://www.chatcepat.id/sitemap.xml
