@@ -16,6 +16,20 @@ Route::get('/sitemap-main.xml', [App\Http\Controllers\SitemapController::class, 
 Route::get('/sitemap-blog.xml', [App\Http\Controllers\SitemapController::class, 'blog'])->name('sitemap.blog');
 Route::get('/sitemap-docs.xml', [App\Http\Controllers\SitemapController::class, 'docs'])->name('sitemap.docs');
 
+// Redirect old sitemaps to new sitemap (for backward compatibility)
+Route::get('/sitemap_index.xml', function () {
+    return redirect('/sitemap.xml', 301);
+});
+Route::get('/category-sitemap.xml', function () {
+    return redirect('/sitemap.xml', 301);
+});
+Route::get('/page-sitemap.xml', function () {
+    return redirect('/sitemap-main.xml', 301);
+});
+Route::get('/post-sitemap.xml', function () {
+    return redirect('/sitemap-blog.xml', 301);
+});
+
 Route::get('/', function () {
     $features = App\Models\Feature::active()->ordered()->get();
     $fiturUnggulans = App\Models\FiturUnggulan::active()->ordered()->get();
