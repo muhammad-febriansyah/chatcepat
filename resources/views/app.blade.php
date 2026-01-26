@@ -55,19 +55,9 @@
         @endif
 
         {{-- Favicons --}}
-        @if(!empty($page['props']['settings']['favicon']))
-            <link rel="icon" href="{{ asset('storage/' . $page['props']['settings']['favicon']) }}" type="image/x-icon">
-            <link rel="shortcut icon" href="{{ asset('storage/' . $page['props']['settings']['favicon']) }}" type="image/x-icon">
-            <link rel="apple-touch-icon" href="{{ asset('storage/' . $page['props']['settings']['favicon']) }}">
-        @elseif(!empty($page['props']['settings']['logo']))
-            <link rel="icon" href="{{ asset('storage/' . $page['props']['settings']['logo']) }}" type="image/x-icon">
-            <link rel="shortcut icon" href="{{ asset('storage/' . $page['props']['settings']['logo']) }}" type="image/x-icon">
-            <link rel="apple-touch-icon" href="{{ asset('storage/' . $page['props']['settings']['logo']) }}">
-        @else
-            <link rel="icon" href="/favicon.ico" sizes="any">
-            <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-            <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-        @endif
+        <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
+        <link rel="shortcut icon" href="{{ asset('favicon.png') }}" type="image/png">
+        <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
         <link rel="manifest" href="/site.webmanifest">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
