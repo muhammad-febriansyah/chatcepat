@@ -30,6 +30,17 @@ Route::get('/post-sitemap.xml', function () {
     return redirect('/sitemap-blog.xml', 301);
 });
 
+// Return 410 Gone for old WordPress URLs (tell Google these are permanently deleted)
+Route::get('/wp-content/{path}', function () {
+    abort(410, 'This content has been permanently removed');
+})->where('path', '.*');
+Route::get('/wp-includes/{path}', function () {
+    abort(410, 'This content has been permanently removed');
+})->where('path', '.*');
+Route::get('/wp-admin/{path?}', function () {
+    abort(410, 'This content has been permanently removed');
+})->where('path', '.*');
+
 Route::get('/', function () {
     $features = App\Models\Feature::active()->ordered()->get();
     $fiturUnggulans = App\Models\FiturUnggulan::active()->ordered()->get();

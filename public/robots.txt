@@ -6,6 +6,9 @@ Disallow: /admin/
 Disallow: /user/
 Disallow: /payment/
 Disallow: /agent/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-admin/
 
 # Files
 Disallow: /storage/private/
