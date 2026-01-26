@@ -35,6 +35,70 @@ class PaymentController extends Controller
 
         if ($packageId) {
             $package = PricingPackage::findOrFail($packageId);
+
+            // Auto-activate trial package without showing payment form
+            if ($package->price == 0 || $package->slug === 'trial') {
+                $user = Auth::user();
+
+                // Check if user already has active subscription for the same package
+                $activeSubscription = $user->getActiveSubscription();
+                if ($activeSubscription && $activeSubscription['package_id'] == $package->id) {
+                    return redirect()->route('user.topup')->with('error', 'Anda sudah memiliki paket ' . $package->name . ' yang masih aktif.');
+                }
+
+                try {
+                    DB::beginTransaction();
+
+                    // Generate unique identifiers
+                    $invoiceNumber = Transaction::generateInvoiceNumber();
+                    $merchantOrderId = Transaction::generateMerchantOrderId();
+
+                    // Create transaction and mark as paid immediately
+                    $transaction = Transaction::create([
+                        'user_id' => $user->id,
+                        'pricing_package_id' => $package->id,
+                        'invoice_number' => $invoiceNumber,
+                        'merchant_order_id' => $merchantOrderId,
+                        'amount' => 0,
+                        'payment_method' => 'free_trial',
+                        'status' => 'paid',
+                        'customer_info' => [
+                            'name' => $user->name,
+                            'email' => $user->email,
+                            'phone' => $user->phone ?? '',
+                        ],
+                        'expired_at' => null,
+                    ]);
+
+                    // Mark as paid and set subscription expiration
+                    $transaction->markAsPaid();
+
+                    DB::commit();
+
+                    // Send trial activation success email
+                    try {
+                        Mail::to($user->email)->send(new PaymentSuccessNotification($transaction));
+                        Log::info('Trial activation success email sent', ['transaction_id' => $transaction->id, 'email' => $user->email]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send trial activation email', [
+                            'transaction_id' => $transaction->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+
+                    // Redirect to transactions page with success message
+                    return redirect()->route('user.transactions.index')->with('success', 'Paket trial berhasil diaktifkan! Selamat mencoba fitur ChatCepat selama 3 hari.');
+
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    Log::error('Trial activation error', [
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+
+                    return redirect()->route('user.topup')->with('error', 'Gagal mengaktifkan paket trial. Silakan coba lagi.');
+                }
+            }
         }
 
         // Get active banks for manual payment
