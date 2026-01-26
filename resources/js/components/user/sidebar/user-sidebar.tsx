@@ -804,13 +804,13 @@ export function UserSidebar() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
-                                    isActive={url.startsWith('/user/guides')}
+                                    isActive={url.startsWith('/docs')}
                                     className={cn(
                                         'h-10 rounded-lg',
-                                        url.startsWith('/user/guides') && 'bg-primary/10 text-primary font-semibold'
+                                        url.startsWith('/docs') && 'bg-primary/10 text-primary font-semibold'
                                     )}
                                 >
-                                    <a href="/user/guides" target="_blank" rel="noopener noreferrer">
+                                    <a href="/docs" target="_blank" rel="noopener noreferrer">
                                         <BookOpen className="size-5" />
                                         <span>Pusat Bantuan</span>
                                     </a>

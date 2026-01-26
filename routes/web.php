@@ -132,6 +132,10 @@ Route::get('/contact', function () {
 
 Route::post('/contact', [App\Http\Controllers\ContactController::class, 'store'])->name('contact.store');
 
+// Public Documentation/Guides
+Route::get('/docs', [App\Http\Controllers\DocsController::class, 'index'])->name('docs.index');
+Route::get('/docs/{slug}', [App\Http\Controllers\DocsController::class, 'show'])->name('docs.show');
+
 // WebSocket Test Page (for development/testing)
 Route::get('/test-websocket', function () {
     return Inertia::render('test-websocket');
@@ -349,11 +353,13 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::post('/{template}/duplicate', [App\Http\Controllers\User\TemplateController::class, 'duplicate'])->name('duplicate');
     });
 
-    // Guides / Bantuan
-    Route::prefix('guides')->name('guides.')->group(function () {
-        Route::get('/', [App\Http\Controllers\User\GuideController::class, 'index'])->name('index');
-        Route::get('/{slug}', [App\Http\Controllers\User\GuideController::class, 'show'])->name('show');
-    });
+    // Guides / Bantuan - Redirect to public docs
+    Route::get('/guides', function () {
+        return redirect()->route('docs.index');
+    })->name('guides.index');
+    Route::get('/guides/{slug}', function ($slug) {
+        return redirect()->route('docs.show', $slug);
+    })->name('guides.show');
 
     // SMTP Settings
     Route::prefix('smtp-settings')->name('smtp-settings.')->group(function () {
