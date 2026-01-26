@@ -84,6 +84,57 @@ class PaymentController extends Controller
             $invoiceNumber = Transaction::generateInvoiceNumber();
             $merchantOrderId = Transaction::generateMerchantOrderId();
 
+            // Check if this is a trial package (free package)
+            if ($package->price == 0 || $package->slug === 'trial') {
+                // For trial package, create transaction and mark as paid immediately
+                $transaction = Transaction::create([
+                    'user_id' => $user->id,
+                    'pricing_package_id' => $package->id,
+                    'invoice_number' => $invoiceNumber,
+                    'merchant_order_id' => $merchantOrderId,
+                    'amount' => 0,
+                    'payment_method' => 'free_trial',
+                    'status' => 'paid',
+                    'customer_info' => [
+                        'name' => $request->customer_name,
+                        'email' => $request->email,
+                        'phone' => $request->phone,
+                    ],
+                    'expired_at' => null, // No expiry for trial activation
+                ]);
+
+                // Mark as paid and set subscription expiration
+                $transaction->markAsPaid();
+
+                DB::commit();
+
+                // Send payment success email notification
+                try {
+                    $customerEmail = $request->email;
+                    Mail::to($customerEmail)->send(new PaymentSuccessNotification($transaction));
+                    Log::info('Trial activation success email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send trial activation email', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Don't fail the transaction if email fails
+                }
+
+                // Return success response for trial activation
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Paket trial berhasil diaktifkan!',
+                    'is_trial' => true,
+                    'data' => [
+                        'transaction_id' => $transaction->id,
+                        'invoice_number' => $invoiceNumber,
+                        'redirect_url' => route('user.transactions.index'),
+                    ],
+                ]);
+            }
+
+            // For paid packages, continue with normal payment flow
             // Create transaction record
             $transaction = Transaction::create([
                 'user_id' => $user->id,

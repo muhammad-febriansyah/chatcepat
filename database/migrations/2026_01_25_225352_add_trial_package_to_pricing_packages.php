@@ -30,7 +30,15 @@ return new class extends Migration
                 'Scraping Contacts (Terbatas)',
                 'Auto-Reply Manual (Terbatas)',
             ],
-            'feature_keys' => [], // Empty = all locked
+            'feature_keys' => [
+                'human_agent',
+                'ai_agent',
+                'whatsapp_session',
+                'whatsapp_broadcast',
+                'whatsapp_template',
+                'scraping_contacts',
+                'auto_reply',
+            ],
             'is_featured' => false,
             'is_active' => true,
             'order' => 0,

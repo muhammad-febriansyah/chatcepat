@@ -142,6 +142,14 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
 
             const result = await response.json();
 
+            // Check if this is a trial activation
+            if (result.success && result.is_trial) {
+                toast.success(result.message || 'Paket trial berhasil diaktifkan!');
+                // Redirect to transactions page
+                router.visit('/user/transactions');
+                return;
+            }
+
             if (result.success && result.data?.payment_url) {
                 const paymentUrl = result.data.payment_url;
 
