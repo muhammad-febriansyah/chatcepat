@@ -126,12 +126,38 @@
         }
         </script>
 
+        {{-- Google Analytics --}}
+        @if(config('services.google_analytics.tracking_id'))
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google_analytics.tracking_id') }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ config('services.google_analytics.tracking_id') }}');
+        </script>
+        @endif
+
+        {{-- Google Tag Manager --}}
+        @if(config('services.google_tag_manager.container_id'))
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','{{ config('services.google_tag_manager.container_id') }}');</script>
+        @endif
+
         @routes
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+        {{-- Google Tag Manager (noscript) --}}
+        @if(config('services.google_tag_manager.container_id'))
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ config('services.google_tag_manager.container_id') }}"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        @endif
+
         @inertia
     </body>
 </html>

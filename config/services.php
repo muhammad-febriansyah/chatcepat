@@ -63,4 +63,12 @@ return [
         'key' => env('RAJAONGKIR_API_KEY_SHIPPING', ''),
     ],
 
+    'google_analytics' => [
+        'tracking_id' => env('GOOGLE_ANALYTICS_ID'),
+    ],
+
+    'google_tag_manager' => [
+        'container_id' => env('GOOGLE_TAG_MANAGER_ID'),
+    ],
+
 ];
