@@ -74,56 +74,64 @@
         </noscript>
 
         {{-- Structured Data - Schema.org --}}
+        @php
+            $schema = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Organization',
+                'name' => $page['props']['settings']['site_name'] ?? config('app.name', 'CekatAI'),
+                'url' => url('/'),
+                'logo' => $page['props']['settings']['logo'] ? asset('storage/' . $page['props']['settings']['logo']) : asset('images/logo.png'),
+                'description' => $page['props']['settings']['site_description'] ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas',
+            ];
+
+            if (!empty($page['props']['settings']['contact_email'])) {
+                $schema['email'] = $page['props']['settings']['contact_email'];
+            }
+            if (!empty($page['props']['settings']['contact_phone'])) {
+                $schema['telephone'] = $page['props']['settings']['contact_phone'];
+            }
+            if (!empty($page['props']['settings']['address'])) {
+                $schema['address'] = [
+                    '@type' => 'PostalAddress',
+                    'streetAddress' => $page['props']['settings']['address']
+                ];
+            }
+
+            $contactPoint = [
+                '@type' => 'ContactPoint',
+                'contactType' => 'Customer Service',
+                'url' => url('/contact')
+            ];
+            if (!empty($page['props']['settings']['contact_email'])) {
+                $contactPoint['email'] = $page['props']['settings']['contact_email'];
+            }
+            if (!empty($page['props']['settings']['contact_phone'])) {
+                $contactPoint['telephone'] = $page['props']['settings']['contact_phone'];
+            }
+            $schema['contactPoint'] = $contactPoint;
+
+            $sameAs = [];
+            if (!empty($page['props']['settings']['facebook_url'])) {
+                $sameAs[] = $page['props']['settings']['facebook_url'];
+            }
+            if (!empty($page['props']['settings']['twitter_url'])) {
+                $sameAs[] = $page['props']['settings']['twitter_url'];
+            }
+            if (!empty($page['props']['settings']['instagram_url'])) {
+                $sameAs[] = $page['props']['settings']['instagram_url'];
+            }
+            if (!empty($page['props']['settings']['linkedin_url'])) {
+                $sameAs[] = $page['props']['settings']['linkedin_url'];
+            }
+            if (!empty($page['props']['settings']['tiktok_url'])) {
+                $sameAs[] = $page['props']['settings']['tiktok_url'];
+            }
+            if (!empty($sameAs)) {
+                $schema['sameAs'] = $sameAs;
+            }
+        @endphp
         <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "{{ $page['props']['settings']['site_name'] ?? config('app.name', 'CekatAI') }}",
-            "url": "{{ url('/') }}",
-            "logo": "{{ $page['props']['settings']['logo'] ? asset('storage/' . $page['props']['settings']['logo']) : asset('images/logo.png') }}",
-            "description": "{{ $page['props']['settings']['site_description'] ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas' }}",
-            @if($page['props']['settings']['contact_email'] ?? null)
-            "email": "{{ $page['props']['settings']['contact_email'] }}",
-            @endif
-            @if($page['props']['settings']['contact_phone'] ?? null)
-            "telephone": "{{ $page['props']['settings']['contact_phone'] }}",
-            @endif
-            @if($page['props']['settings']['address'] ?? null)
-            "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "{{ $page['props']['settings']['address'] }}"
-            },
-            @endif
-            "contactPoint": {
-                "@type": "ContactPoint",
-                "contactType": "Customer Service",
-                "url": "{{ url('/contact') }}"
-                @if($page['props']['settings']['contact_email'] ?? null)
-                ,"email": "{{ $page['props']['settings']['contact_email'] }}"
-                @endif
-                @if($page['props']['settings']['contact_phone'] ?? null)
-                ,"telephone": "{{ $page['props']['settings']['contact_phone'] }}"
-                @endif
-            },
-            "sameAs": [
-                @if($page['props']['settings']['facebook_url'] ?? null)
-                "{{ $page['props']['settings']['facebook_url'] }}",
-                @endif
-                @if($page['props']['settings']['twitter_url'] ?? null)
-                "{{ $page['props']['settings']['twitter_url'] }}",
-                @endif
-                @if($page['props']['settings']['instagram_url'] ?? null)
-                "{{ $page['props']['settings']['instagram_url'] }}",
-                @endif
-                @if($page['props']['settings']['linkedin_url'] ?? null)
-                "{{ $page['props']['settings']['linkedin_url'] }}",
-                @endif
-                @if($page['props']['settings']['tiktok_url'] ?? null)
-                "{{ $page['props']['settings']['tiktok_url'] }}",
-                @endif
-                "{{ url('/') }}"
-            ]
-        }
+        {!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
         </script>
 
         {{-- Google Analytics --}}
