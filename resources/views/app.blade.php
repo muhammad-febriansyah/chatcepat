@@ -21,12 +21,12 @@
             }
         </style>
 
-        <title inertia>{{ $siteName ?? config('app.name', 'CekatAI') }}</title>
+        <title inertia>{{ $page['props']['settings']['site_name'] ?? config('app.name', 'CekatAI') }}</title>
 
         {{-- SEO Meta Tags --}}
-        <meta name="description" content="{{ $siteDescription ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas.' }}">
+        <meta name="description" content="{{ $page['props']['settings']['site_description'] ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas.' }}">
         <meta name="keywords" content="CRM, AI CRM, Customer Relationship Management, Sales Pipeline, Lead Management, Business Automation">
-        <meta name="author" content="{{ $siteName ?? config('app.name', 'CekatAI') }}">
+        <meta name="author" content="{{ $page['props']['settings']['site_name'] ?? config('app.name', 'CekatAI') }}">
         <meta name="robots" content="index, follow">
 
         {{-- Canonical URL --}}
@@ -35,10 +35,10 @@
         {{-- Open Graph / Facebook --}}
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:title" content="{{ $siteName ?? config('app.name', 'CekatAI') }} - AI CRM Platform">
-        <meta property="og:description" content="{{ $siteDescription ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas' }}">
-        @if($siteLogo)
-            <meta property="og:image" content="{{ asset('storage/' . $siteLogo) }}">
+        <meta property="og:title" content="{{ $page['props']['settings']['site_name'] ?? config('app.name', 'CekatAI') }} - AI CRM Platform">
+        <meta property="og:description" content="{{ $page['props']['settings']['site_description'] ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas' }}">
+        @if(!empty($page['props']['settings']['logo']))
+            <meta property="og:image" content="{{ asset('storage/' . $page['props']['settings']['logo']) }}">
         @else
             <meta property="og:image" content="{{ asset('images/og-image.png') }}">
         @endif
@@ -46,18 +46,18 @@
         {{-- Twitter --}}
         <meta property="twitter:card" content="summary_large_image">
         <meta property="twitter:url" content="{{ url()->current() }}">
-        <meta property="twitter:title" content="{{ $siteName ?? config('app.name', 'CekatAI') }} - AI CRM Platform">
-        <meta property="twitter:description" content="{{ $siteDescription ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas' }}">
-        @if($siteLogo)
-            <meta property="twitter:image" content="{{ asset('storage/' . $siteLogo) }}">
+        <meta property="twitter:title" content="{{ $page['props']['settings']['site_name'] ?? config('app.name', 'CekatAI') }} - AI CRM Platform">
+        <meta property="twitter:description" content="{{ $page['props']['settings']['site_description'] ?? 'Platform CRM berbasis AI untuk mengelola bisnis lebih cerdas' }}">
+        @if(!empty($page['props']['settings']['logo']))
+            <meta property="twitter:image" content="{{ asset('storage/' . $page['props']['settings']['logo']) }}">
         @else
             <meta property="twitter:image" content="{{ asset('images/og-image.png') }}">
         @endif
 
         {{-- Favicons --}}
-        @if($siteFavicon)
-            <link rel="icon" href="{{ asset('storage/' . $siteFavicon) }}" type="image/x-icon">
-            <link rel="shortcut icon" href="{{ asset('storage/' . $siteFavicon) }}" type="image/x-icon">
+        @if(!empty($page['props']['settings']['favicon']))
+            <link rel="icon" href="{{ asset('storage/' . $page['props']['settings']['favicon']) }}" type="image/x-icon">
+            <link rel="shortcut icon" href="{{ asset('storage/' . $page['props']['settings']['favicon']) }}" type="image/x-icon">
         @else
             <link rel="icon" href="/favicon.ico" sizes="any">
             <link rel="icon" href="/favicon.svg" type="image/svg+xml">
