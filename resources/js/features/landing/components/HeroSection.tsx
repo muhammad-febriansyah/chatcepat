@@ -68,7 +68,7 @@ export function HeroSection({ settings, canRegister }: HeroSectionProps) {
                                     return (
                                         <Highlight
                                             key={index}
-                                            className="text-slate-900 dark:text-white"
+                                            className="text-black dark:text-white"
                                         >
                                             {part}
                                         </Highlight>
