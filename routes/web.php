@@ -14,6 +14,7 @@ Route::get('/csrf-token', function () {
 Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/sitemap-main.xml', [App\Http\Controllers\SitemapController::class, 'main'])->name('sitemap.main');
 Route::get('/sitemap-blog.xml', [App\Http\Controllers\SitemapController::class, 'blog'])->name('sitemap.blog');
+Route::get('/sitemap-docs.xml', [App\Http\Controllers\SitemapController::class, 'docs'])->name('sitemap.docs');
 
 Route::get('/', function () {
     $features = App\Models\Feature::active()->ordered()->get();

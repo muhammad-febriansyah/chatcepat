@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\GuideArticle;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
@@ -21,6 +22,12 @@ class SitemapController extends Controller
         // Blog sitemap
         $sitemap .= '<sitemap>';
         $sitemap .= '<loc>' . url('/sitemap-blog.xml') . '</loc>';
+        $sitemap .= '<lastmod>' . now()->toW3cString() . '</lastmod>';
+        $sitemap .= '</sitemap>';
+
+        // Docs sitemap
+        $sitemap .= '<sitemap>';
+        $sitemap .= '<loc>' . url('/sitemap-docs.xml') . '</loc>';
         $sitemap .= '<lastmod>' . now()->toW3cString() . '</lastmod>';
         $sitemap .= '</sitemap>';
 
@@ -85,6 +92,49 @@ class SitemapController extends Controller
                 $sitemap .= '<image:image>';
                 $sitemap .= '<image:loc>' . asset('storage/' . $post->featured_image) . '</image:loc>';
                 $sitemap .= '<image:title>' . htmlspecialchars($post->title) . '</image:title>';
+                $sitemap .= '</image:image>';
+            }
+
+            $sitemap .= '</url>';
+        }
+
+        $sitemap .= '</urlset>';
+
+        return response($sitemap, 200)
+            ->header('Content-Type', 'text/xml');
+    }
+
+    public function docs()
+    {
+        $sitemap = '<?xml version="1.0" encoding="UTF-8"?>';
+        $sitemap .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
+        $sitemap .= ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">';
+
+        // Add docs home page
+        $sitemap .= '<url>';
+        $sitemap .= '<loc>' . url('/docs') . '</loc>';
+        $sitemap .= '<lastmod>' . now()->toW3cString() . '</lastmod>';
+        $sitemap .= '<changefreq>weekly</changefreq>';
+        $sitemap .= '<priority>0.9</priority>';
+        $sitemap .= '</url>';
+
+        // Get all published guide articles
+        $articles = GuideArticle::where('is_published', true)
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        foreach ($articles as $article) {
+            $sitemap .= '<url>';
+            $sitemap .= '<loc>' . url('/docs/' . $article->slug) . '</loc>';
+            $sitemap .= '<lastmod>' . $article->updated_at->toW3cString() . '</lastmod>';
+            $sitemap .= '<changefreq>monthly</changefreq>';
+            $sitemap .= '<priority>0.8</priority>';
+
+            // Add image if exists
+            if ($article->featured_image) {
+                $sitemap .= '<image:image>';
+                $sitemap .= '<image:loc>' . asset('storage/' . $article->featured_image) . '</image:loc>';
+                $sitemap .= '<image:title>' . htmlspecialchars($article->title) . '</image:title>';
                 $sitemap .= '</image:image>';
             }
 
