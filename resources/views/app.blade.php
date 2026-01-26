@@ -70,8 +70,9 @@
     @endif
 
     {{-- Favicons --}}
-    <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/png">
-    <link rel="shortcut icon" href="{{ asset('favicon.png') }}" type="image/png">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
     <link rel="manifest" href="/site.webmanifest">
 
