@@ -1,8 +1,8 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import UserLayout from '@/layouts/user/user-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Download, Loader2, CheckCircle2, XCircle, Clock, Search, ChevronLeft, ChevronRight, Shield, Lock, Unlock, MessageSquare, Eye, Phone, UserCircle, X } from 'lucide-react';
+import { Users, Download, Loader2, CheckCircle2, XCircle, Clock, Search, ChevronLeft, ChevronRight, Shield, Lock, Unlock, MessageSquare, Eye, Phone, UserCircle, X, AlertCircle, Facebook, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import {
     Select,
@@ -41,6 +41,7 @@ interface Group {
     is_locked: boolean;
     session_name: string;
     formatted_date: string;
+    platform: string;
 }
 
 interface GroupMember {
@@ -75,7 +76,7 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
     const [selectedSession, setSelectedSession] = useState<string>('');
     const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [scrapeResult, setScrapeResult] = useState<{ totalScraped: number; totalSaved: number } | null>(null);
-    const [activeTab, setActiveTab] = useState('scrape');
+    const [activeTab, setActiveTab] = useState('meta');
     const [searchQuery, setSearchQuery] = useState('');
 
     // Members modal state
@@ -108,6 +109,9 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
     const handlePageChange = (page: number) => {
         router.get('/user/scraper/groups', { page }, { preserveState: true, preserveScroll: true });
     };
+
+    const [isScrapingMeta, setIsScrapingMeta] = useState(false);
+    const [metaAlertMessage, setMetaAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     const handleScrapeGroups = async () => {
         if (!selectedSession) {
@@ -158,6 +162,44 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
             });
         } finally {
             setIsScraping(false);
+        }
+    };
+
+    const handleMetaScrapeGroups = async () => {
+        setIsScrapingMeta(true);
+        setMetaAlertMessage(null);
+
+        try {
+            const response = await fetch('/user/groups/scrape/whatsapp-cloud', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMetaAlertMessage({
+                    type: 'success',
+                    message: data.message
+                });
+                // Refresh page
+                router.reload({ only: ['groups', 'stats'] });
+            } else {
+                setMetaAlertMessage({
+                    type: 'error',
+                    message: data.error || 'Gagal mengambil grup dari Cloud API'
+                });
+            }
+        } catch (error) {
+            setMetaAlertMessage({
+                type: 'error',
+                message: 'Terjadi kesalahan saat mengambil grup dari Cloud API.'
+            });
+        } finally {
+            setIsScrapingMeta(false);
         }
     };
 
@@ -247,7 +289,7 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                             Scraping Grup WhatsApp
                         </h1>
                         <p className="text-muted-foreground mt-1">
-                            Ambil semua grup WhatsApp yang Anda ikuti dari session yang terhubung
+                            Informasi tentang limitasi WhatsApp Cloud API untuk scraping groups
                         </p>
                     </div>
                 </div>
@@ -255,9 +297,9 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="scrape" className="flex items-center gap-2">
+                        <TabsTrigger value="meta" className="flex items-center gap-2">
                             <Download className="size-4" />
-                            Scraping
+                            Mulai Scraping
                         </TabsTrigger>
                         <TabsTrigger value="results" className="flex items-center gap-2">
                             <Users className="size-4" />
@@ -270,166 +312,159 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* Tab 1: Scraping */}
-                    <TabsContent value="scrape" className="space-y-6 mt-6">
-                        {/* Info Cards */}
-                        <div className="grid gap-4 md:grid-cols-3">
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Rate Limit</CardTitle>
-                                    <Clock className="size-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-green-600">5x / Hari</div>
-                                    <p className="text-xs text-muted-foreground">Maksimal scraping per hari</p>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Cooldown</CardTitle>
-                                    <Clock className="size-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-blue-600">2 Jam</div>
-                                    <p className="text-xs text-muted-foreground">Waktu tunggu antar scraping</p>
-                                </CardContent>
-                            </Card>
-
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">Max Grup</CardTitle>
-                                    <Users className="size-4 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-purple-600">100</div>
-                                    <p className="text-xs text-muted-foreground">Grup per sesi scraping</p>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        {/* Scraping Form */}
-                        <Card className="overflow-hidden border-2">
-                            <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Download className="size-5 text-primary" />
-                                    Mulai Scraping Grup
-                                </CardTitle>
-                                <CardDescription>
-                                    Pilih WhatsApp session dan mulai proses scraping grup.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
+                    {/* Tab 1: Scraping Methods */}
+                    <TabsContent value="meta" className="space-y-6 mt-6">
+                        {/* Global Alert Messages */}
+                        {(alertMessage || metaAlertMessage) && (
+                            <div className="space-y-2">
                                 {alertMessage && (
-                                    <Alert className={alertMessage.type === 'error'
-                                        ? 'bg-red-50 border-red-300'
-                                        : 'bg-green-50 border-green-300'
-                                    }>
+                                    <Alert className={alertMessage.type === 'error' ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}>
                                         <AlertDescription className={`flex items-center gap-2 ${alertMessage.type === 'error' ? 'text-red-900' : 'text-green-900'}`}>
-                                            {alertMessage.type === 'success' ? (
-                                                <CheckCircle2 className="size-4 flex-shrink-0" />
-                                            ) : (
-                                                <XCircle className="size-4 flex-shrink-0" />
-                                            )}
+                                            {alertMessage.type === 'success' ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
                                             <span>{alertMessage.message}</span>
                                         </AlertDescription>
                                     </Alert>
                                 )}
-
-                                {scrapeResult && (
-                                    <Card className="bg-green-50 border-green-200">
-                                        <CardContent className="pt-6">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm font-medium text-green-900">Total Grup Ditemukan</p>
-                                                    <p className="text-3xl font-bold text-green-700">{scrapeResult.totalScraped}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-green-900">Berhasil Disimpan</p>
-                                                    <p className="text-3xl font-bold text-green-700">{scrapeResult.totalSaved}</p>
-                                                </div>
-                                            </div>
-                                            <Button
-                                                onClick={() => setActiveTab('results')}
-                                                className="w-full mt-4"
-                                                variant="outline"
-                                            >
-                                                Lihat Hasil Scraping
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
+                                {metaAlertMessage && (
+                                    <Alert className={metaAlertMessage.type === 'error' ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}>
+                                        <AlertDescription className={`flex items-center gap-2 ${metaAlertMessage.type === 'error' ? 'text-red-900' : 'text-green-900'}`}>
+                                            {metaAlertMessage.type === 'success' ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
+                                            <span>{metaAlertMessage.message}</span>
+                                        </AlertDescription>
+                                    </Alert>
                                 )}
+                            </div>
+                        )}
 
-                                <div className="space-y-4">
+                        <div className="grid gap-6 md:grid-cols-2">
+                            {/* Card 1: WhatsApp Web (Baileys) */}
+                            <Card className="overflow-hidden border-2 flex flex-col">
+                                <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <MessageCircle className="size-5 text-blue-600" />
+                                            WhatsApp Web
+                                        </CardTitle>
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Session Based</Badge>
+                                    </div>
+                                    <CardDescription>
+                                        Scrape grup menggunakan koneksi WhatsApp Web (QR Scan).
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4 flex-1">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Pilih WhatsApp Session</label>
-                                        <Select value={selectedSession} onValueChange={setSelectedSession} disabled={sessions.length === 0}>
-                                            <SelectTrigger className="h-12">
-                                                <SelectValue placeholder="Pilih session yang terhubung..." />
+                                        <label className="text-xs font-medium text-muted-foreground">Pilih Session</label>
+                                        <Select value={selectedSession} onValueChange={setSelectedSession}>
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Pilih session..." />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {sessions.map((session) => (
-                                                    <SelectItem
-                                                        key={session.id}
-                                                        value={session.session_id}
-                                                        disabled={session.status !== 'connected'}
-                                                    >
+                                                    <SelectItem key={session.id} value={session.session_id}>
                                                         <div className="flex items-center gap-2">
                                                             <span className="font-medium">{session.name}</span>
-                                                            {session.status === 'connected' ? (
-                                                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 font-medium">
-                                                                    <CheckCircle2 className="size-3" />
-                                                                    Terhubung
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                                                                    <XCircle className="size-3" />
-                                                                    {session.status}
-                                                                </span>
-                                                            )}
+                                                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${session.status === 'connected' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                                {session.status}
+                                                            </span>
                                                         </div>
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {sessions.length === 0 && (
-                                            <div className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                                Tidak ada session aktif. Buat dan hubungkan session WhatsApp terlebih dahulu.
-                                            </div>
-                                        )}
                                     </div>
-
-                                    <Alert className="bg-blue-50 border-blue-200">
-                                        <AlertDescription className="text-blue-900 text-sm">
-                                            Proses scraping menggunakan sistem anti-ban dengan delay otomatis untuk menghindari pemblokiran dari WhatsApp.
-                                        </AlertDescription>
-                                    </Alert>
-
+                                    <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                                        <p className="text-[11px] text-blue-900 leading-relaxed">
+                                            <strong>Kelebihan:</strong> Mendukung semua jenis grup tanpa verifikasi bisnis.<br />
+                                            <strong>Kekurangan:</strong> Memerlukan session aktif dan rentan terhadap limitasi WhatsApp Web.
+                                        </p>
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
                                     <Button
                                         onClick={handleScrapeGroups}
-                                        disabled={isScraping || !selectedSession || !isSelectedSessionConnected || sessions.length === 0}
-                                        className="w-full h-12 text-base"
-                                        size="lg"
+                                        disabled={isScraping || !selectedSession}
+                                        className="w-full"
                                     >
                                         {isScraping ? (
                                             <>
-                                                <Loader2 className="mr-2 size-5 animate-spin" />
-                                                Sedang mengambil grup...
+                                                <Loader2 className="mr-2 size-4 animate-spin" />
+                                                Loading...
                                             </>
                                         ) : (
                                             <>
-                                                <Download className="mr-2 size-5" />
-                                                Mulai Scraping Grup
+                                                <Download className="mr-2 size-4" />
+                                                Mulai Scrape (Baileys)
                                             </>
                                         )}
                                     </Button>
+                                </CardFooter>
+                            </Card>
+
+                            {/* Card 2: WhatsApp Cloud API (Meta) */}
+                            <Card className="overflow-hidden border-2 flex flex-col">
+                                <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <MessageCircle className="size-5 text-green-600" />
+                                            WhatsApp Cloud
+                                        </CardTitle>
+                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Official API</Badge>
+                                    </div>
+                                    <CardDescription>
+                                        Scrape grup menggunakan Official WhatsApp Business API.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4 flex-1">
+                                    <Alert className="bg-amber-50 border-amber-200 py-2">
+                                        <AlertCircle className="size-4 text-amber-600" />
+                                        <AlertDescription className="text-[11px] text-amber-900">
+                                            Memerlukan status <strong>Official Business Account (OBA)</strong>. Akun bisnis biasa tidak dapat menggunakan fitur ini.
+                                        </AlertDescription>
+                                    </Alert>
+                                    <div className="p-3 bg-green-50/50 rounded-lg border border-green-100">
+                                        <p className="text-[11px] text-green-900 leading-relaxed">
+                                            <strong>Kelebihan:</strong> Stabil, resmi, dan didukung penuh oleh Meta.<br />
+                                            <strong>Kekurangan:</strong> Proses verifikasi bisnis sulit (OBA required).
+                                        </p>
+                                    </div>
+                                </CardContent>
+                                <CardFooter>
+                                    <Button
+                                        onClick={handleMetaScrapeGroups}
+                                        disabled={isScrapingMeta}
+                                        className="w-full"
+                                        variant="outline"
+                                    >
+                                        {isScrapingMeta ? (
+                                            <>
+                                                <Loader2 className="mr-2 size-4 animate-spin" />
+                                                Loading...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Shield className="mr-2 size-4" />
+                                                Mulai Scrape (Cloud API)
+                                            </>
+                                        )}
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        </div>
+
+                        <Card className="bg-muted/30 border-dashed">
+                            <CardContent className="pt-6">
+                                <div className="text-center">
+                                    <p className="text-sm text-muted-foreground">
+                                        Tips: Gunakan <strong>WhatsApp Web</strong> jika Anda ingin scraping cepat tanpa verifikasi Meta Business.
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
                     </TabsContent>
 
-                    {/* Tab 2: Results */}
+                    {/* Tab 3: Results */}
                     <TabsContent value="results" className="space-y-6 mt-6">
                         {/* Stats Cards */}
                         <div className="grid gap-4 md:grid-cols-2">
@@ -488,6 +523,7 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                                                 <thead className="bg-muted/50">
                                                     <tr>
                                                         <th className="px-4 py-3 text-left font-medium">Nama Grup</th>
+                                                        <th className="px-4 py-3 text-left font-medium text-center">Platform</th>
                                                         <th className="px-4 py-3 text-left font-medium">Anggota</th>
                                                         <th className="px-4 py-3 text-left font-medium">Admin</th>
                                                         <th className="px-4 py-3 text-left font-medium">Status</th>
@@ -501,9 +537,16 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                                                             <td className="px-4 py-3">
                                                                 <div className="font-medium">{group.name}</div>
                                                                 {group.description && (
-                                                                    <div className="text-xs text-muted-foreground truncate max-w-xs">
+                                                                    <div className="text-xs text-muted-foreground truncate max-w-[200px]">
                                                                         {group.description}
                                                                     </div>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {group.platform === 'whatsapp_cloud' ? (
+                                                                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Cloud API</Badge>
+                                                                ) : (
+                                                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Baileys</Badge>
                                                                 )}
                                                             </td>
                                                             <td className="px-4 py-3">
@@ -521,25 +564,22 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                                                             <td className="px-4 py-3">
                                                                 <div className="flex flex-wrap gap-1">
                                                                     {group.is_announce && (
-                                                                        <Badge variant="secondary" className="text-xs">
-                                                                            <MessageSquare className="size-3 mr-1" />
+                                                                        <Badge variant="secondary" className="text-[10px] h-5">
                                                                             Announce
                                                                         </Badge>
                                                                     )}
                                                                     {group.is_locked ? (
-                                                                        <Badge variant="outline" className="text-xs">
-                                                                            <Lock className="size-3 mr-1" />
+                                                                        <Badge variant="outline" className="text-[10px] h-5">
                                                                             Locked
                                                                         </Badge>
                                                                     ) : (
-                                                                        <Badge variant="outline" className="text-xs text-green-600">
-                                                                            <Unlock className="size-3 mr-1" />
+                                                                        <Badge variant="outline" className="text-[10px] h-5 text-green-600">
                                                                             Open
                                                                         </Badge>
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-3 text-muted-foreground">{group.formatted_date}</td>
+                                                            <td className="px-4 py-3 text-muted-foreground text-xs">{group.formatted_date}</td>
                                                             <td className="px-4 py-3 text-center">
                                                                 <Button
                                                                     variant="outline"
@@ -600,16 +640,17 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                                     <div className="flex flex-col items-center justify-center py-12">
                                         <Users className="size-12 text-muted-foreground/50 mb-4" />
                                         <h3 className="text-lg font-medium text-muted-foreground">Belum Ada Grup</h3>
-                                        <p className="text-sm text-muted-foreground/70 mt-1 text-center">
-                                            Mulai scraping untuk mengambil daftar grup dari WhatsApp Anda
+                                        <p className="text-sm text-muted-foreground/70 mt-1 text-center max-w-md">
+                                            Meta Business API tidak menyediakan fitur scraping groups.
+                                            Lihat tab "Info Meta Apps" untuk informasi lengkap.
                                         </p>
                                         <Button
-                                            onClick={() => setActiveTab('scrape')}
+                                            onClick={() => setActiveTab('meta')}
                                             className="mt-4"
                                             variant="outline"
                                         >
-                                            <Download className="mr-2 size-4" />
-                                            Mulai Scraping
+                                            <AlertCircle className="mr-2 size-4" />
+                                            Lihat Info
                                         </Button>
                                     </div>
                                 )}

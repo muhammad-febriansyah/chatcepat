@@ -5,183 +5,166 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\TelegramBot;
 use App\Models\TelegramBroadcast;
-use App\Models\ContactGroup;
-use App\Services\TelegramService;
+use App\Models\TelegramBroadcastMessage;
+use App\Models\TelegramContact;
+use App\Models\TelegramMessage;
+use App\Services\Telegram\TelegramBotApiService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Log;
 
 class TelegramBroadcastController extends Controller
 {
-    /**
-     * Display broadcast page
-     */
-    public function index(): Response
+    public function index()
     {
-        $user = auth()->user();
+        $broadcasts = auth()->user()->telegramBroadcasts()
+            ->with('telegramBot')
+            ->latest()
+            ->paginate(20);
 
-        $bots = TelegramBot::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->withCount('contacts')
-            ->get()
-            ->map(function ($bot) {
-                return [
-                    'id' => $bot->id,
-                    'bot_username' => $bot->bot_username,
-                    'contacts_count' => $bot->contacts_count,
-                ];
-            });
+        return Inertia::render('user/telegram/broadcasts/index', [
+            'broadcasts' => $broadcasts,
+        ]);
+    }
 
-        // Get contact groups (can be used for Telegram too if phone numbers are converted)
-        $contactGroups = ContactGroup::where('user_id', $user->id)
-            ->withCount('members')
-            ->orderBy('name')
-            ->get()
-            ->map(function ($group) {
-                return [
-                    'id' => $group->id,
-                    'name' => $group->name,
-                    'members_count' => $group->members_count,
-                ];
-            });
+    public function create()
+    {
+        $bots = auth()->user()->telegramBots()->where('is_active', true)->get();
+        $contacts = auth()->user()->telegramContacts()->get();
 
-        return Inertia::render('user/telegram/broadcast', [
+        return Inertia::render('user/telegram/broadcasts/create', [
             'bots' => $bots,
-            'contactGroups' => $contactGroups,
+            'contacts' => $contacts,
         ]);
     }
 
-    /**
-     * Get contacts for a specific bot
-     */
-    public function getContacts(TelegramBot $telegramBot)
+    public function store(Request $request)
     {
-        if ($telegramBot->user_id !== auth()->id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $contacts = $telegramBot->contacts()
-            ->where('is_blocked', false)
-            ->orderBy('last_message_at', 'desc')
-            ->get()
-            ->map(function ($contact) {
-                return [
-                    'id' => $contact->id,
-                    'chat_id' => $contact->chat_id,
-                    'display_name' => $contact->display_name,
-                    'username' => $contact->username,
-                    'chat_type' => $contact->chat_type,
-                ];
-            });
-
-        return response()->json(['contacts' => $contacts]);
-    }
-
-    /**
-     * Send broadcast
-     */
-    public function send(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
+        $request->validate([
             'bot_id' => 'required|exists:telegram_bots,id',
-            'message' => 'required|string',
-            'recipients' => 'required|array|min:1',
-            'recipients.*' => 'required|integer',
-        ], [
-            'bot_id.required' => 'Pilih bot terlebih dahulu.',
-            'bot_id.exists' => 'Bot tidak valid.',
-            'message.required' => 'Pesan wajib diisi.',
-            'recipients.required' => 'Pilih minimal 1 penerima.',
-            'recipients.min' => 'Pilih minimal 1 penerima.',
+            'name' => 'required|string|max:255',
+            'message_type' => 'required|in:text,photo,video,document',
+            'message_content' => 'required|string',
+            'file' => 'nullable|file|max:51200',
+            'contact_ids' => 'required|array|min:1',
+            'contact_ids.*' => 'exists:telegram_contacts,id',
         ]);
 
-        $user = auth()->user();
-        $bot = TelegramBot::findOrFail($validated['bot_id']);
+        $bot = TelegramBot::findOrFail($request->bot_id);
+        $this->authorize('update', $bot);
 
-        if ($bot->user_id !== $user->id) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses ke bot ini.');
+        // Upload file if exists
+        $fileUrl = null;
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('telegram/broadcast', 'public');
+            $fileUrl = Storage::url($path);
         }
 
-        if (!$bot->is_active) {
-            return redirect()->back()->with('error', 'Bot tidak aktif.');
-        }
-
-        $chatIds = $validated['recipients'];
-        $message = $validated['message'];
-
-        // Create broadcast record
+        // Create broadcast
         $broadcast = TelegramBroadcast::create([
+            'user_id' => auth()->id(),
             'telegram_bot_id' => $bot->id,
-            'user_id' => $user->id,
-            'name' => 'Broadcast ' . now()->format('d M Y H:i'),
-            'type' => 'text',
-            'content' => $message,
-            'recipient_chat_ids' => $chatIds,
-            'total_recipients' => count($chatIds),
+            'name' => $request->name,
+            'message_type' => $request->message_type,
+            'message_content' => $request->message_content,
+            'file_url' => $fileUrl,
             'status' => 'processing',
-            'started_at' => now(),
+            'total_recipients' => count($request->contact_ids),
         ]);
 
-        // Send messages
-        $service = new TelegramService($bot);
-        $sentCount = 0;
-        $failedCount = 0;
+        // Create broadcast messages for each contact
+        foreach ($request->contact_ids as $contactId) {
+            TelegramBroadcastMessage::create([
+                'telegram_broadcast_id' => $broadcast->id,
+                'telegram_contact_id' => $contactId,
+                'status' => 'pending',
+            ]);
+        }
 
-        foreach ($chatIds as $chatId) {
+        // Dispatch job to send broadcast (in real app, use Queue)
+        $this->processBroadcast($broadcast);
+
+        return redirect()->route('user.telegram.broadcasts.index')
+            ->with('success', 'Broadcast created and being sent');
+    }
+
+    protected function processBroadcast(TelegramBroadcast $broadcast): void
+    {
+        $broadcast->update(['started_at' => now()]);
+        $bot = $broadcast->telegramBot;
+        $botApi = new TelegramBotApiService($bot->token);
+
+        $messages = $broadcast->broadcastMessages()->with('telegramContact')->get();
+
+        foreach ($messages as $broadcastMessage) {
             try {
-                $result = $service->sendMessage($chatId, $message);
+                $contact = $broadcastMessage->telegramContact;
+                $chatId = $contact->telegram_id ?? $contact->phone;
 
-                if ($result['success']) {
-                    $sentCount++;
-                } else {
-                    $failedCount++;
-                    Log::warning('Telegram broadcast failed', [
-                        'broadcast_id' => $broadcast->id,
+                // Send message based on type
+                $result = match ($broadcast->message_type) {
+                    'text' => $botApi->sendMessage($chatId, $broadcast->message_content),
+                    'photo' => $botApi->sendPhoto($chatId, url($broadcast->file_url), $broadcast->message_content),
+                    'video' => $botApi->sendVideo($chatId, url($broadcast->file_url), $broadcast->message_content),
+                    'document' => $botApi->sendDocument($chatId, url($broadcast->file_url), $broadcast->message_content),
+                };
+
+                if ($result['success'] ?? false) {
+                    // Create message record
+                    $message = TelegramMessage::create([
+                        'user_id' => $broadcast->user_id,
+                        'telegram_bot_id' => $bot->id,
+                        'telegram_contact_id' => $contact->id,
                         'chat_id' => $chatId,
-                        'error' => $result['error'],
+                        'message_id' => $result['result']['message_id'] ?? null,
+                        'direction' => 'outbound',
+                        'type' => $broadcast->message_type,
+                        'content' => $broadcast->message_content,
+                        'file_url' => $broadcast->file_url,
+                        'status' => 'sent',
+                        'sent_at' => now(),
                     ]);
+
+                    $broadcastMessage->update([
+                        'telegram_message_id' => $message->id,
+                        'status' => 'sent',
+                        'sent_at' => now(),
+                    ]);
+
+                    $broadcast->increment('sent_count');
+                } else {
+                    $broadcastMessage->update([
+                        'status' => 'failed',
+                        'error_message' => $result['error'] ?? 'Unknown error',
+                    ]);
+                    $broadcast->increment('failed_count');
                 }
 
-                // Rate limiting
-                usleep(100000); // 100ms delay
-
+                usleep(100000); // 100ms delay to avoid rate limit
             } catch (\Exception $e) {
-                $failedCount++;
-                Log::error('Telegram broadcast error', [
-                    'broadcast_id' => $broadcast->id,
-                    'chat_id' => $chatId,
-                    'error' => $e->getMessage(),
+                $broadcastMessage->update([
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
                 ]);
+                $broadcast->increment('failed_count');
             }
         }
 
-        // Update broadcast record
         $broadcast->update([
-            'sent_count' => $sentCount,
-            'failed_count' => $failedCount,
             'status' => 'completed',
             'completed_at' => now(),
         ]);
-
-        return redirect()->back()->with('success', "Broadcast selesai! Terkirim: {$sentCount}, Gagal: {$failedCount}");
     }
 
-    /**
-     * Get broadcast history
-     */
-    public function history(): Response
+    public function show(TelegramBroadcast $broadcast)
     {
-        $user = auth()->user();
+        $this->authorize('view', $broadcast);
 
-        $broadcasts = TelegramBroadcast::where('user_id', $user->id)
-            ->with('bot:id,bot_username')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $broadcast->load(['telegramBot', 'broadcastMessages.telegramContact']);
 
-        return Inertia::render('user/telegram/history', [
-            'broadcasts' => $broadcasts,
+        return Inertia::render('user/telegram/broadcasts/show', [
+            'broadcast' => $broadcast,
         ]);
     }
 }

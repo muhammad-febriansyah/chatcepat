@@ -30,6 +30,21 @@ class User extends Authenticatable
         'role',
         'nama_bisnis',
         'kategori_bisnis',
+        // Meta Integration Fields
+        'meta_whatsapp_phone_number_id',
+        'meta_whatsapp_business_account_id',
+        'meta_instagram_account_id',
+        'meta_facebook_page_id',
+        'meta_facebook_page_access_token',
+        'meta_access_token',
+        // Widget Fields
+        'widget_enabled',
+        'widget_color',
+        'widget_position',
+        'widget_greeting',
+        'widget_placeholder',
+        // AI Credit
+        'ai_credit',
     ];
 
     /**
@@ -64,6 +79,54 @@ class User extends Authenticatable
     public function whatsappSessions()
     {
         return $this->hasMany(WhatsappSession::class);
+    }
+
+    /**
+     * Get the Telegram sessions for the user.
+     */
+    public function telegramSessions()
+    {
+        return $this->hasMany(TelegramSession::class);
+    }
+
+    /**
+     * Get the Telegram bots for the user.
+     */
+    public function telegramBots()
+    {
+        return $this->hasMany(TelegramBot::class);
+    }
+
+    /**
+     * Get the Telegram contacts for the user.
+     */
+    public function telegramContacts()
+    {
+        return $this->hasMany(TelegramContact::class);
+    }
+
+    /**
+     * Get the Telegram messages for the user.
+     */
+    public function telegramMessages()
+    {
+        return $this->hasMany(TelegramMessage::class);
+    }
+
+    /**
+     * Get the Telegram auto replies for the user.
+     */
+    public function telegramAutoReplies()
+    {
+        return $this->hasMany(TelegramAutoReply::class);
+    }
+
+    /**
+     * Get the Telegram broadcasts for the user.
+     */
+    public function telegramBroadcasts()
+    {
+        return $this->hasMany(TelegramBroadcast::class);
     }
 
     /**
@@ -228,5 +291,21 @@ class User extends Authenticatable
         $packageSlug = strtolower($subscription['package_slug'] ?? $subscription['package_name'] ?? '');
 
         return $packageLimits[$packageSlug] ?? 1;
+    }
+
+    /**
+     * Get all up-selling campaigns for the user.
+     */
+    public function upSellingCampaigns()
+    {
+        return $this->hasMany(UpSellingCampaign::class);
+    }
+
+    /**
+     * Get all broadcast emails for the user.
+     */
+    public function broadcastEmails()
+    {
+        return $this->hasMany(BroadcastEmail::class);
     }
 }

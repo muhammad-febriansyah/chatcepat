@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'whatsapp.session' => \App\Http\Middleware\EnsureHasWhatsAppSession::class,
             'agent' => \App\Http\Middleware\RedirectIfNotAgent::class,
+            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

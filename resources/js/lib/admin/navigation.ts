@@ -36,6 +36,7 @@ export interface AdminNavItem {
     icon: LucideIcon
     external?: boolean // For external links
     roles?: UserRole[] // Roles that can see this item (if undefined, visible to all)
+    children?: AdminNavItem[] // For dropdown items
 }
 
 export interface AdminNavGroup {
@@ -105,24 +106,31 @@ export const adminNavigation: AdminNavGroup[] = [
         title: 'Halaman Statis',
         items: [
             {
-                title: 'Tentang Kami',
-                href: '/admin/pages/about',
-                icon: Info,
-            },
-            {
-                title: 'Visi & Misi',
-                href: '/admin/pages/vision-mission',
-                icon: Target,
-            },
-            {
-                title: 'Kebijakan Privasi',
-                href: '/admin/pages/privacy',
-                icon: ShieldCheck,
-            },
-            {
-                title: 'Syarat & Ketentuan',
-                href: '/admin/pages/terms',
-                icon: ScrollText,
+                title: 'Halaman',
+                href: '/admin/pages',
+                icon: FileText,
+                children: [
+                    {
+                        title: 'Tentang Kami',
+                        href: '/admin/pages/about',
+                        icon: Info,
+                    },
+                    {
+                        title: 'Visi & Misi',
+                        href: '/admin/pages/vision-mission',
+                        icon: Target,
+                    },
+                    {
+                        title: 'Kebijakan Privasi',
+                        href: '/admin/pages/privacy',
+                        icon: ShieldCheck,
+                    },
+                    {
+                        title: 'Syarat & Ketentuan',
+                        href: '/admin/pages/terms',
+                        icon: ScrollText,
+                    },
+                ],
             },
         ],
     },
@@ -130,14 +138,21 @@ export const adminNavigation: AdminNavGroup[] = [
         title: 'Blog',
         items: [
             {
-                title: 'Artikel',
-                href: '/admin/blog/posts',
-                icon: FileEdit,
-            },
-            {
-                title: 'Kategori',
-                href: '/admin/blog/categories',
-                icon: FolderOpen,
+                title: 'Blog',
+                href: '/admin/blog',
+                icon: FileText,
+                children: [
+                    {
+                        title: 'Artikel',
+                        href: '/admin/blog/posts',
+                        icon: FileEdit,
+                    },
+                    {
+                        title: 'Kategori',
+                        href: '/admin/blog/categories',
+                        icon: FolderOpen,
+                    },
+                ],
             },
         ],
     },
@@ -145,14 +160,21 @@ export const adminNavigation: AdminNavGroup[] = [
         title: 'Panduan Ekosistem',
         items: [
             {
-                title: 'Artikel Panduan',
-                href: '/admin/guides/articles',
+                title: 'Panduan',
+                href: '/admin/guides',
                 icon: BookOpen,
-            },
-            {
-                title: 'Kategori Panduan',
-                href: '/admin/guides/categories',
-                icon: FolderOpen,
+                children: [
+                    {
+                        title: 'Artikel Panduan',
+                        href: '/admin/guides/articles',
+                        icon: FileEdit,
+                    },
+                    {
+                        title: 'Kategori Panduan',
+                        href: '/admin/guides/categories',
+                        icon: FolderOpen,
+                    },
+                ],
             },
         ],
     },

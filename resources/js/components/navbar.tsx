@@ -34,7 +34,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
         { name: 'Home', link: '/' },
         { name: 'Harga', link: '/pricing' },
         { name: 'Blog', link: '/blog' },
-        { name: 'Kontak', link: '/contact' },
+        // { name: 'Kontak', link: '/contact' }, // HIDDEN
     ];
 
     const profileMenuItems = [
@@ -72,7 +72,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 <Sparkles className="h-5 w-5 text-white" />
                             </div>
                             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl font-bold text-transparent">
-                                {settings.site_name || 'CekatAI'}
+                                {settings.site_name || 'Chatcepat'}
                             </span>
                         </>
                     )}
@@ -206,7 +206,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                         background="rgb(37, 99, 235)"
                                         className="px-5 py-2 text-sm shadow-lg shadow-blue-500/30"
                                     >
-                                        Daftar Gratis
+                                        Coba Gratis
                                     </ShimmerButton>
                                 </Link>
                             )}
@@ -234,7 +234,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                     <Sparkles className="h-5 w-5 text-white" />
                                 </div>
                                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl font-bold text-transparent">
-                                    {settings.site_name || 'CekatAI'}
+                                    {settings.site_name || 'Chatcepat'}
                                 </span>
                             </>
                         )}
@@ -368,7 +368,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                             router.visit(register().url);
                                         }}
                                     >
-                                        Daftar Gratis
+                                        Coba Gratis
                                     </ShimmerButton>
                                 )}
                             </>

@@ -33,6 +33,12 @@ Route::middleware('auth:sanctum')->prefix('whatsapp-gateway')->name('api.whatsap
     Route::get('/sessions/{sessionId}', [WhatsAppGatewayController::class, 'getSession'])->name('get-session');
 });
 
-// Telegram Webhook - No auth required, validated by secret
-Route::post('/telegram/webhook/{botId}/{secret}', [App\Http\Controllers\Api\TelegramWebhookController::class, 'handle'])
+// Meta Webhook - For WhatsApp Business API, Instagram, Facebook
+Route::get('/meta/webhook', [App\Http\Controllers\Api\MetaWebhookController::class, 'verify'])
+    ->name('api.meta.webhook.verify');
+Route::post('/meta/webhook', [App\Http\Controllers\Api\MetaWebhookController::class, 'handle'])
+    ->name('api.meta.webhook.handle');
+
+// Telegram Webhook - For Telegram Bot API
+Route::post('/telegram/webhook/{bot}', [App\Http\Controllers\Api\TelegramWebhookController::class, 'handle'])
     ->name('api.telegram.webhook');

@@ -1,5 +1,4 @@
 import { AnimatedShinyText } from '@/components/ui/animated-shiny-text';
-import { Highlight } from '@/components/ui/hero-highlight';
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 import { register } from '@/routes';
@@ -66,12 +65,12 @@ export function HeroSection({ settings, canRegister }: HeroSectionProps) {
                                     )
                                 ) {
                                     return (
-                                        <Highlight
+                                        <span
                                             key={index}
-                                            className="text-black dark:text-white"
+                                            style={{ color: '#2547F9' }}
                                         >
                                             {part}
-                                        </Highlight>
+                                        </span>
                                     );
                                 }
                                 return <span key={index}>{part}</span>;

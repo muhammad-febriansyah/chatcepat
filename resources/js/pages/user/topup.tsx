@@ -48,8 +48,8 @@ export default function TopUp({ packages }: TopUpProps) {
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                    {packages.map((pkg) => {
+                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                    {packages.filter(pkg => pkg.slug !== 'trial').map((pkg) => {
                         const isFeatured = pkg.is_featured;
 
                         return (

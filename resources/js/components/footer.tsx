@@ -52,43 +52,53 @@ export default function Footer() {
                             {settings.footer_tagline || 'Omnichannel + CRM'}
                         </p>
 
-                        {/* Company Name */}
-                        <h3 className="mb-2 text-base font-semibold text-slate-900">
-                            {settings.footer_company_name || `PT Teknologi ${settings.site_name || 'ChatCepat'} Indonesia`}
-                        </h3>
+                        {/* Company Name - Only show if exists in settings */}
+                        {settings.footer_company_name && (
+                            <h3 className="mb-2 text-base font-semibold text-slate-900">
+                                {settings.footer_company_name}
+                            </h3>
+                        )}
 
-                        {/* Address */}
-                        <address className="mb-6 text-sm leading-relaxed text-slate-600 not-italic">
-                            {settings.footer_address || 'Ruko Hampton Avenue Blok A no.10. Paramount - Gading Serpong. Tangerang, 15810'}
-                        </address>
+                        {/* Address - Only show if exists in settings */}
+                        {settings.footer_address && (
+                            <address className="mb-6 text-sm leading-relaxed text-slate-600 not-italic">
+                                {settings.footer_address}
+                            </address>
+                        )}
 
-                        {/* App Download Buttons */}
-                        <div className="mb-6 flex gap-3">
-                            <a
-                                href={settings.google_play_url || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="transition-opacity hover:opacity-80"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                                    alt="Get it on Google Play"
-                                    className="h-10"
-                                />
-                            </a>
-                            <a
-                                href={settings.app_store_url || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="transition-opacity hover:opacity-80"
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
-                                    alt="Download on the App Store"
-                                    className="h-10"
-                                />
-                            </a>
-                        </div>
+                        {/* App Download Buttons - HIDDEN */}
+                        {/* {(settings.google_play_url || settings.app_store_url) && (
+                            <div className="mb-6 flex gap-3">
+                                {settings.google_play_url && (
+                                    <a
+                                        href={settings.google_play_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="transition-opacity hover:opacity-80"
+                                    >
+                                        <img
+                                            src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                                            alt="Get it on Google Play"
+                                            className="h-10"
+                                        />
+                                    </a>
+                                )}
+                                {settings.app_store_url && (
+                                    <a
+                                        href={settings.app_store_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="transition-opacity hover:opacity-80"
+                                    >
+                                        <img
+                                            src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
+                                            alt="Download on the App Store"
+                                            className="h-10"
+                                        />
+                                    </a>
+                                )}
+                            </div>
+                        )} */}
 
                         {/* Social Media Icons */}
                         <div className="flex flex-wrap gap-3">
@@ -148,7 +158,8 @@ export default function Footer() {
                                     <Linkedin className="h-5 w-5" />
                                 </a>
                             )}
-                            {settings?.youtube_url && (
+                            {/* YouTube - HIDDEN */}
+                            {/* {settings?.youtube_url && (
                                 <a
                                     href={settings.youtube_url}
                                     target="_blank"
@@ -157,7 +168,7 @@ export default function Footer() {
                                 >
                                     <Youtube className="h-5 w-5" />
                                 </a>
-                            )}
+                            )} */}
                         </div>
                     </div>
 

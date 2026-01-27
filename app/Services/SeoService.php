@@ -14,7 +14,7 @@ class SeoService
      */
     public function setTitle(string $title, bool $appendSiteName = true): self
     {
-        $siteName = config('app.name', 'CekatAI');
+        $siteName = config('app.name', 'Chatcepat');
         $this->meta['title'] = $appendSiteName ? "{$title} - {$siteName}" : $title;
         return $this;
     }
@@ -83,7 +83,7 @@ class SeoService
             ],
             'publisher' => [
                 '@type' => 'Organization',
-                'name' => config('app.name', 'CekatAI'),
+                'name' => config('app.name', 'Chatcepat'),
                 'logo' => [
                     '@type' => 'ImageObject',
                     'url' => asset('images/logo.png'),

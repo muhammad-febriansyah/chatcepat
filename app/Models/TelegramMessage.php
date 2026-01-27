@@ -11,41 +11,47 @@ class TelegramMessage extends Model
     use HasFactory;
 
     protected $fillable = [
-        'telegram_bot_id',
-        'telegram_message_id',
-        'chat_id',
-        'chat_type',
-        'chat_title',
-        'from_user_id',
-        'from_username',
-        'from_first_name',
-        'direction',
-        'type',
-        'content',
-        'media_metadata',
-        'is_auto_reply',
+        'user_id', 'telegram_bot_id', 'telegram_contact_id',
+        'message_id', 'chat_id', 'direction', 'type', 'content',
+        'file_url', 'file_type', 'file_size', 'metadata',
+        'status', 'error_message', 'sent_at', 'delivered_at', 'read_at',
     ];
 
     protected $casts = [
-        'telegram_message_id' => 'integer',
-        'chat_id' => 'integer',
-        'from_user_id' => 'integer',
-        'media_metadata' => 'array',
-        'is_auto_reply' => 'boolean',
+        'metadata' => 'array',
+        'file_size' => 'integer',
+        'sent_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'read_at' => 'datetime',
     ];
 
-    public function bot(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(TelegramBot::class, 'telegram_bot_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function isIncoming(): bool
+    public function telegramBot(): BelongsTo
     {
-        return $this->direction === 'incoming';
+        return $this->belongsTo(TelegramBot::class);
     }
 
-    public function isOutgoing(): bool
+    public function telegramContact(): BelongsTo
     {
-        return $this->direction === 'outgoing';
+        return $this->belongsTo(TelegramContact::class);
+    }
+
+    public function scopeInbound($query)
+    {
+        return $query->where('direction', 'inbound');
+    }
+
+    public function scopeOutbound($query)
+    {
+        return $query->where('direction', 'outbound');
+    }
+
+    public function scopeByStatus($query, string $status)
+    {
+        return $query->where('status', $status);
     }
 }

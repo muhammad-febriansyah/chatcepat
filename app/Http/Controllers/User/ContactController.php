@@ -7,6 +7,7 @@ use App\Models\WhatsappContact;
 use App\Models\WhatsappSession;
 use App\Imports\WhatsappContactsImport;
 use App\Traits\LogsActivity;
+use App\Services\Meta\MetaContactScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -44,8 +45,8 @@ class ContactController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('phone_number', 'like', "%{$search}%")
-                  ->orWhere('display_name', 'like', "%{$search}%")
-                  ->orWhere('push_name', 'like', "%{$search}%");
+                    ->orWhere('display_name', 'like', "%{$search}%")
+                    ->orWhere('push_name', 'like', "%{$search}%");
             });
         }
 
@@ -545,7 +546,7 @@ class ContactController extends Controller
             ['08123456789', 'Ahmad (akan otomatis jadi 628123456789)'],
         ];
 
-        $callback = function() use ($columns, $examples) {
+        $callback = function () use ($columns, $examples) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
             foreach ($examples as $row) {
@@ -555,5 +556,85 @@ class ContactController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Scrape contacts from WhatsApp Cloud API
+     */
+    public function scrapeWhatsAppCloudContacts(Request $request)
+    {
+        $service = new MetaContactScraperService();
+        $result = $service->fetchWhatsAppCloudContacts(auth()->id());
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
+
+    /**
+     * Scrape groups from WhatsApp Cloud API
+     */
+    public function scrapeWhatsAppCloudGroups(Request $request)
+    {
+        $service = new MetaContactScraperService();
+        $result = $service->fetchWhatsAppCloudGroups(auth()->id());
+
+        if ($result['success']) {
+            $this->logActivity(
+                action: 'scrape',
+                resourceType: 'WhatsAppCloudGroups',
+                resourceId: null,
+                resourceName: 'WhatsApp Cloud Groups Scraping',
+                newValues: ['total_scraped' => $result['data']['totalScraped'] ?? 0]
+            );
+        }
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
+
+    /**
+     * Scrape friends from Facebook
+     */
+    public function scrapeFacebookContacts(Request $request)
+    {
+        set_time_limit(180); // 3 minutes
+
+        $service = new MetaContactScraperService();
+        $result = $service->scrapeFacebookContacts(auth()->id());
+
+        if ($result['success']) {
+            // Log activity
+            $this->logActivity(
+                action: 'scrape',
+                resourceType: 'FacebookContacts',
+                resourceId: null,
+                resourceName: 'Facebook Messenger Scraping',
+                newValues: ['total_scraped' => $result['data']['totalScraped'] ?? 0]
+            );
+        }
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
+
+    /**
+     * Scrape followers from Instagram
+     */
+    public function scrapeInstagramFollowers(Request $request)
+    {
+        set_time_limit(180); // 3 minutes
+
+        $service = new MetaContactScraperService();
+        $result = $service->scrapeInstagramContacts(auth()->id());
+
+        if ($result['success']) {
+            // Log activity
+            $this->logActivity(
+                action: 'scrape',
+                resourceType: 'InstagramFollowers',
+                resourceId: null,
+                resourceName: 'Instagram Direct Scraping',
+                newValues: ['total_scraped' => $result['data']['totalScraped'] ?? 0]
+            );
+        }
+
+        return response()->json($result, $result['success'] ? 200 : 400);
     }
 }

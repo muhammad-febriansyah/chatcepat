@@ -11,42 +11,47 @@ class TelegramAutoReply extends Model
     use HasFactory;
 
     protected $fillable = [
-        'telegram_bot_id',
-        'name',
-        'trigger_type',
-        'trigger_value',
-        'response_type',
-        'response_content',
-        'response_media_url',
-        'is_active',
-        'priority',
+        'user_id', 'telegram_bot_id', 'name', 'trigger_type', 'trigger_value',
+        'reply_type', 'reply_content', 'reply_file_url',
+        'is_active', 'priority', 'usage_count', 'last_used_at',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'priority' => 'integer',
+        'usage_count' => 'integer',
+        'last_used_at' => 'datetime',
     ];
 
-    public function bot(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(TelegramBot::class, 'telegram_bot_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function matches(string $text): bool
+    public function telegramBot(): BelongsTo
     {
-        if (!$this->is_active) {
-            return false;
-        }
+        return $this->belongsTo(TelegramBot::class);
+    }
 
-        $text = trim($text);
-        $trigger = $this->trigger_value;
+    public function incrementUsage(): void
+    {
+        $this->increment('usage_count');
+        $this->update(['last_used_at' => now()]);
+    }
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true)->orderBy('priority', 'desc');
+    }
+
+    public function matches(string $message): bool
+    {
         return match ($this->trigger_type) {
+            'exact' => strtolower($message) === strtolower($this->trigger_value),
+            'contains' => str_contains(strtolower($message), strtolower($this->trigger_value)),
+            'keyword' => in_array(strtolower($this->trigger_value), array_map('strtolower', explode(' ', $message))),
+            'regex' => preg_match('/' . $this->trigger_value . '/i', $message),
             'all' => true,
-            'exact' => strtolower($text) === strtolower($trigger),
-            'contains' => str_contains(strtolower($text), strtolower($trigger)),
-            'starts_with' => str_starts_with(strtolower($text), strtolower($trigger)),
-            'regex' => (bool) preg_match($trigger, $text),
             default => false,
         };
     }

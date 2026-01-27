@@ -5,56 +5,48 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TelegramContact extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'telegram_bot_id',
-        'chat_id',
-        'chat_type',
-        'username',
-        'first_name',
-        'last_name',
-        'chat_title',
-        'is_blocked',
-        'last_message_at',
+        'user_id', 'telegram_bot_id', 'telegram_id', 'username',
+        'first_name', 'last_name', 'phone', 'bio',
+        'is_bot', 'is_verified', 'is_premium', 'metadata', 'last_interaction_at',
     ];
 
     protected $casts = [
-        'chat_id' => 'integer',
-        'is_blocked' => 'boolean',
-        'last_message_at' => 'datetime',
+        'is_bot' => 'boolean',
+        'is_verified' => 'boolean',
+        'is_premium' => 'boolean',
+        'metadata' => 'array',
+        'last_interaction_at' => 'datetime',
     ];
 
-    public function bot(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(TelegramBot::class, 'telegram_bot_id');
+        return $this->belongsTo(User::class);
+    }
+
+    public function telegramBot(): BelongsTo
+    {
+        return $this->belongsTo(TelegramBot::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(TelegramMessage::class);
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name}");
     }
 
     public function getDisplayNameAttribute(): string
     {
-        if ($this->chat_type !== 'private' && $this->chat_title) {
-            return $this->chat_title;
-        }
-
-        $name = trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
-
-        if (empty($name) && $this->username) {
-            return '@' . $this->username;
-        }
-
-        return $name ?: 'Unknown';
-    }
-
-    public function isPrivateChat(): bool
-    {
-        return $this->chat_type === 'private';
-    }
-
-    public function isGroupChat(): bool
-    {
-        return in_array($this->chat_type, ['group', 'supergroup']);
+        return $this->full_name ?: $this->username ?: $this->phone ?: 'Unknown';
     }
 }

@@ -27,12 +27,16 @@ interface EmailTemplate {
 }
 
 interface Props {
-    activeSmtp: SmtpSetting | null;
-    smtpSettings: SmtpSetting[];
-    emailTemplates: EmailTemplate[];
+    activeSmtp?: SmtpSetting | null;
+    smtpSettings?: SmtpSetting[];
+    emailTemplates?: EmailTemplate[];
 }
 
-export default function EmailBroadcastIndex({ activeSmtp, smtpSettings, emailTemplates }: Props) {
+export default function EmailBroadcastIndex({
+    activeSmtp = null,
+    smtpSettings = [],
+    emailTemplates = []
+}: Props) {
     const [recipientInput, setRecipientInput] = useState('');
 
     const { data, setData, post, processing } = useForm({

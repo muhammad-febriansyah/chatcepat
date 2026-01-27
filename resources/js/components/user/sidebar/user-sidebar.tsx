@@ -40,6 +40,10 @@ import {
     Package,
     UserCog,
     BookOpen,
+    MessagesSquare,
+    Coins,
+    Instagram,
+    Facebook,
 } from 'lucide-react'
 import { Link, router, usePage } from '@inertiajs/react'
 import { cn } from '@/lib/utils'
@@ -74,7 +78,7 @@ export function UserSidebar() {
     const isScrapingActive = isAnyActive(['/user/scraper'])
     const isBroadcastActive = isAnyActive(['/user/broadcast', '/user/contact-groups'])
     const isChatbotActive = isAnyActive(['/user/chatbot', '/user/reply-manual'])
-    const isPlatformsActive = isAnyActive(['/user/telegram', '/user/whatsapp'])
+    const isPlatformsActive = isAnyActive(['/user/whatsapp'])
     const isTemplatesActive = isAnyActive(['/user/templates', '/user/products'])
 
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -96,7 +100,12 @@ export function UserSidebar() {
         }))
     }
 
-    const isActive = (path: string) => {
+    const isActive = (path: string, exact: boolean = false) => {
+        if (exact) {
+            // Exact match only (for submenu items)
+            return url === path || url.startsWith(path + '?')
+        }
+        // Original behavior for parent menu items
         return url === path || url.startsWith(path + '/')
     }
 
@@ -239,6 +248,44 @@ export function UserSidebar() {
                                     <LockedMenuButton icon={MessageSquare} label="CRM Chat App" />
                                 )}
                             </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                {hasFeature('crm_chat') ? (
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith('/user/widget')}
+                                        className={cn(
+                                            'h-10 rounded-lg',
+                                            url.startsWith('/user/widget') && 'bg-primary/10 text-primary font-semibold'
+                                        )}
+                                    >
+                                        <Link href="/user/widget">
+                                            <MessagesSquare className="size-5" />
+                                            <span>Widget Live Chat</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                ) : (
+                                    <LockedMenuButton icon={MessagesSquare} label="Widget Live Chat" />
+                                )}
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                {hasFeature('human_agents') ? (
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={url.startsWith('/user/human-agents')}
+                                        className={cn(
+                                            'h-10 rounded-lg',
+                                            url.startsWith('/user/human-agents') && 'bg-primary/10 text-primary font-semibold'
+                                        )}
+                                    >
+                                        <Link href="/user/human-agents">
+                                            <UserCog className="size-5" />
+                                            <span>Human Agent</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                ) : (
+                                    <LockedMenuButton icon={UserCog} label="Human Agent" />
+                                )}
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
@@ -266,7 +313,7 @@ export function UserSidebar() {
                                             )}
                                         >
                                             <Users className="size-5" />
-                                            <span>Scraping Kontak</span>
+                                            <span>Scraping Contacts</span>
                                             {!hasFeature('scraper_gmaps') && !hasFeature('scraper_contacts') && !hasFeature('scraper_groups') && <Lock className="size-4 text-muted-foreground" />}
                                             <ChevronRight
                                                 className={cn(
@@ -282,54 +329,54 @@ export function UserSidebar() {
                                                 {hasFeature('scraper_gmaps') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/scraper')}
+                                                        isActive={isActive('/user/scraper', true)}
                                                         className={cn(
-                                                            isActive('/user/scraper') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/scraper', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/scraper">
-                                                            <MapPin className="size-4" />
-                                                            <span>Google Maps</span>
+                                                            <MapPin className="size-4 text-red-500" />
+                                                            <span>dari Google Maps</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={MapPin} label="Google Maps" />
+                                                    <LockedSubMenuButton icon={MapPin} label="dari Google Maps" />
                                                 )}
                                             </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
                                                 {hasFeature('scraper_contacts') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/scraper/contacts')}
+                                                        isActive={isActive('/user/scraper/contacts', true)}
                                                         className={cn(
-                                                            isActive('/user/scraper/contacts') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/scraper/contacts', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/scraper/contacts">
-                                                            <User className="size-4" />
-                                                            <span>Kontak HP</span>
+                                                            <User className="size-4 text-blue-500" />
+                                                            <span>dari Contacts HP</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={User} label="Kontak HP" />
+                                                    <LockedSubMenuButton icon={User} label="dari Contacts HP" />
                                                 )}
                                             </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
                                                 {hasFeature('scraper_groups') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/scraper/groups')}
+                                                        isActive={isActive('/user/scraper/groups', true)}
                                                         className={cn(
-                                                            isActive('/user/scraper/groups') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/scraper/groups', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/scraper/groups">
-                                                            <MessageCircle className="size-4" />
-                                                            <span>Grup WhatsApp</span>
+                                                            <MessageCircle className="size-4 text-green-600" />
+                                                            <span>dari Group WhatsApp</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={MessageCircle} label="Grup WhatsApp" />
+                                                    <LockedSubMenuButton icon={MessageCircle} label="dari Group WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
                                         </SidebarMenuSub>
@@ -375,7 +422,7 @@ export function UserSidebar() {
                                                         )}
                                                     >
                                                         <Link href="/user/broadcast">
-                                                            <MessageCircle className="size-4" />
+                                                            <MessageCircle className="size-4 text-green-600" />
                                                             <span>Broadcast WhatsApp</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
@@ -393,30 +440,48 @@ export function UserSidebar() {
                                                         )}
                                                     >
                                                         <Link href="/user/broadcast/groups">
-                                                            <Users className="size-4" />
-                                                            <span>Broadcast Grup WhatsApp</span>
+                                                            <Users className="size-4 text-gray-700" />
+                                                            <span>Broadcast Group WhatsApp</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={Users} label="Broadcast Grup WhatsApp" />
+                                                    <LockedSubMenuButton icon={Users} label="Broadcast Group WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/contact-groups')}
+                                                        isActive={isActive('/user/broadcast/email')}
                                                         className={cn(
-                                                            isActive('/user/contact-groups') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/broadcast/email') && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
-                                                        <Link href="/user/contact-groups">
-                                                            <Database className="size-4" />
-                                                            <span>Kelola Grup Kontak</span>
+                                                        <Link href="/user/broadcast/email">
+                                                            <Mail className="size-4 text-red-500" />
+                                                            <span>Broadcast Email</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={Database} label="Kelola Grup Kontak" />
+                                                    <LockedSubMenuButton icon={Mail} label="Broadcast Email" />
+                                                )}
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('broadcast_wa') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={isActive('/user/upselling')}
+                                                        className={cn(
+                                                            isActive('/user/upselling') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
+                                                        <Link href="/user/upselling">
+                                                            <TrendingUp className="size-4 text-gray-700" />
+                                                            <span>Up Selling</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={TrendingUp} label="Up Selling" />
                                                 )}
                                             </SidebarMenuSubItem>
                                         </SidebarMenuSub>
@@ -473,12 +538,12 @@ export function UserSidebar() {
                                                         )}
                                                     >
                                                         <Link href="/user/reply-manual">
-                                                            <Reply className="size-4" />
-                                                            <span>Reply Manual</span>
+                                                            <Reply className="size-4 text-gray-700" />
+                                                            <span>Auto Reply Manual</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={Reply} label="Reply Manual" />
+                                                    <LockedSubMenuButton icon={Reply} label="Auto Reply Manual" />
                                                 )}
                                             </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
@@ -493,7 +558,7 @@ export function UserSidebar() {
                                                         )}
                                                     >
                                                         <Link href="/user/chatbot">
-                                                            <Bot className="size-4" />
+                                                            <Bot className="size-4 text-gray-700" />
                                                             <span>Chatbot AI Cerdas</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
@@ -505,27 +570,6 @@ export function UserSidebar() {
                                     </CollapsibleContent>
                                 </SidebarMenuItem>
                             </Collapsible>
-
-                            {/* Human Agents - CRM */}
-                            <SidebarMenuItem>
-                                {hasFeature('human_agents') ? (
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={url.startsWith('/user/human-agents')}
-                                        className={cn(
-                                            'h-10 rounded-lg',
-                                            url.startsWith('/user/human-agents') && 'bg-primary/10 text-primary font-semibold'
-                                        )}
-                                    >
-                                        <Link href="/user/human-agents">
-                                            <UserCog className="size-5" />
-                                            <span>Human Agents</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                ) : (
-                                    <LockedMenuButton icon={UserCog} label="Human Agents" />
-                                )}
-                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
@@ -586,18 +630,72 @@ export function UserSidebar() {
                                                 {hasFeature('platforms') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
+                                                        isActive={url.startsWith('/user/meta/settings')}
+                                                        className={cn(
+                                                            url.startsWith('/user/meta/settings') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
+                                                        <Link href="/user/meta/settings">
+                                                            <MessageCircle className="size-4 text-green-600" />
+                                                            <span>WhatsApp Business API</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={MessageCircle} label="WhatsApp Business API" iconColor="text-green-600" />
+                                                )}
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('platforms') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
                                                         isActive={url.startsWith('/user/telegram')}
                                                         className={cn(
                                                             url.startsWith('/user/telegram') && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/telegram">
-                                                            <Bot className="size-4 text-blue-500" />
-                                                            <span>Telegram Bot</span>
+                                                            <Send className="size-4 text-blue-500" />
+                                                            <span>Telegram</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
-                                                    <LockedSubMenuButton icon={Bot} label="Telegram Bot" iconColor="text-blue-500" />
+                                                    <LockedSubMenuButton icon={Send} label="Telegram" iconColor="text-blue-500" />
+                                                )}
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('platforms') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={url.startsWith('/user/meta/messenger')}
+                                                        className={cn(
+                                                            url.startsWith('/user/meta/messenger') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
+                                                        <Link href="/user/meta/messenger">
+                                                            <Facebook className="size-4 text-blue-600" />
+                                                            <span>Facebook Messenger</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={Facebook} label="Facebook Messenger" iconColor="text-blue-600" />
+                                                )}
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('platforms') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={url.startsWith('/user/meta/instagram')}
+                                                        className={cn(
+                                                            url.startsWith('/user/meta/instagram') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
+                                                        <Link href="/user/meta/instagram">
+                                                            <Instagram className="size-4 text-pink-500" />
+                                                            <span>DM Instagram</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={Instagram} label="DM Instagram" iconColor="text-pink-500" />
                                                 )}
                                             </SidebarMenuSubItem>
                                         </SidebarMenuSub>
@@ -652,12 +750,30 @@ export function UserSidebar() {
                                                         )}
                                                     >
                                                         <Link href="/user/templates?type=whatsapp">
-                                                            <MessageCircle className="size-4" />
+                                                            <MessageCircle className="size-4 text-gray-700" />
                                                             <span>Template WhatsApp</span>
                                                         </Link>
                                                     </SidebarMenuSubButton>
                                                 ) : (
                                                     <LockedSubMenuButton icon={MessageCircle} label="Template WhatsApp" />
+                                                )}
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('templates') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={url.startsWith('/user/templates/email')}
+                                                        className={cn(
+                                                            url.startsWith('/user/templates/email') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
+                                                        <Link href="/user/templates/email">
+                                                            <Mail className="size-4 text-gray-700" />
+                                                            <span>Template Email</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={Mail} label="Template Email" />
                                                 )}
                                             </SidebarMenuSubItem>
                                             {/* Katalog Produk - Hidden for now
@@ -685,7 +801,7 @@ export function UserSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* Daftar Kontak */}
+                {/* MASTER DATA */}
                 <SidebarGroup>
                     <SidebarGroupContent>
                         <SidebarMenu>
@@ -693,19 +809,19 @@ export function UserSidebar() {
                                 {hasFeature('master_data') ? (
                                     <SidebarMenuButton
                                         asChild
-                                        isActive={isActive('/user/contacts')}
+                                        isActive={isActive('/user/contacts') || isActive('/user/contact-groups')}
                                         className={cn(
                                             'h-10 rounded-lg',
-                                            isActive('/user/contacts') && 'bg-primary/10 text-primary font-semibold'
+                                            (isActive('/user/contacts') || isActive('/user/contact-groups')) && 'bg-primary/10 text-primary font-semibold'
                                         )}
                                     >
                                         <Link href="/user/contacts">
-                                            <Users className="size-5" />
-                                            <span>Daftar Kontak</span>
+                                            <Database className="size-5" />
+                                            <span>Master Data</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 ) : (
-                                    <LockedMenuButton icon={Users} label="Daftar Kontak" />
+                                    <LockedMenuButton icon={Database} label="Master Data" />
                                 )}
                             </SidebarMenuItem>
                         </SidebarMenu>
@@ -719,6 +835,22 @@ export function UserSidebar() {
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
+                            {/* Hidden: Top Up AI Credit - temporarily disabled for user role */}
+                            {/* <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive('/user/ai-credit')}
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        isActive('/user/ai-credit') && 'bg-primary/10 text-primary font-semibold'
+                                    )}
+                                >
+                                    <Link href="/user/ai-credit">
+                                        <Coins className="size-5" />
+                                        <span>Top Up AI Credit</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem> */}
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
@@ -753,67 +885,26 @@ export function UserSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* LAPORAN & MONITORING - Always accessible */}
+                {/* LAPORAN & ANALITIK - Always accessible */}
                 <SidebarGroup>
                     <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider px-2">
-                        Laporan & Monitoring
+                        Laporan & Analitik
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
-                                    isActive={isActive('/user/reports') || url.startsWith('/user/reports/')}
+                                    isActive={isActive('/user/reports') || url.startsWith('/user/reports/') || isActive('/user/activity-logs') || url.startsWith('/user/activity-logs/')}
                                     className={cn(
                                         'h-10 rounded-lg',
-                                        (isActive('/user/reports') || url.startsWith('/user/reports/')) && 'bg-primary/10 text-primary font-semibold'
+                                        (isActive('/user/reports') || url.startsWith('/user/reports/') || isActive('/user/activity-logs') || url.startsWith('/user/activity-logs/')) && 'bg-primary/10 text-primary font-semibold'
                                     )}
                                 >
                                     <Link href="/user/reports">
                                         <BarChart3 className="size-5" />
-                                        <span>Laporan</span>
+                                        <span>Laporan & Log</span>
                                     </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={isActive('/user/activity-logs') || url.startsWith('/user/activity-logs/')}
-                                    className={cn(
-                                        'h-10 rounded-lg',
-                                        (isActive('/user/activity-logs') || url.startsWith('/user/activity-logs/')) && 'bg-primary/10 text-primary font-semibold'
-                                    )}
-                                >
-                                    <Link href="/user/activity-logs">
-                                        <FileText className="size-5" />
-                                        <span>Log Aktivitas</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-
-                {/* DUKUNGAN */}
-                <SidebarGroup>
-                    <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider px-2">
-                        Dukungan
-                    </SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={url.startsWith('/docs')}
-                                    className={cn(
-                                        'h-10 rounded-lg',
-                                        url.startsWith('/docs') && 'bg-primary/10 text-primary font-semibold'
-                                    )}
-                                >
-                                    <a href="/docs" target="_blank" rel="noopener noreferrer">
-                                        <BookOpen className="size-5" />
-                                        <span>Pusat Bantuan</span>
-                                    </a>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>

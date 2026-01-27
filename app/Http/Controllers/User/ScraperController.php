@@ -8,7 +8,9 @@ use App\Models\ScraperCategory;
 use App\Models\WhatsappSession;
 use App\Models\WhatsappGroup;
 use App\Models\WhatsappGroupMember;
+use App\Models\MetaContact;
 use App\Jobs\ProcessGoogleMapsScraping;
+use App\Services\Meta\MetaContactScraperService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -279,6 +281,7 @@ class ScraperController extends Controller
                 'whatsapp_groups.admins_count',
                 'whatsapp_groups.is_announce',
                 'whatsapp_groups.is_locked',
+                'whatsapp_groups.platform',
                 'whatsapp_groups.created_at',
                 'whatsapp_sessions.name as session_name'
             )
@@ -391,6 +394,93 @@ class ScraperController extends Controller
                     'admins' => $members->filter(fn($m) => $m['is_admin'])->count(),
                 ],
             ],
+        ]);
+    }
+
+    /**
+     * Scrape contacts from WhatsApp Cloud API (Meta)
+     */
+    public function scrapeMetaWhatsApp(Request $request)
+    {
+        $service = new MetaContactScraperService();
+        $result = $service->fetchWhatsAppCloudContacts(auth()->id());
+
+        return response()->json($result);
+    }
+
+    /**
+     * Scrape contacts from Facebook Messenger
+     */
+    public function scrapeMetaFacebook(Request $request)
+    {
+        $service = new MetaContactScraperService();
+        $result = $service->scrapeFacebookContacts(auth()->id());
+
+        return response()->json($result);
+    }
+
+    /**
+     * Scrape contacts from Instagram Direct
+     */
+    public function scrapeMetaInstagram(Request $request)
+    {
+        $service = new MetaContactScraperService();
+        $result = $service->scrapeInstagramContacts(auth()->id());
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get Meta contacts (for display in UI)
+     */
+    public function getMetaContacts(Request $request)
+    {
+        $platform = $request->query('platform'); // whatsapp_cloud, facebook, instagram
+
+        $query = \App\Models\WhatsappContact::where('user_id', auth()->id());
+
+        if ($platform) {
+            $query->where('platform', $platform);
+        } else {
+            // Default to Meta-only platforms
+            $query->whereIn('platform', ['whatsapp_cloud', 'facebook', 'instagram']);
+        }
+
+        $contacts = $query->latest()
+            ->paginate(20)
+            ->through(function ($contact) {
+                return [
+                    'id' => $contact->id,
+                    'platform' => $contact->platform,
+                    'identifier' => $contact->phone_number,
+                    'name' => $contact->display_name ?: $contact->push_name ?: '-',
+                    'username' => $contact->push_name,
+                    'last_message_at' => $contact->updated_at ? $contact->updated_at->format('d/m/Y H:i') : '-',
+                    'created_at' => $contact->created_at->format('d/m/Y H:i'),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $contacts,
+        ]);
+    }
+
+    /**
+     * Get Meta contacts stats
+     */
+    public function getMetaContactsStats()
+    {
+        $stats = [
+            'total' => \App\Models\WhatsappContact::where('user_id', auth()->id())->whereIn('platform', ['whatsapp_cloud', 'facebook', 'instagram'])->count(),
+            'whatsapp' => \App\Models\WhatsappContact::where('user_id', auth()->id())->where('platform', 'whatsapp_cloud')->count(),
+            'facebook' => \App\Models\WhatsappContact::where('user_id', auth()->id())->where('platform', 'facebook')->count(),
+            'instagram' => \App\Models\WhatsappContact::where('user_id', auth()->id())->where('platform', 'instagram')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
         ]);
     }
 }
