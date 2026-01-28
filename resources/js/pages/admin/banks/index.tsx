@@ -72,6 +72,8 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
+        console.log('Submitting form:', { editingBank, data })
+
         const formData = new FormData()
         formData.append('nama_bank', data.nama_bank)
         formData.append('atasnama', data.atasnama)
@@ -80,6 +82,7 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
 
         if (data.gambar) {
             formData.append('gambar', data.gambar)
+            console.log('Image file:', data.gambar)
         }
 
         if (editingBank) {
@@ -90,6 +93,10 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
                     reset()
                     setImagePreview(null)
                 },
+                onError: (errors) => {
+                    console.error('Update error:', errors)
+                    alert('Gagal mengupdate bank: ' + JSON.stringify(errors))
+                },
             })
         } else {
             router.post('/admin/banks', formData, {
@@ -97,6 +104,10 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
                     setIsModalOpen(false)
                     reset()
                     setImagePreview(null)
+                },
+                onError: (errors) => {
+                    console.error('Create error:', errors)
+                    alert('Gagal menambah bank: ' + JSON.stringify(errors))
                 },
             })
         }
