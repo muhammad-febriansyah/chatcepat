@@ -22,6 +22,7 @@ export function ImageUpload({
     const [preview, setPreview] = useState<string | null>(null)
     const [isDragOver, setIsDragOver] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isCurrentImageRemoved, setIsCurrentImageRemoved] = useState(false)
 
     const validateFile = (file: File): boolean => {
         const acceptedTypes = accept.split(',').map((t) => t.trim())
@@ -50,6 +51,7 @@ export function ImageUpload({
     const handleFile = (file: File) => {
         if (validateFile(file)) {
             onChange(file)
+            setIsCurrentImageRemoved(false) // Reset removed state when uploading new file
             const reader = new FileReader()
             reader.onloadend = () => {
                 setPreview(reader.result as string)
@@ -92,9 +94,10 @@ export function ImageUpload({
         onChange(null)
         setPreview(null)
         setError(null)
+        setIsCurrentImageRemoved(true) // Mark current image as removed
     }
 
-    const displayImage = preview || (currentImage ? `/storage/${currentImage}` : null)
+    const displayImage = preview || (currentImage && !isCurrentImageRemoved ? `/storage/${currentImage}` : null)
 
     return (
         <div className={cn('space-y-3', className)}>
