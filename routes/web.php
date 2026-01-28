@@ -2,8 +2,47 @@
 
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+
+// ========================================
+// Meta Webhook - MUST BE FIRST! Bypass all middleware
+// ========================================
+Route::get('/api/meta/webhook', function (Request $request) {
+    $mode = $request->query('hub_mode');
+    $token = $request->query('hub_verify_token');
+    $challenge = $request->query('hub_challenge');
+
+    \Log::info('Meta Webhook verify attempt', [
+        'mode' => $mode,
+        'token' => $token,
+        'challenge' => $challenge,
+        'ip' => $request->ip(),
+        'user_agent' => $request->userAgent(),
+    ]);
+
+    if ($mode === 'subscribe' && $token === 'chatcepat-meta-webhook-2026') {
+        \Log::info('Meta Webhook verification SUCCESS');
+        return response($challenge, 200)
+            ->header('Content-Type', 'text/plain')
+            ->header('Cache-Control', 'no-cache');
+    }
+
+    \Log::warning('Meta Webhook verification FAILED', [
+        'expected_token' => 'chatcepat-meta-webhook-2026',
+        'received_token' => $token,
+    ]);
+
+    return response('Forbidden', 403);
+})->withoutMiddleware();
+
+Route::post('/api/meta/webhook', function (Request $request) {
+    \Log::info('Meta Webhook POST received', ['payload' => $request->all()]);
+
+    // Forward to controller for actual processing
+    return app(\App\Http\Controllers\Api\MetaWebhookController::class)->handle($request);
+})->withoutMiddleware();
 
 // Route to refresh CSRF token (for handling 419 errors)
 Route::get('/csrf-token', function () {
