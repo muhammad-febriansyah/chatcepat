@@ -71,4 +71,13 @@ return [
         'container_id' => env('GOOGLE_TAG_MANAGER_ID'),
     ],
 
+    'meta' => [
+        'app_id' => env('META_APP_ID'),
+        'app_secret' => env('META_APP_SECRET'),
+        'webhook_verify_token' => env('META_WEBHOOK_VERIFY_TOKEN', 'chatcepat-meta-webhook-2024'),
+        'oauth_redirect_uri' => env('META_OAUTH_REDIRECT_URI'),
+        'graph_api_version' => env('META_GRAPH_API_VERSION', 'v21.0'),
+        'graph_api_url' => 'https://graph.facebook.com',
+    ],
+
 ];

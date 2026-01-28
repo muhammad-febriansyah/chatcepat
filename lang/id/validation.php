@@ -187,6 +187,10 @@ return [
         'phone' => [
             'required' => 'Nomor telepon harus diisi.',
         ],
+        'g-recaptcha-response' => [
+            'required' => 'Silakan centang reCAPTCHA untuk melanjutkan.',
+            'captcha' => 'Verifikasi reCAPTCHA gagal, silakan coba lagi.',
+        ],
     ],
 
     /*

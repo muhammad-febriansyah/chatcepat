@@ -15,6 +15,6 @@ return [
 
     'failed' => 'Email atau password yang Anda masukkan salah.',
     'password' => 'Password yang Anda masukkan salah.',
-    'throttle' => 'Terlalu banyak percobaan login. Silakan coba lagi dalam :seconds detik.',
+    'throttle' => 'Terlalu banyak percobaan login. Akun Anda ditangguhkan sementara selama 5 menit demi keamanan.',
 
 ];
