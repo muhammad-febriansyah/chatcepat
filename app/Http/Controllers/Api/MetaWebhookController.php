@@ -21,7 +21,7 @@ class MetaWebhookController extends Controller
     /**
      * Verify webhook (GET request from Meta)
      */
-    public function verify(Request $request): string|JsonResponse
+    public function verify(Request $request): mixed
     {
         $mode = $request->query('hub_mode');
         $token = $request->query('hub_verify_token');
@@ -29,14 +29,26 @@ class MetaWebhookController extends Controller
 
         $verifyToken = config('meta.webhook_verify_token');
 
+        Log::info('Meta Webhook verify request received', [
+            'mode' => $mode,
+            'token_received' => $token,
+            'token_expected' => $verifyToken,
+            'challenge' => $challenge,
+            'user_agent' => $request->userAgent(),
+            'ip' => $request->ip(),
+        ]);
+
         if ($mode === 'subscribe' && $token === $verifyToken) {
-            Log::info('Meta Webhook verified successfully');
-            return response($challenge, 200);
+            Log::info('Meta Webhook verified successfully - returning challenge');
+            return response($challenge, 200)
+                ->header('Content-Type', 'text/plain');
         }
 
         Log::warning('Meta Webhook verification failed', [
             'mode' => $mode,
-            'token' => $token
+            'token_received' => $token,
+            'token_expected' => $verifyToken,
+            'match' => $token === $verifyToken
         ]);
 
         return response()->json(['error' => 'Verification failed'], 403);
