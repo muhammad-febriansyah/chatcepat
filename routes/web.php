@@ -35,14 +35,14 @@ Route::get('/api/meta/webhook', function (Request $request) {
     ]);
 
     return response('Forbidden', 403);
-})->withoutMiddleware();
+});
 
 Route::post('/api/meta/webhook', function (Request $request) {
     \Log::info('Meta Webhook POST received', ['payload' => $request->all()]);
 
     // Forward to controller for actual processing
     return app(\App\Http\Controllers\Api\MetaWebhookController::class)->handle($request);
-})->withoutMiddleware();
+});
 
 // Route to refresh CSRF token (for handling 419 errors)
 Route::get('/csrf-token', function () {
