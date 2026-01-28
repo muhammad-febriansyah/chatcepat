@@ -27,7 +27,7 @@ class BankController extends Controller
             'nama_bank' => 'required|string|max:255',
             'atasnama' => 'required|string|max:255',
             'norek' => 'required|string|max:255',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'is_active' => 'boolean',
         ]);
 
@@ -48,7 +48,7 @@ class BankController extends Controller
             'nama_bank' => 'required|string|max:255',
             'atasnama' => 'required|string|max:255',
             'norek' => 'required|string|max:255',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'is_active' => 'boolean',
         ]);
 
