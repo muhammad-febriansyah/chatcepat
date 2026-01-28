@@ -30,3 +30,4 @@ yarn-error.log
 # Google Cloud credentials
 febrinogen-auth-2978e61d4917.json
 *.json.bak
+_env.production
