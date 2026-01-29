@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUpload } from '@/components/ui/image-upload'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import InputError from '@/components/input-error'
 import { FormEventHandler } from 'react'
 import { FileEdit, Save, X } from 'lucide-react'
@@ -108,14 +109,10 @@ export default function EditGuideArticle({ article, categories }: EditGuideArtic
 
                         <div className="space-y-2">
                             <Label htmlFor="content">Konten *</Label>
-                            <textarea
-                                id="content"
-                                value={data.content}
-                                onChange={(e) => setData('content', e.target.value)}
-                                placeholder="Tulis konten panduan di sini (mendukung Markdown/HTML sederhana)"
-                                rows={15}
-                                required
-                                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                            <RichTextEditor
+                                content={data.content}
+                                onChange={(html) => setData('content', html)}
+                                placeholder="Tulis konten panduan di sini..."
                             />
                             <InputError message={errors.content} />
                         </div>
