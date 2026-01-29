@@ -448,6 +448,7 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={Users} label="Broadcast Group WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
+                                            {/* Broadcast Email - Hidden for now
                                             <SidebarMenuSubItem>
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
@@ -466,6 +467,7 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={Mail} label="Broadcast Email" />
                                                 )}
                                             </SidebarMenuSubItem>
+                                            */}
                                             <SidebarMenuSubItem>
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
@@ -758,6 +760,7 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={MessageCircle} label="Template WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
+                                            {/* Template Email - Hidden for now
                                             <SidebarMenuSubItem>
                                                 {hasFeature('templates') ? (
                                                     <SidebarMenuSubButton
@@ -776,6 +779,7 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={Mail} label="Template Email" />
                                                 )}
                                             </SidebarMenuSubItem>
+                                            */}
                                             {/* Katalog Produk - Hidden for now
                                             <SidebarMenuSubItem>
                                                 {hasFeature('templates') ? (
