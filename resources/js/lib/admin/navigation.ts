@@ -25,6 +25,7 @@ import {
     Brain,
     BookOpen,
     Building,
+    Activity,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -246,6 +247,27 @@ export const adminNavigation: AdminNavGroup[] = [
                 title: 'AI Assistant Types',
                 href: '/admin/ai-assistant-types',
                 icon: Brain,
+            },
+        ],
+    },
+    {
+        title: 'Meta Management',
+        roles: ['admin'],
+        items: [
+            {
+                title: 'Documentation',
+                href: '/admin/meta/documentation',
+                icon: BookOpen,
+            },
+            {
+                title: 'Message Templates',
+                href: '/admin/meta/templates',
+                icon: MessageSquare,
+            },
+            {
+                title: 'Webhook Logs',
+                href: '/admin/meta/webhook-logs',
+                icon: Activity,
             },
         ],
     },
