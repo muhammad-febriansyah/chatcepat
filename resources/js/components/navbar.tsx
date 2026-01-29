@@ -84,11 +84,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                         {/* Home Link */}
                         <Link
                             href={navItems[0].link}
-                            className={`relative rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${
-                                isActive(navItems[0].link)
+                            className={`relative rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${isActive(navItems[0].link)
                                     ? 'bg-blue-600 text-white shadow-sm'
                                     : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
-                            }`}
+                                }`}
                         >
                             {navItems[0].name}
                         </Link>
@@ -96,11 +95,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                         {/* Profile Dropdown */}
                         <div className="group relative">
                             <button
-                                className={`flex items-center gap-1 rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${
-                                    isProfileMenuActive()
+                                className={`flex items-center gap-1 rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${isProfileMenuActive()
                                         ? 'bg-blue-600 text-white shadow-sm'
                                         : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
-                                }`}
+                                    }`}
                             >
                                 Profil
                                 <svg
@@ -123,11 +121,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                         <Link
                                             key={idx}
                                             href={item.link}
-                                            className={`mx-2 block rounded-[100px] px-4 py-2.5 transition-all duration-200 ${
-                                                isActive(item.link)
+                                            className={`mx-2 block rounded-[100px] px-4 py-2.5 transition-all duration-200 ${isActive(item.link)
                                                     ? 'bg-blue-600/10 font-medium text-blue-600'
                                                     : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
-                                            }`}
+                                                }`}
                                         >
                                             {item.name}
                                         </Link>
@@ -141,11 +138,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                             <Link
                                 key={idx}
                                 href={item.link}
-                                className={`relative rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${
-                                    isActive(item.link)
+                                className={`relative rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${isActive(item.link)
                                         ? 'bg-blue-600 text-white shadow-sm'
                                         : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
-                                }`}
+                                    }`}
                             >
                                 {item.name}
                             </Link>
@@ -174,7 +170,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 </div>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    onClick={() => router.visit('/dashboard')}
+                                    onClick={() => router.visit(auth.user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard')}
                                     className="cursor-pointer"
                                 >
                                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -254,11 +250,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                     <div className="mb-2 w-full space-y-1 border-b border-slate-200 pb-4">
                         <Link
                             href={navItems[0].link}
-                            className={`relative block rounded-[100px] px-3 py-2.5 font-medium transition-all duration-200 ${
-                                isActive(navItems[0].link)
+                            className={`relative block rounded-[100px] px-3 py-2.5 font-medium transition-all duration-200 ${isActive(navItems[0].link)
                                     ? 'bg-blue-600 font-semibold text-white shadow-sm'
                                     : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
-                            }`}
+                                }`}
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             {navItems[0].name}
@@ -268,11 +263,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                     {/* Profile Menu Items */}
                     <div className="mb-2 w-full border-b border-slate-200 pb-4">
                         <div
-                            className={`mb-3 rounded-[100px] px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                                isProfileMenuActive()
+                            className={`mb-3 rounded-[100px] px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${isProfileMenuActive()
                                     ? 'bg-blue-600 text-white'
                                     : 'text-slate-500'
-                            }`}
+                                }`}
                         >
                             PROFIL
                         </div>
@@ -280,11 +274,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                             <Link
                                 key={idx}
                                 href={item.link}
-                                className={`block rounded-[100px] px-3 py-2.5 transition-all duration-200 ${
-                                    isActive(item.link)
+                                className={`block rounded-[100px] px-3 py-2.5 transition-all duration-200 ${isActive(item.link)
                                         ? 'bg-blue-600/10 font-medium text-blue-600'
                                         : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
-                                }`}
+                                    }`}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {item.name}
@@ -298,11 +291,10 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                             <Link
                                 key={idx}
                                 href={item.link}
-                                className={`relative block rounded-[100px] px-3 py-2.5 font-medium transition-all duration-200 ${
-                                    isActive(item.link)
+                                className={`relative block rounded-[100px] px-3 py-2.5 font-medium transition-all duration-200 ${isActive(item.link)
                                         ? 'bg-blue-600 font-semibold text-white shadow-sm'
                                         : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
-                                }`}
+                                    }`}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {item.name}
@@ -330,7 +322,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
-                                        router.visit('/dashboard');
+                                        router.visit(auth.user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard');
                                     }}
                                     className="flex w-full items-center gap-2 rounded-[100px] bg-slate-100 px-4 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-200"
                                 >
