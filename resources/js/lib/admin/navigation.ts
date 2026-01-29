@@ -177,6 +177,24 @@ export const adminNavigation: AdminNavGroup[] = [
                     },
                 ],
             },
+            {
+                title: 'Meta Documentation',
+                href: '/admin/meta/documentation',
+                icon: BookOpen,
+                roles: ['admin'],
+            },
+            {
+                title: 'Message Templates',
+                href: '/admin/meta/templates',
+                icon: MessageSquare,
+                roles: ['admin'],
+            },
+            {
+                title: 'Webhook Logs',
+                href: '/admin/meta/webhook-logs',
+                icon: Activity,
+                roles: ['admin'],
+            },
         ],
     },
     {
@@ -247,27 +265,6 @@ export const adminNavigation: AdminNavGroup[] = [
                 title: 'AI Assistant Types',
                 href: '/admin/ai-assistant-types',
                 icon: Brain,
-            },
-        ],
-    },
-    {
-        title: 'Meta Management',
-        roles: ['admin'],
-        items: [
-            {
-                title: 'Documentation',
-                href: '/admin/meta/documentation',
-                icon: BookOpen,
-            },
-            {
-                title: 'Message Templates',
-                href: '/admin/meta/templates',
-                icon: MessageSquare,
-            },
-            {
-                title: 'Webhook Logs',
-                href: '/admin/meta/webhook-logs',
-                icon: Activity,
             },
         ],
     },
