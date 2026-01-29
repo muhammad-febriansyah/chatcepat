@@ -626,6 +626,26 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     // AI Assistant Types
     Route::resource('ai-assistant-types', App\Http\Controllers\Admin\AiAssistantTypeController::class)->except(['show', 'create', 'edit']);
 
+    // Meta Management (Documentation, Templates, Webhook Logs)
+    Route::prefix('meta')->name('meta.')->group(function () {
+        // Documentation
+        Route::resource('documentation', App\Http\Controllers\Admin\MetaDocumentationController::class);
+        Route::post('/documentation/{documentation}/toggle', [App\Http\Controllers\Admin\MetaDocumentationController::class, 'toggle'])->name('documentation.toggle');
+
+        // Message Templates
+        Route::resource('templates', App\Http\Controllers\Admin\MetaTemplateController::class);
+        Route::post('/templates/{template}/toggle', [App\Http\Controllers\Admin\MetaTemplateController::class, 'toggle'])->name('templates.toggle');
+        Route::post('/templates/{template}/duplicate', [App\Http\Controllers\Admin\MetaTemplateController::class, 'duplicate'])->name('templates.duplicate');
+
+        // Webhook Logs
+        Route::get('/webhook-logs', [App\Http\Controllers\Admin\MetaWebhookLogController::class, 'index'])->name('webhook-logs.index');
+        Route::get('/webhook-logs/{webhookLog}', [App\Http\Controllers\Admin\MetaWebhookLogController::class, 'show'])->name('webhook-logs.show');
+        Route::delete('/webhook-logs/{webhookLog}', [App\Http\Controllers\Admin\MetaWebhookLogController::class, 'destroy'])->name('webhook-logs.destroy');
+        Route::post('/webhook-logs/cleanup', [App\Http\Controllers\Admin\MetaWebhookLogController::class, 'cleanup'])->name('webhook-logs.cleanup');
+        Route::post('/webhook-logs/{webhookLog}/retry', [App\Http\Controllers\Admin\MetaWebhookLogController::class, 'retry'])->name('webhook-logs.retry');
+        Route::get('/webhook-logs-export', [App\Http\Controllers\Admin\MetaWebhookLogController::class, 'export'])->name('webhook-logs.export');
+    });
+
     // Transactions
     Route::get('/transactions', [App\Http\Controllers\Admin\TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{id}', [App\Http\Controllers\Admin\TransactionController::class, 'show'])->name('transactions.show');
