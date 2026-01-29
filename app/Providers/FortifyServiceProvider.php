@@ -173,7 +173,17 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())) . '|' . $request->ip());
 
-            return Limit::perMinute(10)->by($throttleKey);
+            return Limit::perMinute(10)->by($throttleKey)->response(function (Request $request, array $headers) {
+                $retryAfter = $headers['Retry-After'] ?? 60;
+                $minutes = ceil($retryAfter / 60);
+
+                return response()->json([
+                    'message' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$minutes} menit.",
+                    'errors' => [
+                        'email' => ["Anda telah mencoba login terlalu banyak kali. Mohon tunggu {$minutes} menit sebelum mencoba lagi."]
+                    ]
+                ], 429, $headers);
+            });
         });
     }
 
