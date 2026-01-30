@@ -423,7 +423,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                     className={cn(
                         'max-w-[70%] rounded-2xl p-3 shadow-md',
                         isOutgoing
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-sm'
+                            ? 'bg-primary text-white rounded-br-sm'
                             : 'bg-white border rounded-bl-sm'
                     )}
                 >
@@ -476,7 +476,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
 
             <div className="space-y-6">
                 {/* Header with Gradient */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
+                <div className="relative overflow-hidden rounded-xl bg-primary/5 p-6 border">
                     <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
                     <div className="relative flex items-center justify-between">
                         <div>
@@ -494,7 +494,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                 <Button
                                     variant="default"
                                     size="sm"
-                                    className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                    className="gap-2 bg-primary hover:bg-primary/90"
                                 >
                                     <ExternalLink className="size-4" />
                                     WhatsApp Web Style
@@ -555,7 +555,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 {/* Session Selector */}
                 {sessions.length > 0 && (
                     <Card className="overflow-hidden border-2">
-                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                        <div className="h-1 bg-primary" />
                         <CardHeader className="border-b">
                             <CardTitle className="flex items-center gap-2">
                                 <Wifi className="size-5 text-primary" />
@@ -603,7 +603,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 {/* Chat Interface */}
                 {selectedSession && (
                     <Card className="h-[calc(100vh-24rem)] overflow-hidden border-2">
-                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                        <div className="h-1 bg-primary" />
                         <div className="flex h-full">
                             {/* Conversations List */}
                             <div className="w-80 border-r flex flex-col">
@@ -611,7 +611,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                     {/* New Conversation Button */}
                                     <Dialog open={showNewConversation} onOpenChange={setShowNewConversation}>
                                         <DialogTrigger asChild>
-                                            <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/30" size="sm">
+                                            <Button className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30" size="sm">
                                                 <Plus className="size-4 mr-2" />
                                                 Percakapan Baru
                                             </Button>
@@ -665,7 +665,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                                     onClick={() => handleSelectContact(contact)}
                                                                     className="w-full p-3 border rounded-lg hover:bg-muted/50 transition-colors text-left flex items-center gap-3"
                                                                 >
-                                                                    <div className="size-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                                                    <div className="size-10 rounded-full bg-primary flex items-center justify-center">
                                                                         <User className="size-5 text-white" />
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
@@ -700,7 +700,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                     <Button
                                                         onClick={handleStartManualConversation}
                                                         disabled={!manualNumber.trim()}
-                                                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+                                                        className="w-full bg-primary hover:bg-primary/90 shadow-lg"
                                                     >
                                                         <MessageCircle className="size-4 mr-2" />
                                                         Mulai Percakapan
@@ -747,7 +747,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                 )}
                                             >
                                                 <div className="flex items-start gap-3">
-                                                    <div className="size-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                                                    <div className="size-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 shadow-md">
                                                         <User className="size-5 text-white" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -771,7 +771,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                                 {conv.last_message?.content || 'Mulai percakapan'}
                                                             </p>
                                                             {conv.unread_count > 0 && (
-                                                                <Badge className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-purple-600 border-0 shadow-md">
+                                                                <Badge className="flex-shrink-0 bg-primary border-0 shadow-md">
                                                                     {conv.unread_count}
                                                                 </Badge>
                                                             )}
@@ -789,9 +789,9 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                 {selectedConversationData ? (
                                     <>
                                         {/* Chat Header */}
-                                        <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+                                        <div className="p-4 border-b bg-primary/5">
                                             <div className="flex items-center gap-3">
-                                                <div className="size-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                                <div className="size-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
                                                     <User className="size-6 text-white" />
                                                 </div>
                                                 <div className="flex-1">
@@ -869,9 +869,9 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
 
                                         {/* File Preview */}
                                         {selectedFile && (
-                                            <div className="p-3 border-t bg-gradient-to-r from-blue-50 to-purple-50">
+                                            <div className="p-3 border-t bg-primary/5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="size-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
+                                                    <div className="size-12 rounded-xl bg-primary flex items-center justify-center shadow-md">
                                                         {selectedFile.type.startsWith('image/') ? (
                                                             <Image className="size-6 text-white" />
                                                         ) : (
@@ -899,7 +899,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                         onChange={(e) => setFileCaption(e.target.value)}
                                                         className="flex-1"
                                                     />
-                                                    <Button onClick={handleSendMedia} disabled={uploadingFile} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                                                    <Button onClick={handleSendMedia} disabled={uploadingFile} className="bg-primary hover:bg-primary/90">
                                                         {uploadingFile ? (
                                                             <RefreshCw className="size-4 animate-spin" />
                                                         ) : (
@@ -949,7 +949,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                                                     onClick={handleSendMessage}
                                                     disabled={sending || !messageText.trim()}
                                                     size="icon"
-                                                    className="h-[60px] w-[60px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/30"
+                                                    className="h-[60px] w-[60px] bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30"
                                                 >
                                                     <Send className="size-5" />
                                                 </Button>
