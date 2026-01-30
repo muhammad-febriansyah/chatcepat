@@ -301,15 +301,15 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
 
                 {/* Connection Error Alert */}
                 {connectionError && (
-                    <Alert variant="destructive" className="border-red-500 bg-red-50">
-                        <AlertTriangle className="size-5" />
-                        <AlertTitle className="font-semibold">Gagal Menautkan WhatsApp</AlertTitle>
-                        <AlertDescription className="mt-2">
+                    <Alert variant="destructive" className="border-red-500 bg-red-50 dark:bg-red-950">
+                        <AlertTriangle className="size-5 text-red-600 dark:text-red-400" />
+                        <AlertTitle className="font-semibold text-red-900 dark:text-red-100">Gagal Menautkan WhatsApp</AlertTitle>
+                        <AlertDescription className="mt-2 text-red-800 dark:text-red-200">
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <p>{connectionError.message}</p>
+                                    <p className="font-medium">{connectionError.message}</p>
                                     {connectionError.code && (
-                                        <p className="text-xs text-muted-foreground mt-1">
+                                        <p className="text-xs text-red-700 dark:text-red-300 mt-1 font-mono bg-red-100 dark:bg-red-900 px-2 py-1 rounded inline-block">
                                             Error code: {connectionError.code}
                                         </p>
                                     )}
@@ -320,7 +320,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="shrink-0 hover:bg-red-100"
+                                    className="shrink-0 hover:bg-red-100 dark:hover:bg-red-900 text-red-700 dark:text-red-300"
                                     onClick={() => setConnectionError(null)}
                                 >
                                     <X className="size-4" />
