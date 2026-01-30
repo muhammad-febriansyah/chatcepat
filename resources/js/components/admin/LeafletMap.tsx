@@ -8,9 +8,14 @@ const getPrimaryColor = (): string => {
     return '#2563eb'
 }
 
+// Get gray color for places without images
+const getGrayColor = (): string => {
+    return '#94a3b8' // slate-400
+}
+
 // Create custom marker icon based on category
-const createCategoryIcon = (category: string | null, rating: number | null) => {
-    const color = getPrimaryColor()
+const createCategoryIcon = (category: string | null, rating: number | null, hasImage: boolean = true) => {
+    const color = hasImage ? getPrimaryColor() : getGrayColor()
     const size = rating && rating >= 4.5 ? 40 : rating && rating >= 4.0 ? 36 : 32
 
     return L.divIcon({
@@ -142,8 +147,8 @@ const createCategoryImageIcon = (categoryImageUrl: string | null, categoryColor:
         })
     }
 
-    // Fallback to colored marker if no image
-    return createCategoryIcon(null, rating)
+    // Fallback to gray marker if no image
+    return createCategoryIcon(null, rating, false)
 }
 
 export function LeafletMap({

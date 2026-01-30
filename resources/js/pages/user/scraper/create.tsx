@@ -324,32 +324,6 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
                                         />
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="max_results" className="text-sm font-medium text-slate-700">
-                                            Maksimal Hasil
-                                        </Label>
-                                        <Select
-                                            value={formData.max_results.toString()}
-                                            onValueChange={(value) =>
-                                                setFormData({ ...formData, max_results: parseInt(value) })
-                                            }
-                                            disabled={isLoading}
-                                        >
-                                            <SelectTrigger className="border-slate-300 focus:border-primary">
-                                                <SelectValue placeholder="Pilih jumlah hasil..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="10">10 hasil (Cepat)</SelectItem>
-                                                <SelectItem value="20">20 hasil (Recommended)</SelectItem>
-                                                <SelectItem value="30">30 hasil</SelectItem>
-                                                <SelectItem value="50">50 hasil (Maksimal Aman)</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <p className="text-xs text-slate-500">
-                                            💡 Recommended: 20 hasil untuk kecepatan optimal dan tetap aman
-                                        </p>
-                                    </div>
-
                                     <div className="pt-2">
                                         <Button type="submit" className="w-full" disabled={isLoading}>
                                             {isLoading ? (
