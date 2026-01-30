@@ -951,6 +951,21 @@ export function UserSidebar() {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive('/user/guide')}
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        isActive('/user/guide') && 'bg-primary/10 text-primary font-semibold'
+                                    )}
+                                >
+                                    <Link href="/user/guide">
+                                        <BookOpen className="size-5" />
+                                        <span>Panduan</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
