@@ -347,7 +347,7 @@ export default function WhatsAppCreate({ aiAssistantTypes, products }: Props) {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="ai_description">Deskripsi & Aturan AI Agent</Label>
+                                                <Label htmlFor="ai_description">Behaviour & Training AI Agent</Label>
                                                 <Textarea
                                                     id="ai_description"
                                                     placeholder="Jelaskan peran, tanggung jawab, dan perilaku yang dibutuhkan untuk AI agent Anda..."
