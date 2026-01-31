@@ -114,6 +114,12 @@ class Transaction extends Model
      */
     public function markAsPaid(): void
     {
+        // Prevent double-processing: if already paid, skip to avoid
+        // the extension logic re-extending from this transaction's own expiration.
+        if ($this->status === 'paid') {
+            return;
+        }
+
         $now = Carbon::now();
         $package = $this->pricingPackage;
         $user = $this->user;
