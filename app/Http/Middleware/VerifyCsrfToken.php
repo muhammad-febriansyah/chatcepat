@@ -14,5 +14,6 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         '/logout', // User logout is safe to exclude - it only destroys session, no data modification
         '/agent/logout', // Agent logout is also safe to exclude
+        '/login', // Login excluded to prevent 419 errors when session expires on login page
     ];
 }
