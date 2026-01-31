@@ -270,16 +270,46 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
         return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
+    const formatLastMessagePreview = (message: Message | null): string => {
+        if (!message) return 'Start a conversation';
+
+        // Check if protocol/system message
+        if (message.type === 'text' && isProtocolMessage(message.content)) {
+            return '🔒 Pesan terenkripsi';
+        }
+
+        // Handle media types
+        switch (message.type) {
+            case 'image':
+                return '📷 Foto';
+            case 'video':
+                return '🎥 Video';
+            case 'audio':
+                return '🎵 Audio';
+            case 'document':
+                return `📄 ${message.media_metadata?.filename || 'Dokumen'}`;
+            case 'sticker':
+                return '✨ Stiker';
+            case 'text':
+            default:
+                // Truncate long messages
+                if (message.content && message.content.length > 50) {
+                    return message.content.substring(0, 50) + '...';
+                }
+                return message.content || 'Pesan';
+        }
+    };
+
     // No session connected
     if (sessions.length === 0) {
         return (
             <div className="h-screen bg-[#111b21] flex items-center justify-center">
                 <Head title="WhatsApp Chat" />
                 <div className="text-center">
-                    <MessageCircle className="size-24 mx-auto mb-6 text-[#00a884] opacity-50" />
+                    <MessageCircle className="size-24 mx-auto mb-6 text-[#2563eb] opacity-50" />
                     <h2 className="text-2xl font-semibold text-white mb-2">No WhatsApp Session Connected</h2>
                     <p className="text-[#8696a0] mb-6">Please connect a WhatsApp session first</p>
-                    <a href="/user/whatsapp" className="inline-flex items-center gap-2 px-6 py-3 bg-[#00a884] text-white rounded-lg hover:bg-[#008f72]">
+                    <a href="/user/whatsapp" className="inline-flex items-center gap-2 px-6 py-3 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8]">
                         Connect WhatsApp
                     </a>
                 </div>
@@ -296,7 +326,7 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                 {/* Header */}
                 <div className="h-[60px] bg-[#202c33] flex items-center justify-between px-4">
                     <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-full bg-[#00a884] flex items-center justify-center">
+                        <div className="size-10 rounded-full bg-[#2563eb] flex items-center justify-center">
                             <User className="size-5 text-white" />
                         </div>
                         <div>
@@ -391,10 +421,10 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                                             {conv.last_message?.direction === 'outgoing' && (
                                                 <CheckCheck className="inline size-4 text-[#53bdeb] mr-1" />
                                             )}
-                                            {conv.last_message?.content || 'Start a conversation'}
+                                            {formatLastMessagePreview(conv.last_message)}
                                         </p>
                                         {conv.unread_count > 0 && (
-                                            <span className="size-5 flex items-center justify-center rounded-full bg-[#00a884] text-white text-xs font-medium">
+                                            <span className="size-5 flex items-center justify-center rounded-full bg-[#2563eb] text-white text-xs font-medium">
                                                 {conv.unread_count}
                                             </span>
                                         )}
@@ -463,7 +493,7 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                                                 className={cn(
                                                     'max-w-[65%] rounded-lg px-3 py-2 shadow-sm relative',
                                                     isOutgoing
-                                                        ? 'bg-[#005c4b] text-[#e9edef] rounded-tr-none'
+                                                        ? 'bg-[#1e40af] text-[#e9edef] rounded-tr-none'
                                                         : 'bg-[#202c33] text-[#e9edef] rounded-tl-none'
                                                 )}
                                             >
@@ -530,7 +560,7 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                                 onClick={handleSendMessage}
                                 disabled={sending || !messageText.trim()}
                             >
-                                <Send className={cn("size-6", messageText.trim() ? "text-[#00a884]" : "text-[#8696a0]")} />
+                                <Send className={cn("size-6", messageText.trim() ? "text-[#2563eb]" : "text-[#8696a0]")} />
                             </Button>
                         </div>
                     </>
@@ -538,8 +568,8 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                     /* Empty State */
                     <div className="flex-1 flex items-center justify-center bg-[#222e35]">
                         <div className="text-center max-w-md">
-                            <div className="size-32 mx-auto mb-8 rounded-full bg-[#00a884]/10 flex items-center justify-center">
-                                <MessageCircle className="size-16 text-[#00a884]" />
+                            <div className="size-32 mx-auto mb-8 rounded-full bg-[#2563eb]/10 flex items-center justify-center">
+                                <MessageCircle className="size-16 text-[#2563eb]" />
                             </div>
                             <h2 className="text-3xl font-light text-[#e9edef] mb-4">ChatCepat Web</h2>
                             <p className="text-[#8696a0] text-sm leading-relaxed">
@@ -581,7 +611,7 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                                 onChange={(e) => setManualNumber(e.target.value)}
                                 className="bg-[#202c33] border-0 text-[#d1d7db] placeholder:text-[#8696a0]"
                             />
-                            <Button onClick={handleStartManualChat} disabled={!manualNumber.trim()} className="bg-[#00a884] hover:bg-[#008f72]">
+                            <Button onClick={handleStartManualChat} disabled={!manualNumber.trim()} className="bg-[#2563eb] hover:bg-[#1d4ed8]">
                                 Chat
                             </Button>
                         </div>
