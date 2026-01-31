@@ -72,36 +72,187 @@ class ScraperController extends Controller
             'location' => 'required|string|max:255',
             'kecamatan' => 'required|string|max:255',
             'category_id' => 'required|exists:scraper_categories,id',
-            'max_results' => 'nullable|integer|min:1|max:100',
+            'max_results' => 'nullable|integer|min:1|max:60',
         ]);
 
         $category = ScraperCategory::findOrFail($validated['category_id']);
+        $keyword = $category->name;
+        $location = $validated['location'];
+        $kecamatan = $validated['kecamatan'];
+        $maxResults = $validated['max_results'] ?? 20;
 
-        // Dispatch scraping job with user_id
-        $jobId = uniqid('scrape_', true);
+        try {
+            // Check cache first
+            $cacheKey = sprintf(
+                'scraper:cache:%s:%s:%s',
+                md5($keyword),
+                md5($location),
+                md5($kecamatan)
+            );
+            $cachedData = \Cache::get($cacheKey);
 
-        ProcessGoogleMapsScraping::dispatch(
-            auth()->id(),
-            $category->name, // keyword
-            $validated['location'],
-            $validated['kecamatan'],
-            $validated['max_results'] ?? 20,
-            $jobId
-        );
+            if ($cachedData) {
+                // Save cached data to database
+                $this->savePlacesSync($cachedData, auth()->id());
 
-        // Return JSON response for AJAX requests
-        if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'status' => 'success',
+                    'message' => 'Scraping completed successfully (from cache)',
+                    'data' => $cachedData,
+                    'total' => count($cachedData),
+                    'cached' => true,
+                ]);
+            }
+
+            // Call Python scraper API
+            $apiUrl = env('PYTHON_SCRAPER_API_URL', 'http://localhost:5001');
+            $apiKey = env('PYTHON_SCRAPER_API_KEY', 'chatcepat-secret-key-2024');
+
+            \Log::info('User Scraper: Calling Python API', [
+                'url' => $apiUrl,
+                'keyword' => $keyword,
+                'location' => $location,
+                'kecamatan' => $kecamatan,
+                'max_results' => $maxResults,
+                'user_id' => auth()->id(),
+            ]);
+
+            try {
+                $response = Http::timeout(300)
+                    ->withHeaders([
+                        'X-API-Key' => $apiKey,
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->post($apiUrl . '/api/scrape', [
+                        'keyword' => $keyword,
+                        'location' => $location,
+                        'kecamatan' => $kecamatan,
+                        'max_results' => $maxResults,
+                    ]);
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                \Log::error('User Scraper: Python API Connection Failed', [
+                    'error' => $e->getMessage(),
+                    'api_url' => $apiUrl,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'Cannot connect to scraper service. Please make sure Python API is running at ' . $apiUrl,
+                    'data' => [],
+                ], 500);
+            }
+
+            \Log::info('User Scraper: Python API Response', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+            ]);
+
+            if (!$response->successful()) {
+                $errorMsg = $response->json('message') ?? 'Failed to connect to scraper API';
+                \Log::error('User Scraper: Python API Error', [
+                    'status' => $response->status(),
+                    'error' => $errorMsg,
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => $errorMsg,
+                    'data' => [],
+                ], 500);
+            }
+
+            $output = $response->json();
+
+            if (!$output || $output['status'] !== 'success') {
+                $errorMsg = $output['message'] ?? 'Scraping failed';
+                \Log::error('User Scraper: Scraping Failed', [
+                    'output' => $output,
+                    'error' => $errorMsg,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => $errorMsg,
+                    'data' => [],
+                ], 500);
+            }
+
+            $data = $output['data'] ?? [];
+
+            \Log::info('User Scraper: Scraping Success', [
+                'total_results' => count($data),
+                'user_id' => auth()->id(),
+            ]);
+
+            // Cache hasil untuk 24 jam
+            \Cache::put($cacheKey, $data, now()->addHours(24));
+
+            // Save to database
+            $savedCount = $this->savePlacesSync($data, auth()->id());
+
+            \Log::info('User Scraper: Saved to Database', [
+                'saved_count' => $savedCount,
+                'total_received' => count($data),
+            ]);
+
             return response()->json([
                 'success' => true,
                 'status' => 'success',
-                'message' => 'Scraping job started successfully',
-                'job_id' => $jobId,
-                'data' => [],
+                'message' => "Scraping completed successfully! Saved {$savedCount} new places.",
+                'data' => $data,
+                'total' => count($data),
+                'saved' => $savedCount,
+                'cached' => false,
             ]);
+
+        } catch (\Exception $e) {
+            \Log::error('User Scraper: Exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
+    }
+
+    /**
+     * Save places to database synchronously
+     */
+    protected function savePlacesSync(array $data, int $userId): int
+    {
+        $count = 0;
+
+        foreach ($data as $placeData) {
+            try {
+                // Check if place already exists (prevent duplicates)
+                $exists = GoogleMapPlace::where('name', $placeData['name'])
+                    ->where('kecamatan', $placeData['kecamatan'])
+                    ->where('user_id', $userId)
+                    ->exists();
+
+                if (!$exists) {
+                    $placeData['user_id'] = $userId;
+                    GoogleMapPlace::create($placeData);
+                    $count++;
+                }
+            } catch (\Exception $e) {
+                \Log::warning("Failed to save place: {$e->getMessage()}", [
+                    'place_data' => $placeData,
+                ]);
+            }
         }
 
-        return redirect()->route('user.scraper.index')
-            ->with('success', 'Scraping job started. Results will appear shortly.');
+        return $count;
     }
 
     /**
