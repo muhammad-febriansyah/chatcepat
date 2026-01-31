@@ -148,31 +148,72 @@ class GoogleMapScraperController extends Controller
             $apiUrl = env('PYTHON_SCRAPER_API_URL', 'http://localhost:5001');
             $apiKey = env('PYTHON_SCRAPER_API_KEY', 'chatcepat-secret-key-2024');
 
-            $response = Http::timeout(300)
-                ->withHeaders([
-                    'X-API-Key' => $apiKey,
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($apiUrl . '/api/scrape', [
-                    'keyword' => $keyword,
-                    'location' => $location,
-                    'kecamatan' => $kecamatan,
-                    'max_results' => $maxResults,
+            \Log::info('Calling Python Scraper API', [
+                'url' => $apiUrl,
+                'keyword' => $keyword,
+                'location' => $location,
+                'kecamatan' => $kecamatan,
+                'max_results' => $maxResults,
+            ]);
+
+            try {
+                $response = Http::timeout(300)
+                    ->withHeaders([
+                        'X-API-Key' => $apiKey,
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->post($apiUrl . '/api/scrape', [
+                        'keyword' => $keyword,
+                        'location' => $location,
+                        'kecamatan' => $kecamatan,
+                        'max_results' => $maxResults,
+                    ]);
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                \Log::error('Python API Connection Failed', [
+                    'error' => $e->getMessage(),
+                    'api_url' => $apiUrl,
                 ]);
 
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Cannot connect to scraper service. Please make sure Python API is running at ' . $apiUrl,
+                    'details' => $e->getMessage(),
+                ], 500);
+            }
+
+            \Log::info('Python API Response', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+            ]);
+
             if (!$response->successful()) {
-                throw new \Exception(
-                    $response->json('message') ?? 'Failed to connect to scraper API'
-                );
+                $errorMsg = $response->json('message') ?? 'Failed to connect to scraper API';
+                \Log::error('Python API Error', [
+                    'status' => $response->status(),
+                    'error' => $errorMsg,
+                    'body' => $response->body(),
+                ]);
+
+                throw new \Exception($errorMsg);
             }
 
             $output = $response->json();
 
             if (!$output || $output['status'] !== 'success') {
-                throw new \Exception($output['message'] ?? 'Scraping failed');
+                $errorMsg = $output['message'] ?? 'Scraping failed';
+                \Log::error('Scraping Failed', [
+                    'output' => $output,
+                    'error' => $errorMsg,
+                ]);
+
+                throw new \Exception($errorMsg);
             }
 
             $data = $output['data'] ?? [];
+
+            \Log::info('Scraping Success', [
+                'total_results' => count($data),
+            ]);
 
             // Cache hasil untuk 24 jam
             \Cache::put($cacheKey, $data, now()->addHours(24));
@@ -193,6 +234,11 @@ class GoogleMapScraperController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Scraping Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error: ' . $e->getMessage(),

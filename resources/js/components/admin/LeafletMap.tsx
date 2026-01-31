@@ -284,21 +284,50 @@ export function LeafletMap({
                     if (data.address) {
                         // Extract kecamatan and kota from address components
                         const address = data.address
-                        const kecamatan = address.suburb || address.neighbourhood || address.quarter || address.city_district || ''
-                        const kota = address.city || address.town || address.village || address.county || address.state_district || ''
 
-                        if (kecamatan && kota) {
+                        // More comprehensive fallback for kecamatan (district/subdistrict level)
+                        const kecamatan = address.suburb ||
+                            address.neighbourhood ||
+                            address.quarter ||
+                            address.city_district ||
+                            address.hamlet ||
+                            address.district ||
+                            address.subdistrict ||
+                            address.municipality || ''
+
+                        // More comprehensive fallback for kota (city/regency level)
+                        const kota = address.city ||
+                            address.town ||
+                            address.village ||
+                            address.county ||
+                            address.state_district ||
+                            address.municipality ||
+                            address.state ||
+                            address.region || ''
+
+                        // Smart fallback: if one is missing, use the other
+                        const finalKecamatan = kecamatan || kota || 'Unknown'
+                        const finalKota = kota || kecamatan || address.country || 'Unknown'
+
+                        // Log for debugging
+                        console.log('Geocoding result:', {
+                            raw: address,
+                            kecamatan: finalKecamatan,
+                            kota: finalKota
+                        })
+
+                        if (finalKecamatan !== 'Unknown' && finalKota !== 'Unknown') {
                             // Update popup with success message
                             clickMarker?.setPopupContent(`
                                 <div style="padding: 8px;">
                                     <b>✅ Lokasi Dipilih</b><br>
-                                    <small>Kecamatan: ${kecamatan}<br>
-                                    Kota: ${kota}</small>
+                                    <small>Kecamatan: ${finalKecamatan}<br>
+                                    Kota: ${finalKota}</small>
                                 </div>
                             `)
 
                             // Call the callback
-                            onLocationSelect(kecamatan, kota, lat, lng)
+                            onLocationSelect(finalKecamatan, finalKota, lat, lng)
 
                             // Remove marker after 2 seconds
                             setTimeout(() => {
@@ -308,8 +337,24 @@ export function LeafletMap({
                                 }
                             }, 2000)
                         } else {
-                            clickMarker?.setPopupContent('❌ Tidak dapat menemukan kecamatan/kota')
+                            // Show what we found for debugging
+                            const foundInfo = Object.entries(address)
+                                .filter(([key, value]) => value && typeof value === 'string')
+                                .slice(0, 3)
+                                .map(([key, value]) => `${key}: ${value}`)
+                                .join('<br>')
+
+                            clickMarker?.setPopupContent(`
+                                <div style="padding: 8px;">
+                                    <b>❌ Lokasi tidak lengkap</b><br>
+                                    <small style="color: #64748b;">
+                                        Ditemukan:<br>${foundInfo || 'Tidak ada data'}
+                                    </small>
+                                </div>
+                            `)
                         }
+                    } else {
+                        clickMarker?.setPopupContent('❌ Tidak ada data lokasi')
                     }
                 } catch (error) {
                     console.error('Reverse geocoding error:', error)
