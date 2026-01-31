@@ -22,7 +22,7 @@ class ChatbotController extends Controller
 
         // Get all user sessions
         $sessions = WhatsappSession::where('user_id', $user->id)
-            ->select('id', 'session_id', 'name', 'phone_number', 'status', 'ai_assistant_type', 'settings')
+            ->select('id', 'session_id', 'name', 'phone_number', 'status', 'ai_assistant_type', 'ai_config', 'settings')
             ->get();
 
         // Get AI assistant types
@@ -49,7 +49,14 @@ class ChatbotController extends Controller
         $validated = $request->validate([
             'ai_assistant_type' => 'required|string|exists:ai_assistant_types,code',
             'auto_reply_enabled' => 'required|boolean',
-            'custom_system_prompt' => 'nullable|string|max:2000',
+            'primary_language' => 'nullable|string|in:id,en,both',
+            'communication_tone' => 'nullable|string|in:professional,friendly,casual,formal',
+            'ai_description' => 'nullable|string|max:5000',
+            'products' => 'nullable|array',
+            'products.*.name' => 'required|string',
+            'products.*.price' => 'required|numeric|min:0',
+            'products.*.description' => 'nullable|string',
+            'products.*.purchase_link' => 'nullable|string',
             'temperature' => 'nullable|numeric|min:0|max:2',
             'max_tokens' => 'nullable|integer|min:50|max:4000',
             'response_delay' => 'nullable|integer|min:0|max:10000',
@@ -62,15 +69,22 @@ class ChatbotController extends Controller
         // Update AI assistant type
         $session->ai_assistant_type = $validated['ai_assistant_type'];
 
+        // Update ai_config (behaviour & training)
+        $aiConfig = $session->ai_config ?? [];
+        if (isset($validated['primary_language'])) {
+            $aiConfig['primary_language'] = $validated['primary_language'];
+        }
+        if (isset($validated['communication_tone'])) {
+            $aiConfig['communication_tone'] = $validated['communication_tone'];
+        }
+        $aiConfig['ai_description'] = $validated['ai_description'] ?? '';
+        $aiConfig['products'] = $validated['products'] ?? [];
+        $session->ai_config = $aiConfig;
+
         // Build settings object
         $settings = $session->settings ?? [];
         $settings['autoReplyEnabled'] = $validated['auto_reply_enabled'];
-
-        if (!empty($validated['custom_system_prompt'])) {
-            $settings['customSystemPrompt'] = $validated['custom_system_prompt'];
-        } else {
-            unset($settings['customSystemPrompt']);
-        }
+        unset($settings['customSystemPrompt']);
 
         if (isset($validated['temperature'])) {
             $settings['temperature'] = (float) $validated['temperature'];

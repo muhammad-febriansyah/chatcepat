@@ -46,7 +46,19 @@ import {
     HelpCircle,
     ChevronRight,
     RefreshCw,
+    Plus,
+    X,
+    Package,
+    Link as LinkIcon,
 } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -58,6 +70,13 @@ const ICON_MAP: Record<string, LucideIcon> = {
     Bot,
 };
 
+interface Product {
+    name: string;
+    price: number;
+    description: string;
+    purchase_link: string;
+}
+
 interface WhatsappSession {
     id: number;
     session_id: string;
@@ -65,9 +84,16 @@ interface WhatsappSession {
     phone_number: string | null;
     status: string;
     ai_assistant_type: string;
+    ai_config: {
+        creation_method?: string;
+        agent_category?: string;
+        primary_language?: string;
+        communication_tone?: string;
+        ai_description?: string;
+        products?: Product[];
+    } | null;
     settings: {
         autoReplyEnabled?: boolean;
-        customSystemPrompt?: string;
         temperature?: number;
         maxTokens?: number;
         responseDelay?: number;
@@ -105,9 +131,25 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
     const [autoReplyEnabled, setAutoReplyEnabled] = useState(
         selectedSession?.settings?.autoReplyEnabled ?? true
     );
-    const [customPrompt, setCustomPrompt] = useState(
-        selectedSession?.settings?.customSystemPrompt || ''
+    const [primaryLanguage, setPrimaryLanguage] = useState(
+        selectedSession?.ai_config?.primary_language || 'id'
     );
+    const [communicationTone, setCommunicationTone] = useState(
+        selectedSession?.ai_config?.communication_tone || 'professional'
+    );
+    const [aiDescription, setAiDescription] = useState(
+        selectedSession?.ai_config?.ai_description || ''
+    );
+    const [products, setProducts] = useState<Product[]>(
+        selectedSession?.ai_config?.products || []
+    );
+    const [showProductDialog, setShowProductDialog] = useState(false);
+    const [newProduct, setNewProduct] = useState<Product>({
+        name: '',
+        price: 0,
+        description: '',
+        purchase_link: '',
+    });
     const [temperature, setTemperature] = useState(
         selectedSession?.settings?.temperature?.toString() || '0.7'
     );
@@ -130,7 +172,10 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
             setSelectedSession(session);
             setAiType(session.ai_assistant_type);
             setAutoReplyEnabled(session.settings?.autoReplyEnabled ?? true);
-            setCustomPrompt(session.settings?.customSystemPrompt || '');
+            setPrimaryLanguage(session.ai_config?.primary_language || 'id');
+            setCommunicationTone(session.ai_config?.communication_tone || 'professional');
+            setAiDescription(session.ai_config?.ai_description || '');
+            setProducts(session.ai_config?.products || []);
             setTemperature(session.settings?.temperature?.toString() || '0.7');
             setMaxTokens(session.settings?.maxTokens?.toString() || '500');
             setResponseDelay(session.settings?.responseDelay?.toString() || '0');
@@ -139,6 +184,18 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
             setTestResponse('');
             setSaveSuccess(false);
         }
+    };
+
+    const handleAddProduct = () => {
+        if (newProduct.name && newProduct.price) {
+            setProducts([...products, { ...newProduct }]);
+            setNewProduct({ name: '', price: 0, description: '', purchase_link: '' });
+            setShowProductDialog(false);
+        }
+    };
+
+    const handleRemoveProduct = (index: number) => {
+        setProducts(products.filter((_, i) => i !== index));
     };
 
     const handleSave = async () => {
@@ -157,7 +214,10 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
                 body: JSON.stringify({
                     ai_assistant_type: aiType,
                     auto_reply_enabled: autoReplyEnabled,
-                    custom_system_prompt: customPrompt,
+                    primary_language: primaryLanguage,
+                    communication_tone: communicationTone,
+                    ai_description: aiDescription,
+                    products: products,
                     temperature: parseFloat(temperature),
                     max_tokens: parseInt(maxTokens),
                     response_delay: parseInt(responseDelay),
@@ -533,40 +593,136 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
                                             </Card>
                                         </div>
 
-                                        {/* Custom Prompt */}
+                                        {/* Behaviour & Training */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    <SettingsIcon className="size-5 text-blue-500" />
+                                                    Behaviour & Training AI
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    Atur perilaku dan pengetahuan AI agent Anda
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="space-y-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label>Bahasa Utama</Label>
+                                                        <Select value={primaryLanguage} onValueChange={setPrimaryLanguage}>
+                                                            <SelectTrigger>
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="id">Bahasa Indonesia</SelectItem>
+                                                                <SelectItem value="en">English</SelectItem>
+                                                                <SelectItem value="both">Keduanya (Indonesia & English)</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <Label>Gaya Komunikasi</Label>
+                                                        <Select value={communicationTone} onValueChange={setCommunicationTone}>
+                                                            <SelectTrigger>
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="professional">Professional</SelectItem>
+                                                                <SelectItem value="friendly">Friendly</SelectItem>
+                                                                <SelectItem value="casual">Casual</SelectItem>
+                                                                <SelectItem value="formal">Formal</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label>Behaviour & Training AI Agent</Label>
+                                                    <Textarea
+                                                        placeholder="Jelaskan peran, tanggung jawab, dan perilaku yang dibutuhkan untuk AI agent Anda. Contoh: Jika ada yang bertanya apa nama perusahaannya, jawab nama perusahaan kami adalah PT Grow Indonesia yang bergerak dalam bidang teknologi..."
+                                                        value={aiDescription}
+                                                        onChange={(e) => setAiDescription(e.target.value)}
+                                                        className="min-h-[120px]"
+                                                    />
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Ini akan digunakan sebagai base prompt untuk mendefinisikan perilaku dan pedoman AI agent Anda
+                                                    </p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Products */}
                                         <Card>
                                             <CardHeader>
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <CardTitle className="flex items-center gap-2">
-                                                            <SettingsIcon className="size-5 text-blue-500" />
-                                                            Custom System Prompt
-                                                            <Badge variant="outline" className="ml-2">Opsional</Badge>
+                                                            <Package className="size-5 text-green-500" />
+                                                            Informasi Produk
                                                         </CardTitle>
                                                         <CardDescription>
-                                                            Tambahkan instruksi khusus untuk chatbot (kosongkan untuk menggunakan default)
+                                                            Tambahkan produk agar AI dapat menjawab pertanyaan tentang produk Anda
                                                         </CardDescription>
                                                     </div>
-                                                    <Tooltip>
-                                                        <TooltipTrigger>
-                                                            <Info className="size-4 text-muted-foreground" />
-                                                        </TooltipTrigger>
-                                                        <TooltipContent className="max-w-xs">
-                                                            <p>System prompt adalah instruksi yang diberikan ke AI tentang bagaimana harus berperilaku. Misalnya: "Kamu adalah customer service toko online yang ramah"</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        onClick={() => setShowProductDialog(true)}
+                                                        className="h-8"
+                                                    >
+                                                        <Plus className="size-3 mr-1" />
+                                                        Tambah Produk
+                                                    </Button>
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
-                                                <Textarea
-                                                    placeholder="Contoh: Kamu adalah asisten customer service untuk toko fashion online bernama 'ModernStyle'. Jawab dengan ramah, gunakan bahasa Indonesia yang sopan, dan selalu tawarkan bantuan lebih lanjut..."
-                                                    value={customPrompt}
-                                                    onChange={(e) => setCustomPrompt(e.target.value)}
-                                                    className="min-h-[120px]"
-                                                />
-                                                <p className="text-xs text-muted-foreground mt-2">
-                                                    Tip: Sertakan nama bisnis, gaya bahasa, dan batasan topik yang boleh dibahas
-                                                </p>
+                                                {products.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {products.map((product, index) => (
+                                                            <Card key={index} className="p-3">
+                                                                <div className="flex items-start justify-between gap-3">
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-2 mb-1">
+                                                                            <h4 className="font-semibold text-sm">{product.name}</h4>
+                                                                            <Badge variant="outline" className="text-xs">
+                                                                                Rp {product.price.toLocaleString('id-ID')}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        {product.description && (
+                                                                            <p className="text-xs text-muted-foreground mb-2">
+                                                                                {product.description}
+                                                                            </p>
+                                                                        )}
+                                                                        {product.purchase_link && (
+                                                                            <div className="flex items-center gap-1 text-xs text-blue-600">
+                                                                                <LinkIcon className="size-3" />
+                                                                                <span className="truncate">{product.purchase_link}</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => handleRemoveProduct(index)}
+                                                                        className="h-8 w-8 p-0"
+                                                                    >
+                                                                        <X className="size-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </Card>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <Card className="p-6">
+                                                        <div className="flex flex-col items-center justify-center text-center">
+                                                            <Package className="size-8 text-muted-foreground mb-2" />
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Belum ada produk. Klik "Tambah Produk" untuk mulai menambahkan.
+                                                            </p>
+                                                        </div>
+                                                    </Card>
+                                                )}
                                             </CardContent>
                                         </Card>
 
@@ -906,6 +1062,81 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
                     )}
                 </div>
             </TooltipProvider>
+
+            {/* Add Product Dialog */}
+            <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Tambah Produk</DialogTitle>
+                        <DialogDescription>
+                            Tambahkan informasi produk untuk AI chatbot Anda
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="cb_product_name">Nama Produk</Label>
+                            <Input
+                                id="cb_product_name"
+                                placeholder="Masukkan nama produk"
+                                value={newProduct.name}
+                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="cb_product_price">Harga</Label>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-muted-foreground">Rp</span>
+                                <Input
+                                    id="cb_product_price"
+                                    type="text"
+                                    placeholder="Masukkan harga"
+                                    value={newProduct.price ? newProduct.price.toLocaleString('id-ID') : ''}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.replace(/\D/g, '');
+                                        setNewProduct({ ...newProduct, price: rawValue ? Number(rawValue) : 0 });
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="cb_product_description">Deskripsi</Label>
+                            <Textarea
+                                id="cb_product_description"
+                                placeholder="Masukkan deskripsi produk, fitur, dan manfaat"
+                                value={newProduct.description}
+                                onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="cb_product_link">Link Pembelian</Label>
+                            <div className="flex items-center gap-2">
+                                <LinkIcon className="size-4 text-muted-foreground" />
+                                <Input
+                                    id="cb_product_link"
+                                    type="url"
+                                    placeholder="https://..."
+                                    value={newProduct.purchase_link}
+                                    onChange={(e) => setNewProduct({ ...newProduct, purchase_link: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setShowProductDialog(false)}>
+                            Batal
+                        </Button>
+                        <Button type="button" onClick={handleAddProduct}>
+                            Tambah Produk
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </UserLayout>
     );
 }
