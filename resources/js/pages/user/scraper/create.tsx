@@ -102,7 +102,10 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
         setIsLoading(true)
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            const xsrfCookie = document.cookie.split('; ').find(c => c.startsWith('XSRF-TOKEN='))
+            const csrfToken = xsrfCookie
+                ? decodeURIComponent(xsrfCookie.substring('XSRF-TOKEN='.length))
+                : document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
 
             if (!csrfToken) {
                 throw new Error('CSRF token tidak ditemukan')
