@@ -82,6 +82,7 @@ interface LeafletMapProps {
     height?: string
     zoom?: number
     mapType?: 'roadmap' | 'satellite' | 'hybrid' | 'terrain'
+    onLocationSelect?: (kecamatan: string, kota: string, lat: number, lng: number) => void
 }
 
 // Create marker icon using category image
@@ -157,6 +158,7 @@ export function LeafletMap({
     height = '600px',
     zoom = 12,
     mapType = 'roadmap',
+    onLocationSelect,
 }: LeafletMapProps) {
     const mapRef = useRef<HTMLDivElement>(null)
     const mapInstanceRef = useRef<L.Map | null>(null)
@@ -197,9 +199,123 @@ export function LeafletMap({
 
         // Add user location marker if available
         if (userLocation) {
-            L.marker(userLocation)
+            const userMarkerIcon = L.divIcon({
+                className: 'user-location-marker',
+                html: `
+                    <div style="position: relative;">
+                        <div style="
+                            width: 20px;
+                            height: 20px;
+                            background: #3b82f6;
+                            border: 3px solid white;
+                            border-radius: 50%;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        "></div>
+                        <div style="
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            width: 40px;
+                            height: 40px;
+                            background: rgba(59, 130, 246, 0.2);
+                            border: 2px solid rgba(59, 130, 246, 0.4);
+                            border-radius: 50%;
+                            animation: pulse 2s infinite;
+                        "></div>
+                    </div>
+                `,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+            })
+
+            L.marker(userLocation, { icon: userMarkerIcon })
                 .addTo(map)
-                .bindPopup('<b>Lokasi Anda</b><br>Posisi saat ini')
+                .bindPopup('<b>📍 Lokasi Anda</b><br>Posisi saat ini')
+        }
+
+        // Add click handler for location selection
+        if (onLocationSelect) {
+            let clickMarker: L.Marker | null = null
+
+            map.on('click', async (e: L.LeafletMouseEvent) => {
+                const { lat, lng } = e.latlng
+
+                // Remove previous click marker if exists
+                if (clickMarker) {
+                    map.removeLayer(clickMarker)
+                }
+
+                // Add temporary marker at click location
+                const tempIcon = L.divIcon({
+                    className: 'temp-marker',
+                    html: `
+                        <div style="
+                            width: 16px;
+                            height: 16px;
+                            background: #ef4444;
+                            border: 3px solid white;
+                            border-radius: 50%;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        "></div>
+                    `,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8],
+                })
+
+                clickMarker = L.marker([lat, lng], { icon: tempIcon })
+                    .addTo(map)
+                    .bindPopup('⏳ Mengambil informasi lokasi...')
+                    .openPopup()
+
+                try {
+                    // Reverse geocoding using Nominatim (free, no API key needed)
+                    const response = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=id`,
+                        {
+                            headers: {
+                                'User-Agent': 'ChatCepat Maps Scraper',
+                            },
+                        }
+                    )
+
+                    const data = await response.json()
+
+                    if (data.address) {
+                        // Extract kecamatan and kota from address components
+                        const address = data.address
+                        const kecamatan = address.suburb || address.neighbourhood || address.quarter || address.city_district || ''
+                        const kota = address.city || address.town || address.village || address.county || address.state_district || ''
+
+                        if (kecamatan && kota) {
+                            // Update popup with success message
+                            clickMarker?.setPopupContent(`
+                                <div style="padding: 8px;">
+                                    <b>✅ Lokasi Dipilih</b><br>
+                                    <small>Kecamatan: ${kecamatan}<br>
+                                    Kota: ${kota}</small>
+                                </div>
+                            `)
+
+                            // Call the callback
+                            onLocationSelect(kecamatan, kota, lat, lng)
+
+                            // Remove marker after 2 seconds
+                            setTimeout(() => {
+                                if (clickMarker) {
+                                    map.removeLayer(clickMarker)
+                                    clickMarker = null
+                                }
+                            }, 2000)
+                        } else {
+                            clickMarker?.setPopupContent('❌ Tidak dapat menemukan kecamatan/kota')
+                        }
+                    }
+                } catch (error) {
+                    console.error('Reverse geocoding error:', error)
+                    clickMarker?.setPopupContent('❌ Gagal mengambil informasi lokasi')
+                }
+            })
         }
 
         // Choose tile layer based on map type
@@ -492,6 +608,17 @@ export function LeafletMap({
                 @keyframes spin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
+                }
+
+                @keyframes pulse {
+                    0%, 100% {
+                        opacity: 1;
+                        transform: translate(-50%, -50%) scale(1);
+                    }
+                    50% {
+                        opacity: 0.5;
+                        transform: translate(-50%, -50%) scale(1.3);
+                    }
                 }
 
                 /* Remove Leaflet popup padding for full-width content */

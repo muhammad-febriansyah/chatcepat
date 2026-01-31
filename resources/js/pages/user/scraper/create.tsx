@@ -188,6 +188,19 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
         window.location.href = '/user/scraper/export/pdf'
     }
 
+    const handleLocationSelect = (kecamatan: string, kota: string, lat: number, lng: number) => {
+        setFormData(prev => ({
+            ...prev,
+            kecamatan: kecamatan,
+            location: kota,
+        }))
+
+        toast.success('Lokasi Dipilih!', {
+            description: `${kecamatan}, ${kota}`,
+            duration: 3000,
+        })
+    }
+
     return (
         <>
             <Head title="Interactive Maps Scraper" />
@@ -255,7 +268,7 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
                             <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
                                 <h3 className="font-semibold text-slate-900">Form Scraping</h3>
                                 <p className="text-xs text-slate-500 mt-0.5">
-                                    Masukkan data lokasi yang ingin di-scrape
+                                    💡 Klik peta untuk auto-fill kecamatan & kota
                                 </p>
                             </div>
                             <div className="p-4">
@@ -451,7 +464,13 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
 
                     {/* Map */}
                     <div className="flex-1 relative">
-                        <LeafletMap places={filteredPlaces} categories={categories} height="100%" mapType={mapType} />
+                        <LeafletMap
+                            places={filteredPlaces}
+                            categories={categories}
+                            height="100%"
+                            mapType={mapType}
+                            onLocationSelect={handleLocationSelect}
+                        />
                     </div>
 
                     {/* Bottom Info Bar */}
