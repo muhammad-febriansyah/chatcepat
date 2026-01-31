@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import {
     Search, Send, Paperclip, Smile, MoreVertical, Phone, Video,
     ArrowLeft, Check, CheckCheck, Clock, User, MessageCircle, Plus,
-    Image, FileText, X, RefreshCw
+    Image, FileText, X, RefreshCw, Lock, Film, Music, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -270,26 +270,51 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
         return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
-    const formatLastMessagePreview = (message: Message | null): string => {
-        if (!message) return 'Start a conversation';
+    const getMessagePreviewIcon = (message: Message | null) => {
+        if (!message) return null;
 
         // Check if protocol/system message
         if (message.type === 'text' && isProtocolMessage(message.content)) {
-            return '🔒 Pesan terenkripsi';
+            return <Lock className="inline size-4 mr-1" />;
         }
 
         // Handle media types
         switch (message.type) {
             case 'image':
-                return '📷 Foto';
+                return <Image className="inline size-4 mr-1" />;
             case 'video':
-                return '🎥 Video';
+                return <Film className="inline size-4 mr-1" />;
             case 'audio':
-                return '🎵 Audio';
+                return <Music className="inline size-4 mr-1" />;
             case 'document':
-                return `📄 ${message.media_metadata?.filename || 'Dokumen'}`;
+                return <FileText className="inline size-4 mr-1" />;
             case 'sticker':
-                return '✨ Stiker';
+                return <Sparkles className="inline size-4 mr-1" />;
+            default:
+                return null;
+        }
+    };
+
+    const getMessagePreviewText = (message: Message | null): string => {
+        if (!message) return 'Start a conversation';
+
+        // Check if protocol/system message
+        if (message.type === 'text' && isProtocolMessage(message.content)) {
+            return 'Pesan terenkripsi';
+        }
+
+        // Handle media types
+        switch (message.type) {
+            case 'image':
+                return 'Foto';
+            case 'video':
+                return 'Video';
+            case 'audio':
+                return 'Audio';
+            case 'document':
+                return message.media_metadata?.filename || 'Dokumen';
+            case 'sticker':
+                return 'Stiker';
             case 'text':
             default:
                 // Truncate long messages
@@ -417,14 +442,15 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                                         )}
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm text-[#8696a0] truncate pr-2">
+                                        <p className="text-sm text-[#8696a0] truncate pr-2 flex items-center">
                                             {conv.last_message?.direction === 'outgoing' && (
-                                                <CheckCheck className="inline size-4 text-[#53bdeb] mr-1" />
+                                                <CheckCheck className="inline size-4 text-[#53bdeb] mr-1 flex-shrink-0" />
                                             )}
-                                            {formatLastMessagePreview(conv.last_message)}
+                                            {getMessagePreviewIcon(conv.last_message)}
+                                            <span className="truncate">{getMessagePreviewText(conv.last_message)}</span>
                                         </p>
                                         {conv.unread_count > 0 && (
-                                            <span className="size-5 flex items-center justify-center rounded-full bg-[#2563eb] text-white text-xs font-medium">
+                                            <span className="size-5 flex items-center justify-center rounded-full bg-[#2563eb] text-white text-xs font-medium flex-shrink-0">
                                                 {conv.unread_count}
                                             </span>
                                         )}
