@@ -154,9 +154,9 @@ export function UserHeader() {
                                             onClick={() => router.visit(notif.url)}
                                         >
                                             <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${notif.color === 'green' ? 'bg-green-100 text-green-600' :
-                                                    notif.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
-                                                        notif.color === 'red' ? 'bg-red-100 text-red-600' :
-                                                            'bg-gray-100 text-gray-600'
+                                                notif.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
+                                                    notif.color === 'red' ? 'bg-red-100 text-red-600' :
+                                                        'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {notif.status === 'paid' ? <CheckCircle className="h-4 w-4" /> :
                                                     notif.status === 'pending' ? <Clock className="h-4 w-4" /> :

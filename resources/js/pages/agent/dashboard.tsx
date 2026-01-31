@@ -45,7 +45,7 @@ interface Props {
 
 export default function AgentDashboard({ agent, assignedSessions, stats }: Props) {
     const handleLogout = () => {
-        router.post(route('agent.logout'));
+        router.post(route('agent.logout'))
     };
 
     const getRoleBadge = (role: string) => {

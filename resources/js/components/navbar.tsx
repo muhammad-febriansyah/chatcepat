@@ -85,8 +85,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                         <Link
                             href={navItems[0].link}
                             className={`relative rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${isActive(navItems[0].link)
-                                    ? 'bg-blue-600 text-white shadow-sm'
-                                    : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
                                 }`}
                         >
                             {navItems[0].name}
@@ -96,8 +96,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                         <div className="group relative">
                             <button
                                 className={`flex items-center gap-1 rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${isProfileMenuActive()
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
+                                    ? 'bg-blue-600 text-white shadow-sm'
+                                    : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
                                     }`}
                             >
                                 Profil
@@ -122,8 +122,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                             key={idx}
                                             href={item.link}
                                             className={`mx-2 block rounded-[100px] px-4 py-2.5 transition-all duration-200 ${isActive(item.link)
-                                                    ? 'bg-blue-600/10 font-medium text-blue-600'
-                                                    : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
+                                                ? 'bg-blue-600/10 font-medium text-blue-600'
+                                                : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
                                                 }`}
                                         >
                                             {item.name}
@@ -139,8 +139,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 key={idx}
                                 href={item.link}
                                 className={`relative rounded-[100px] px-4 py-2 font-medium transition-all duration-200 ${isActive(item.link)
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
+                                    ? 'bg-blue-600 text-white shadow-sm'
+                                    : 'text-neutral-600 hover:bg-slate-50 hover:text-blue-600'
                                     }`}
                             >
                                 {item.name}
@@ -251,8 +251,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                         <Link
                             href={navItems[0].link}
                             className={`relative block rounded-[100px] px-3 py-2.5 font-medium transition-all duration-200 ${isActive(navItems[0].link)
-                                    ? 'bg-blue-600 font-semibold text-white shadow-sm'
-                                    : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
+                                ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                                : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
                                 }`}
                             onClick={() => setMobileMenuOpen(false)}
                         >
@@ -264,8 +264,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                     <div className="mb-2 w-full border-b border-slate-200 pb-4">
                         <div
                             className={`mb-3 rounded-[100px] px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${isProfileMenuActive()
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-slate-500'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-500'
                                 }`}
                         >
                             PROFIL
@@ -275,8 +275,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 key={idx}
                                 href={item.link}
                                 className={`block rounded-[100px] px-3 py-2.5 transition-all duration-200 ${isActive(item.link)
-                                        ? 'bg-blue-600/10 font-medium text-blue-600'
-                                        : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
+                                    ? 'bg-blue-600/10 font-medium text-blue-600'
+                                    : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
                                     }`}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
@@ -292,8 +292,8 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 key={idx}
                                 href={item.link}
                                 className={`relative block rounded-[100px] px-3 py-2.5 font-medium transition-all duration-200 ${isActive(item.link)
-                                        ? 'bg-blue-600 font-semibold text-white shadow-sm'
-                                        : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
+                                    ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                                    : 'text-slate-700 hover:bg-slate-50 hover:text-blue-600'
                                     }`}
                                 onClick={() => setMobileMenuOpen(false)}
                             >

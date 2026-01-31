@@ -125,11 +125,11 @@ export default function ChatInbox({ agent, conversations: initialConversations }
                 prev.map((c) =>
                     c.id === selectedConversation.id
                         ? {
-                              ...c,
-                              last_message_at: new Date().toISOString(),
-                              last_message_text: messageText,
-                              last_message_from: 'agent',
-                          }
+                            ...c,
+                            last_message_at: new Date().toISOString(),
+                            last_message_text: messageText,
+                            last_message_from: 'agent',
+                        }
                         : c
                 )
             );
@@ -157,7 +157,7 @@ export default function ChatInbox({ agent, conversations: initialConversations }
     };
 
     const handleLogout = () => {
-        router.post(route('agent.logout'));
+        router.post(route('agent.logout'))
     };
 
     const formatTime = (dateString: string) => {
@@ -267,11 +267,10 @@ export default function ChatInbox({ agent, conversations: initialConversations }
                                         <div
                                             key={conversation.id}
                                             onClick={() => loadMessages(conversation)}
-                                            className={`p-3 rounded-lg cursor-pointer mb-2 transition-colors ${
-                                                selectedConversation?.id === conversation.id
-                                                    ? 'bg-blue-50 border border-blue-200'
-                                                    : 'hover:bg-gray-50 border border-transparent'
-                                            }`}
+                                            className={`p-3 rounded-lg cursor-pointer mb-2 transition-colors ${selectedConversation?.id === conversation.id
+                                                ? 'bg-blue-50 border border-blue-200'
+                                                : 'hover:bg-gray-50 border border-transparent'
+                                                }`}
                                         >
                                             <div className="flex items-start justify-between mb-1">
                                                 <div className="flex-1 min-w-0">
@@ -347,28 +346,25 @@ export default function ChatInbox({ agent, conversations: initialConversations }
                                         {messages.map((message) => (
                                             <div
                                                 key={message.id}
-                                                className={`flex ${
-                                                    message.direction === 'outbound'
-                                                        ? 'justify-end'
-                                                        : 'justify-start'
-                                                }`}
+                                                className={`flex ${message.direction === 'outbound'
+                                                    ? 'justify-end'
+                                                    : 'justify-start'
+                                                    }`}
                                             >
                                                 <div
-                                                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                                        message.direction === 'outbound'
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'bg-white border border-gray-200'
-                                                    }`}
+                                                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.direction === 'outbound'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-white border border-gray-200'
+                                                        }`}
                                                 >
                                                     <p className="text-sm whitespace-pre-wrap">
                                                         {message.message_text}
                                                     </p>
                                                     <p
-                                                        className={`text-xs mt-1 ${
-                                                            message.direction === 'outbound'
-                                                                ? 'text-blue-100'
-                                                                : 'text-gray-500'
-                                                        }`}
+                                                        className={`text-xs mt-1 ${message.direction === 'outbound'
+                                                            ? 'text-blue-100'
+                                                            : 'text-gray-500'
+                                                            }`}
                                                     >
                                                         {formatTime(message.created_at)}
                                                     </p>
