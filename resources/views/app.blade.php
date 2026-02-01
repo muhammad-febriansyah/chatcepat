@@ -74,10 +74,18 @@
     @endif
 
     {{-- Favicons --}}
-    <link rel="icon" href="/favicon.ico?v=2">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon.png') }}?v=2">
-    <link rel="shortcut icon" href="/favicon.ico?v=2">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon.png') }}?v=2">
+    @php
+        $faviconUrl = !empty($settings['favicon'])
+            ? asset('storage/' . $settings['favicon']) . '?v=' . time()
+            : asset('favicon.ico') . '?v=2';
+        $faviconPngUrl = !empty($settings['favicon'])
+            ? asset('storage/' . $settings['favicon']) . '?v=' . time()
+            : asset('favicon.png') . '?v=2';
+    @endphp
+    <link rel="icon" href="{{ $faviconUrl }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ $faviconPngUrl }}">
+    <link rel="shortcut icon" href="{{ $faviconUrl }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ $faviconPngUrl }}">
     <link rel="manifest" href="/site.webmanifest">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -160,8 +168,9 @@
 
     {{-- Google Analytics --}}
     @if (config('services.google_analytics.tracking_id'))
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google_analytics.tracking_id') }}">
-        </script>
+        <script async
+            src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google_analytics.tracking_id') }}">
+            </script>
         <script>
             window.dataLayer = window.dataLayer || [];
 
@@ -176,7 +185,7 @@
     {{-- Google Tag Manager --}}
     @if (config('services.google_tag_manager.container_id'))
         <script>
-            (function(w, d, s, l, i) {
+            (function (w, d, s, l, i) {
                 w[l] = w[l] || [];
                 w[l].push({
                     'gtm.start': new Date().getTime(),
