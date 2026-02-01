@@ -244,9 +244,10 @@ class User extends Authenticatable
 
         // Map package slug/name to WA session limit
         $packageLimits = [
+            'trial' => 1,
             'basic' => 1,
             'medium' => 3,
-            'pro' => 5,
+            'pro' => 7,
             'enterprise' => PHP_INT_MAX, // unlimited
         ];
 
@@ -282,9 +283,10 @@ class User extends Authenticatable
         }
 
         $packageLimits = [
+            'trial' => 1,
             'basic' => 1,
-            'medium' => 2,
-            'pro' => 5,
+            'medium' => 3,
+            'pro' => 7,
             'enterprise' => PHP_INT_MAX,
         ];
 
