@@ -10,7 +10,7 @@ import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
-import { ArrowRight, Eye, EyeOff, Lock, LogIn, Mail } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useRef, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 
@@ -143,7 +143,6 @@ export default function Login({
                             <ReCAPTCHA
                                 ref={recaptchaRef}
                                 sitekey="6LekAgQsAAAAACd1Pjpmr4gsjaH9lYKNgMOQhmxF"
-                                name="g-recaptcha-response"
                             />
                             <InputError
                                 message={errors['g-recaptcha-response']}
@@ -166,7 +165,6 @@ export default function Login({
                                 </>
                             ) : (
                                 <>
-                                    <LogIn className="size-5" />
                                     <span>Masuk ke Dashboard</span>
                                     <ArrowRight className="ml-auto size-5" />
                                 </>

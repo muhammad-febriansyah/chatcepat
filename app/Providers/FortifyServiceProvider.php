@@ -104,61 +104,61 @@ class FortifyServiceProvider extends ServiceProvider
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'canRegister' => Features::enabled(Features::registration()),
             'status' => $request->session()->get('status'),
-            'authBranding' => [
-                'logo' => Setting::get('auth_logo')
-                    ? '/storage/' . Setting::get('auth_logo')
-                    : (Setting::get('logo') ? '/storage/' . Setting::get('logo') : null),
-                'logo_name' => Setting::get('auth_logo_name', 'ChatCepat'),
-                'tagline' => Setting::get('auth_tagline', 'Smart, Fast & Reliable'),
-                'heading' => Setting::get('auth_heading', 'Kelola website Anda dengan mudah dan cepat'),
-                'description' => Setting::get('auth_description', 'Platform manajemen konten modern dengan fitur lengkap untuk mengembangkan bisnis Anda.'),
-                'features' => json_decode(Setting::get('auth_features', json_encode([
-                    'Dashboard analytics yang powerful',
-                    'Manajemen konten yang intuitif',
-                    'Keamanan tingkat enterprise',
-                ])), true),
-                'copyright' => Setting::get('auth_copyright', '© 2025 ChatCepat. All rights reserved.'),
-                'hero_image' => Setting::get('auth_hero_image') ? '/storage/' . Setting::get('auth_hero_image') : null,
-            ],
+            'authBranding' => $this->getAuthBranding(),
         ]));
 
         Fortify::resetPasswordView(fn(Request $request) => Inertia::render('auth/reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),
+            'authBranding' => $this->getAuthBranding(),
         ]));
 
         Fortify::requestPasswordResetLinkView(fn(Request $request) => Inertia::render('auth/forgot-password', [
             'status' => $request->session()->get('status'),
+            'authBranding' => $this->getAuthBranding(),
         ]));
 
         Fortify::verifyEmailView(fn(Request $request) => Inertia::render('auth/verify-email', [
             'status' => $request->session()->get('status'),
+            'authBranding' => $this->getAuthBranding(),
         ]));
 
         Fortify::registerView(fn() => Inertia::render('auth/register', [
-            'authBranding' => [
-                'logo' => Setting::get('auth_logo')
-                    ? '/storage/' . Setting::get('auth_logo')
-                    : (Setting::get('logo') ? '/storage/' . Setting::get('logo') : null),
-                'logo_name' => Setting::get('auth_logo_name', 'ChatCepat'),
-                'tagline' => Setting::get('auth_tagline', 'Smart, Fast & Reliable'),
-                'heading' => Setting::get('auth_heading', 'Kelola website Anda dengan mudah dan cepat'),
-                'description' => Setting::get('auth_description', 'Platform manajemen konten modern dengan fitur lengkap untuk mengembangkan bisnis Anda.'),
-                'features' => json_decode(Setting::get('auth_features', json_encode([
-                    'Dashboard analytics yang powerful',
-                    'Manajemen konten yang intuitif',
-                    'Keamanan tingkat enterprise',
-                ])), true),
-                'copyright' => Setting::get('auth_copyright', '© 2025 ChatCepat. All rights reserved.'),
-                'hero_image' => Setting::get('auth_hero_image') ? '/storage/' . Setting::get('auth_hero_image') : null,
-            ],
+            'authBranding' => $this->getAuthBranding(),
             'businessCategories' => \App\Models\BusinessCategory::where('is_active', true)->orderBy('name')->get(),
             'pricingPackages' => \App\Models\PricingPackage::active()->ordered()->get(),
         ]));
 
-        Fortify::twoFactorChallengeView(fn() => Inertia::render('auth/two-factor-challenge'));
+        Fortify::twoFactorChallengeView(fn() => Inertia::render('auth/two-factor-challenge', [
+            'authBranding' => $this->getAuthBranding(),
+        ]));
 
-        Fortify::confirmPasswordView(fn() => Inertia::render('auth/confirm-password'));
+        Fortify::confirmPasswordView(fn() => Inertia::render('auth/confirm-password', [
+            'authBranding' => $this->getAuthBranding(),
+        ]));
+    }
+
+    /**
+     * Get the branding settings for auth pages.
+     */
+    private function getAuthBranding(): array
+    {
+        return [
+            'logo' => Setting::get('auth_logo')
+                ? '/storage/' . Setting::get('auth_logo')
+                : (Setting::get('logo') ? '/storage/' . Setting::get('logo') : null),
+            'logo_name' => Setting::get('auth_logo_name', 'ChatCepat'),
+            'tagline' => Setting::get('auth_tagline', 'Smart, Fast & Reliable'),
+            'heading' => Setting::get('auth_heading', 'Kelola website Anda dengan mudah dan cepat'),
+            'description' => Setting::get('auth_description', 'Platform manajemen konten modern dengan fitur lengkap untuk mengembangkan bisnis Anda.'),
+            'features' => json_decode(Setting::get('auth_features', json_encode([
+                'Dashboard analytics yang powerful',
+                'Manajemen konten yang intuitif',
+                'Keamanan tingkat enterprise',
+            ])), true),
+            'copyright' => Setting::get('auth_copyright', '© 2025 ChatCepat. All rights reserved.'),
+            'hero_image' => Setting::get('auth_hero_image') ? '/storage/' . Setting::get('auth_hero_image') : null,
+        ];
     }
 
     /**

@@ -6,13 +6,11 @@ use App\Models\Transaction;
 use App\Models\PricingPackage;
 use App\Models\Bank;
 use App\Services\DuitkuService;
-use App\Mail\PaymentSuccessNotification;
-use App\Mail\PaymentPendingNotification;
+use App\Notifications\PaymentSuccessNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -77,7 +75,7 @@ class PaymentController extends Controller
 
                     // Send trial activation success email
                     try {
-                        Mail::to($user->email)->send(new PaymentSuccessNotification($transaction));
+                        $user->notify(new PaymentSuccessNotification($transaction));
                         Log::info('Trial activation success email sent', ['transaction_id' => $transaction->id, 'email' => $user->email]);
                     } catch (\Exception $e) {
                         Log::error('Failed to send trial activation email', [
@@ -174,9 +172,8 @@ class PaymentController extends Controller
 
                 // Send payment success email notification
                 try {
-                    $customerEmail = $request->email;
-                    Mail::to($customerEmail)->send(new PaymentSuccessNotification($transaction));
-                    Log::info('Trial activation success email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
+                    $transaction->user->notify(new PaymentSuccessNotification($transaction));
+                    Log::info('Trial activation success email sent', ['transaction_id' => $transaction->id, 'email' => $request->email]);
                 } catch (\Exception $e) {
                     Log::error('Failed to send trial activation email', [
                         'transaction_id' => $transaction->id,
@@ -268,18 +265,7 @@ class PaymentController extends Controller
 
             DB::commit();
 
-            // Send payment pending email notification
-            try {
-                $customerEmail = $request->email;
-                Mail::to($customerEmail)->send(new PaymentPendingNotification($transaction));
-                Log::info('Payment pending email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
-            } catch (\Exception $e) {
-                Log::error('Failed to send payment pending email', [
-                    'transaction_id' => $transaction->id,
-                    'error' => $e->getMessage(),
-                ]);
-                // Don't fail the transaction if email fails
-            }
+            // Payment pending notification removed - will be sent via RegistrationSuccessNotification with payment instructions
 
             // Redirect to Duitku payment page
             return response()->json([
@@ -366,18 +352,7 @@ class PaymentController extends Controller
 
             DB::commit();
 
-            // Send payment pending email notification
-            try {
-                $customerEmail = $request->email;
-                Mail::to($customerEmail)->send(new PaymentPendingNotification($transaction));
-                Log::info('Manual payment pending email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
-            } catch (\Exception $e) {
-                Log::error('Failed to send manual payment pending email', [
-                    'transaction_id' => $transaction->id,
-                    'error' => $e->getMessage(),
-                ]);
-                // Don't fail the transaction if email fails
-            }
+            // Manual payment pending - no email needed, admin will verify
 
             return response()->json([
                 'success' => true,
@@ -419,9 +394,8 @@ class PaymentController extends Controller
                 if (isset($result['transaction']) && $result['transaction']->status === 'paid') {
                     try {
                         $transaction = $result['transaction'];
-                        $customerEmail = $transaction->customer_info['email'] ?? $transaction->user->email;
-                        Mail::to($customerEmail)->send(new PaymentSuccessNotification($transaction));
-                        Log::info('Payment success email sent', ['transaction_id' => $transaction->id, 'email' => $customerEmail]);
+                        $transaction->user->notify(new PaymentSuccessNotification($transaction));
+                        Log::info('Payment success email sent', ['transaction_id' => $transaction->id, 'email' => $transaction->user->email]);
                     } catch (\Exception $e) {
                         Log::error('Failed to send payment success email', [
                             'transaction_id' => $result['transaction']->id ?? 'unknown',
