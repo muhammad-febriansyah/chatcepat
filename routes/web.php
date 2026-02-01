@@ -80,6 +80,11 @@ Route::get('/wp-admin/{path?}', function () {
     abort(410, 'This content has been permanently removed');
 })->where('path', '.*');
 
+// CSRF Token Refresh Endpoint (for preventing 419 errors on long-running pages)
+Route::post('/api/csrf/refresh', [App\Http\Controllers\CsrfTokenController::class, 'refresh'])
+    ->middleware('web')
+    ->name('csrf.refresh');
+
 Route::get('/', function () {
     $features = App\Models\Feature::active()->ordered()->get();
     $fiturUnggulans = App\Models\FiturUnggulan::active()->ordered()->get();

@@ -4,6 +4,7 @@ import { AdminSidebar } from '@/components/admin/sidebar/admin-sidebar'
 import { AdminHeader } from '@/components/admin/header/admin-header'
 import { Toaster, toast } from 'sonner'
 import { usePage } from '@inertiajs/react'
+import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh'
 
 export default function AdminLayout({ children }: PropsWithChildren) {
     const { flash } = usePage<{ flash: { success?: string; error?: string } }>().props
@@ -19,6 +20,15 @@ export default function AdminLayout({ children }: PropsWithChildren) {
             lastFlashRef.current.error = flash.error
         }
     }, [flash?.success, flash?.error])
+
+    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    useEffect(() => {
+        startCsrfAutoRefresh(60) // Refresh every 60 minutes
+
+        return () => {
+            stopCsrfAutoRefresh() // Cleanup on unmount
+        }
+    }, [])
 
     return (
         <SidebarProvider>
