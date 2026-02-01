@@ -48,7 +48,7 @@ export default function Footer() {
                             )}
                         </Link>
 
-                        <p className="mb-6 text-sm font-medium text-slate-700">
+                        <p className="mb-6 text-sm font-medium text-slate-700 whitespace-pre-line">
                             {settings.footer_tagline || 'Omnichannel + CRM'}
                         </p>
 

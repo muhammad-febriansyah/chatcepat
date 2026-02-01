@@ -28,7 +28,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Users, Trash2, Edit2, UserPlus, RefreshCw, Phone, X, FolderPlus, Search, Database } from 'lucide-react';
+import { Plus, Users, Trash2, Edit2, UserPlus, RefreshCw, Phone, X, FolderPlus, Search, Database, Send } from 'lucide-react';
 import { useState, FormEvent, useMemo } from 'react';
 
 interface WhatsAppSession {
@@ -263,6 +263,18 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                             </p>
                         </div>
                         <div className="flex gap-3">
+                            {/* Continue to Broadcast Button - Show when there are groups with members */}
+                            {groups.some(g => g.members_count > 0) && (
+                                <Button
+                                    size="lg"
+                                    className="gap-2"
+                                    onClick={() => router.visit('/user/broadcast')}
+                                >
+                                    <Send className="size-4" />
+                                    Lanjutkan Broadcast
+                                </Button>
+                            )}
+
                             {/* Sync from WhatsApp */}
                             {sessions.length > 0 && (
                                 <Dialog>

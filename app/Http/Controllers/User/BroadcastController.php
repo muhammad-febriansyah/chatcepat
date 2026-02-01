@@ -49,15 +49,15 @@ class BroadcastController extends Controller
         $contacts = WhatsappContact::whereHas('session', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })
-        ->orderBy('display_name')
-        ->get()
-        ->map(function ($contact) {
-            return [
-                'id' => $contact->id,
-                'phone_number' => $contact->phone_number,
-                'display_name' => $contact->display_name,
-            ];
-        });
+            ->orderBy('display_name')
+            ->get()
+            ->map(function ($contact) {
+                return [
+                    'id' => $contact->id,
+                    'phone_number' => $contact->phone_number,
+                    'display_name' => $contact->display_name,
+                ];
+            });
 
         // Get user's contact groups
         $contactGroups = ContactGroup::where('user_id', $user->id)
@@ -92,6 +92,9 @@ class BroadcastController extends Controller
             'recipients' => 'required|array|min:1',
             'recipients.*' => 'required|string',
             'file' => 'nullable|file|max:10240', // Max 10MB
+            'broadcast_type' => 'required|in:now,scheduled',
+            'scheduled_at' => 'nullable|required_if:broadcast_type,scheduled|date|after:now',
+            'broadcast_name' => 'nullable|string|max:100',
         ]);
 
         $user = auth()->user();
@@ -110,84 +113,68 @@ class BroadcastController extends Controller
         // Handle file upload if present
         $filePath = null;
         $fileName = null;
+        $mediaMetadata = null;
+
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('broadcasts', $fileName, 'public');
+
+            $mediaMetadata = [
+                'file_path' => $filePath,
+                'file_name' => $fileName,
+                'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
+            ];
         }
 
-        // Send messages to all recipients
-        $successCount = 0;
-        $failedCount = 0;
-        $recipients = $validated['recipients'];
+        // Determine broadcast name
+        $broadcastName = $validated['broadcast_name'] ??
+            ($validated['broadcast_type'] === 'scheduled'
+                ? 'Broadcast Terjadwal - ' . now()->format('d/m/Y H:i')
+                : 'Broadcast - ' . now()->format('d/m/Y H:i'));
 
-        // Anti-ban configuration
-        $batchSize = 20; // Send in batches of 20
-        $messageCount = 0;
-        $minDelay = 7000000; // 7 seconds (in microseconds)
-        $maxDelay = 10000000; // 10 seconds (in microseconds)
-        $batchCooldown = 60000000; // 60 seconds cooldown after each batch
+        // Create broadcast record
+        $broadcast = \App\Models\WhatsappBroadcast::create([
+            'whatsapp_session_id' => $session->id,
+            'user_id' => $user->id,
+            'name' => $broadcastName,
+            'type' => $filePath ? 'document' : 'text',
+            'content' => $validated['message'] ?? '',
+            'media_metadata' => $mediaMetadata,
+            'recipient_numbers' => $validated['recipients'],
+            'total_recipients' => count($validated['recipients']),
+            'status' => $validated['broadcast_type'] === 'scheduled' ? 'pending' : 'processing',
+            'scheduled_at' => $validated['broadcast_type'] === 'scheduled'
+                ? $validated['scheduled_at']
+                : null,
+        ]);
 
-        // Calculate estimated time
-        $totalRecipients = count($recipients);
-        $avgDelay = 8.5; // Average of 7-10 seconds
-        $batches = ceil($totalRecipients / $batchSize);
-        $estimatedMinutes = (($totalRecipients * $avgDelay) + (($batches - 1) * 60)) / 60;
-
-        Log::info("Starting broadcast to {$totalRecipients} recipients. Estimated time: " . round($estimatedMinutes, 1) . " minutes");
-
-        foreach ($recipients as $index => $recipient) {
-            try {
-                $this->sendMessage($session, $recipient, $validated['message'] ?? '', $filePath);
-                $successCount++;
-                $messageCount++;
-
-                // Random delay between messages (7-10 seconds) to appear more human-like
-                $randomDelay = rand($minDelay, $maxDelay);
-                usleep($randomDelay);
-
-                // Cooldown after batch
-                if ($messageCount >= $batchSize && ($index + 1) < count($recipients)) {
-                    Log::info("Batch of {$batchSize} messages sent. Cooling down for 60 seconds...");
-                    sleep(60); // 60 second cooldown
-                    $messageCount = 0; // Reset counter
-                }
-            } catch (\Exception $e) {
-                $failedCount++;
-                Log::error('Broadcast send failed for recipient: ' . $recipient, [
-                    'error' => $e->getMessage(),
-                    'session_id' => $session->id,
-                ]);
-
-                // Still delay even on failure to avoid detection
-                usleep(rand($minDelay, $maxDelay));
-            }
-        }
-
-        // Clean up file if it was uploaded
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
-        }
-
-        $totalTime = round(($successCount + $failedCount) * 8.5 / 60, 1);
-        $message = "Broadcast selesai! Terkirim: {$successCount}, Gagal: {$failedCount}. Waktu: {$totalTime} menit";
-
-        Log::info("Broadcast completed. Success: {$successCount}, Failed: {$failedCount}");
-
+        // Log activity
         $this->logActivity(
-            action: 'send',
+            action: 'create',
             resourceType: 'WhatsappBroadcast',
-            resourceId: null,
-            resourceName: "Broadcast ke {$totalRecipients} penerima",
+            resourceId: $broadcast->id,
+            resourceName: $broadcastName,
             metadata: [
                 'session_id' => $session->id,
                 'session_name' => $session->name,
-                'total_recipients' => $totalRecipients,
-                'success_count' => $successCount,
-                'failed_count' => $failedCount,
-                'duration_minutes' => $totalTime,
+                'total_recipients' => count($validated['recipients']),
+                'broadcast_type' => $validated['broadcast_type'],
+                'scheduled_at' => $validated['scheduled_at'] ?? null,
             ]
         );
+
+        // If immediate broadcast, dispatch job now
+        if ($validated['broadcast_type'] === 'now') {
+            \App\Jobs\ProcessWhatsappBroadcast::dispatch($broadcast);
+
+            $message = "Broadcast sedang diproses! Pesan akan dikirim ke " . count($validated['recipients']) . " penerima.";
+        } else {
+            // Scheduled broadcast
+            $scheduledTime = \Carbon\Carbon::parse($validated['scheduled_at'])->format('d/m/Y H:i');
+            $message = "Broadcast berhasil dijadwalkan untuk {$scheduledTime}! Pesan akan dikirim ke " . count($validated['recipients']) . " penerima.";
+        }
 
         return redirect()->back()->with('success', $message);
     }

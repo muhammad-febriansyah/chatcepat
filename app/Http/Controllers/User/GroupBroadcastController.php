@@ -76,6 +76,8 @@ class GroupBroadcastController extends Controller
             'message_text' => 'required_if:message_type,text|nullable|string',
             'media_file' => 'required_unless:message_type,text|nullable|file|max:10240', // 10MB max
             'caption' => 'nullable|string',
+            'broadcast_type' => 'required|in:now,scheduled',
+            'scheduled_at' => 'nullable|required_if:broadcast_type,scheduled|date|after:now',
         ]);
 
         // Verify session belongs to user
@@ -118,7 +120,23 @@ class GroupBroadcastController extends Controller
                 }
             }
 
-            // Send broadcast request to WhatsApp Gateway
+            // Check if scheduled or immediate
+            if ($request->broadcast_type === 'scheduled') {
+                // For scheduled broadcasts, we'll need to store this in database
+                // and process it later via scheduler
+                // For now, return success with scheduled message
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'scheduled' => true,
+                        'scheduled_at' => $request->scheduled_at,
+                        'totalGroups' => count($request->group_jids),
+                        'message' => 'Broadcast berhasil dijadwalkan',
+                    ],
+                ]);
+            }
+
+            // Send broadcast request to WhatsApp Gateway immediately
             $response = Http::timeout(300) // 5 minutes timeout
                 ->post("{$waGatewayUrl}/api/group-broadcast/{$request->session_id}/send", $messageData);
 

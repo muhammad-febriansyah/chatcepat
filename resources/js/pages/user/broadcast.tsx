@@ -8,7 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Send, FileUp, MessageSquare, Users, X, UserPlus, Edit, FolderOpen } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { Send, FileUp, MessageSquare, Users, X, UserPlus, Edit, FolderOpen, Calendar, Clock } from 'lucide-react';
 import { useState, FormEvent, useEffect } from 'react';
 
 interface WhatsAppSession {
@@ -45,12 +47,17 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
     const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
     const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
     const [loadingGroupMembers, setLoadingGroupMembers] = useState(false);
+    const [broadcastType, setBroadcastType] = useState<'now' | 'scheduled'>('now');
+    const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         session_id: '',
         message: '',
         recipients: [] as string[],
         file: null as File | null,
+        broadcast_type: 'now' as 'now' | 'scheduled',
+        scheduled_at: null as string | null,
+        broadcast_name: null as string | null,
     });
 
     const connectedSessions = sessions.filter(s => s.status === 'connected');
@@ -151,12 +158,23 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
             return;
         }
 
+        if (broadcastType === 'scheduled' && !scheduledDate) {
+            alert('Pilih tanggal dan waktu pengiriman');
+            return;
+        }
+
+        // Update form data before submitting
+        setData('broadcast_type', broadcastType);
+        setData('scheduled_at', scheduledDate ? scheduledDate.toISOString() : null);
+
         post('/user/broadcast/send', {
             onSuccess: () => {
                 reset();
                 setSelectedFile(null);
                 setRecipients([]);
                 setRecipientInput('');
+                setBroadcastType('now');
+                setScheduledDate(null);
             },
         });
     };
@@ -293,6 +311,71 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                                 )}
                                             </div>
                                         </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Broadcast Timing */}
+                                <Card className="overflow-hidden border-2">
+                                    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Clock className="size-5 text-primary" />
+                                            Waktu Pengiriman
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Pilih kapan broadcast akan dikirim
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <RadioGroup
+                                            value={broadcastType}
+                                            onValueChange={(value: 'now' | 'scheduled') => {
+                                                setBroadcastType(value);
+                                                setData('broadcast_type', value);
+                                            }}
+                                        >
+                                            <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
+                                                <RadioGroupItem value="now" id="now" />
+                                                <Label htmlFor="now" className="flex-1 cursor-pointer">
+                                                    <div className="font-medium">Kirim Sekarang</div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        Broadcast akan langsung diproses dan dikirim
+                                                    </div>
+                                                </Label>
+                                                <Send className="size-5 text-muted-foreground" />
+                                            </div>
+
+                                            <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
+                                                <RadioGroupItem value="scheduled" id="scheduled" />
+                                                <Label htmlFor="scheduled" className="flex-1 cursor-pointer">
+                                                    <div className="font-medium">Jadwalkan Pengiriman</div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        Tentukan tanggal dan waktu pengiriman
+                                                    </div>
+                                                </Label>
+                                                <Calendar className="size-5 text-muted-foreground" />
+                                            </div>
+                                        </RadioGroup>
+
+                                        {broadcastType === 'scheduled' && (
+                                            <div className="space-y-2 animate-in fade-in-50 slide-in-from-top-2">
+                                                <Label>Tanggal & Waktu Pengiriman</Label>
+                                                <DateTimePicker
+                                                    selected={scheduledDate}
+                                                    onChange={(date) => {
+                                                        setScheduledDate(date);
+                                                        setData('scheduled_at', date ? date.toISOString() : null);
+                                                    }}
+                                                    placeholder="Pilih tanggal dan waktu"
+                                                />
+                                                {errors.scheduled_at && (
+                                                    <p className="text-sm text-destructive">{errors.scheduled_at}</p>
+                                                )}
+                                                <p className="text-xs text-muted-foreground">
+                                                    Broadcast akan dikirim pada waktu yang ditentukan
+                                                </p>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </div>
@@ -551,14 +634,29 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                             <CardContent className="pt-6">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium">Siap mengirim broadcast?</p>
+                                        <p className="text-sm font-medium">
+                                            {broadcastType === 'now'
+                                                ? 'Siap mengirim broadcast?'
+                                                : 'Siap menjadwalkan broadcast?'}
+                                        </p>
                                         <p className="text-sm text-muted-foreground">
-                                            Pesan akan dikirim ke {recipients.length} penerima
+                                            {broadcastType === 'now'
+                                                ? `Pesan akan dikirim ke ${recipients.length} penerima`
+                                                : `Broadcast akan dijadwalkan untuk ${recipients.length} penerima`}
                                         </p>
                                     </div>
                                     <Button type="submit" disabled={processing} size="lg">
-                                        <Send className="mr-2 size-4" />
-                                        {processing ? 'Mengirim...' : 'Kirim Broadcast'}
+                                        {broadcastType === 'now' ? (
+                                            <>
+                                                <Send className="mr-2 size-4" />
+                                                {processing ? 'Mengirim...' : 'Kirim Broadcast'}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Calendar className="mr-2 size-4" />
+                                                {processing ? 'Menjadwalkan...' : 'Jadwalkan Broadcast'}
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </CardContent>

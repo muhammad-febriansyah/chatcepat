@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Users, Send, Loader2, CheckCircle2, XCircle, Upload, FileText, X, Image as ImageIcon, Video, FileAudio, File } from 'lucide-react';
+import { Users, Send, Loader2, CheckCircle2, XCircle, Upload, FileText, X, Image as ImageIcon, Video, FileAudio, File, Calendar, Clock } from 'lucide-react';
 import { useState, useEffect, ChangeEvent, DragEvent } from 'react';
 import {
     Select,
@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 interface Session {
     id: number;
@@ -48,6 +50,8 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
     const [isLoadingGroups, setIsLoadingGroups] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [broadcastType, setBroadcastType] = useState<'now' | 'scheduled'>('now');
+    const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
 
     // Load groups when session changes
     useEffect(() => {
@@ -242,6 +246,11 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
             return;
         }
 
+        if (broadcastType === 'scheduled' && !scheduledDate) {
+            setAlertMessage({ type: 'error', message: 'Pilih tanggal dan waktu pengiriman' });
+            return;
+        }
+
         setIsSending(true);
         setAlertMessage(null);
 
@@ -249,6 +258,11 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
             const formData = new FormData();
             formData.append('session_id', selectedSession);
             formData.append('message_type', messageType);
+            formData.append('broadcast_type', broadcastType);
+
+            if (broadcastType === 'scheduled' && scheduledDate) {
+                formData.append('scheduled_at', scheduledDate.toISOString());
+            }
 
             selectedGroups.forEach((groupId, index) => {
                 formData.append(`group_jids[${index}]`, groupId);
@@ -277,9 +291,13 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
 
             if (data.success) {
                 const result = data.data;
+                const successMessage = broadcastType === 'scheduled'
+                    ? `Broadcast berhasil dijadwalkan untuk ${selectedGroups.length} grup`
+                    : `Broadcast berhasil dikirim ke ${result.successCount} dari ${result.totalGroups} grup`;
+
                 setAlertMessage({
                     type: 'success',
-                    message: `Broadcast berhasil dikirim ke ${result.successCount} dari ${result.totalGroups} grup`,
+                    message: successMessage,
                 });
 
                 // Reset form
@@ -287,6 +305,8 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
                 setCaption('');
                 setMediaFile(null);
                 setSelectedGroups([]);
+                setBroadcastType('now');
+                setScheduledDate(null);
                 if (imagePreview) {
                     URL.revokeObjectURL(imagePreview);
                     setImagePreview(null);
@@ -572,6 +592,53 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
                                     </div>
                                 )}
 
+                                {/* Broadcast Timing */}
+                                <div className="space-y-4 border-t pt-6">
+                                    <div className="space-y-2">
+                                        <Label className="text-base font-semibold">Waktu Pengiriman</Label>
+                                        <RadioGroup
+                                            value={broadcastType}
+                                            onValueChange={(value: 'now' | 'scheduled') => setBroadcastType(value)}
+                                        >
+                                            <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
+                                                <RadioGroupItem value="now" id="group-now" />
+                                                <Label htmlFor="group-now" className="flex-1 cursor-pointer">
+                                                    <div className="font-medium">Kirim Sekarang ke {selectedGroups.length} Grup</div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        Broadcast akan langsung diproses dan dikirim
+                                                    </div>
+                                                </Label>
+                                                <Send className="size-5 text-muted-foreground" />
+                                            </div>
+
+                                            <div className="flex items-center space-x-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
+                                                <RadioGroupItem value="scheduled" id="group-scheduled" />
+                                                <Label htmlFor="group-scheduled" className="flex-1 cursor-pointer">
+                                                    <div className="font-medium">Broadcast Terjadwal ke {selectedGroups.length} Grup</div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        Tentukan tanggal dan waktu pengiriman
+                                                    </div>
+                                                </Label>
+                                                <Calendar className="size-5 text-muted-foreground" />
+                                            </div>
+                                        </RadioGroup>
+
+                                        {broadcastType === 'scheduled' && (
+                                            <div className="space-y-2 animate-in fade-in-50 slide-in-from-top-2 mt-4">
+                                                <Label>Tanggal & Waktu Pengiriman</Label>
+                                                <DateTimePicker
+                                                    selected={scheduledDate}
+                                                    onChange={setScheduledDate}
+                                                    placeholder="Pilih tanggal dan waktu"
+                                                />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Broadcast akan dikirim pada waktu yang ditentukan
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <Alert>
                                     <AlertDescription>
                                         <strong>Catatan:</strong> Pesan akan dikirim dengan delay otomatis antar grup untuk menghindari spam detection.
@@ -587,12 +654,23 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
                                     {isSending ? (
                                         <>
                                             <Loader2 className="mr-2 size-5 animate-spin" />
-                                            Mengirim ke {selectedGroups.length} grup...
+                                            {broadcastType === 'scheduled'
+                                                ? `Menjadwalkan untuk ${selectedGroups.length} grup...`
+                                                : `Mengirim ke ${selectedGroups.length} grup...`}
                                         </>
                                     ) : (
                                         <>
-                                            <Send className="mr-2 size-5" />
-                                            Kirim Broadcast ke {selectedGroups.length} Grup
+                                            {broadcastType === 'scheduled' ? (
+                                                <>
+                                                    <Calendar className="mr-2 size-5" />
+                                                    Jadwalkan Broadcast ke {selectedGroups.length} Grup
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="mr-2 size-5" />
+                                                    Kirim Broadcast ke {selectedGroups.length} Grup
+                                                </>
+                                            )}
                                         </>
                                     )}
                                 </Button>

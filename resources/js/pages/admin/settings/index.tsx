@@ -2123,15 +2123,17 @@ https://www.google.com/maps/embed?pb=...'
                                     <Label htmlFor="footer_tagline" className="text-sm font-medium">
                                         Tagline Footer
                                     </Label>
-                                    <Input
+                                    <textarea
                                         id="footer_tagline"
                                         name="footer_tagline"
                                         value={data.footer_tagline}
                                         onChange={(e) => setData('footer_tagline', e.target.value)}
                                         placeholder="Omnichannel + CRM"
+                                        rows={2}
+                                        className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-base transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Tagline atau slogan yang akan ditampilkan di bawah logo
+                                        Tagline atau slogan yang akan ditampilkan di bawah logo. Tekan Enter untuk baris baru.
                                     </p>
                                     <InputError message={errors.footer_tagline} />
                                 </div>
