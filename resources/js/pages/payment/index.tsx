@@ -214,7 +214,7 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                     toast.error('Gagal membuat pembayaran manual. Periksa kembali data Anda.');
                 },
                 onFinish: () => {
-                    manualForm.setData('processing', false);
+                    // manualForm.processing is handled automatically by Inertia
                 }
             });
         } catch (error) {
