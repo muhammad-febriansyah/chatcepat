@@ -7,7 +7,7 @@ export default function Footer() {
     const { settings } = usePage<SharedData>().props;
 
     return (
-        <footer className="bg-gray-50 py-16">
+        <footer className="bg-red-50 py-16">
             <div className="container mx-auto max-w-7xl px-6">
                 {/* Main Footer Content */}
                 <div className="grid gap-12 lg:grid-cols-12">
@@ -48,14 +48,13 @@ export default function Footer() {
                             )}
                         </Link>
 
-                        <p className="mb-6 text-sm font-medium text-slate-700 whitespace-pre-line">
+                        <p className="mb-2 text-sm font-medium text-slate-700 whitespace-pre-line">
                             {settings.footer_tagline || 'Omnichannel + CRM'}
                         </p>
 
-                        {/* Company Name - HIDDEN */}
-                        {/* <p className="mb-6 text-sm text-slate-600">
-                            <strong>Dikelola oleh PT. Simetric Consulting Group (v1.2)</strong>
-                        </p> */}
+                        <p className="mb-6 text-sm text-slate-600">
+                            <strong>Dikelola oleh PT. Simetric Consulting Group (v1.3 - RED TEST)</strong>
+                        </p>
 
                         {/* Social Media Icons */}
                         <div className="flex flex-wrap gap-3">
