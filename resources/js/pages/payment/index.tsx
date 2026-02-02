@@ -231,6 +231,7 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                 return;
             }
             setProofFile(file);
+            manualForm.setData('proof_image', file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProofPreview(reader.result as string);
