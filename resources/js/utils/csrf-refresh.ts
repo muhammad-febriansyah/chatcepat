@@ -40,9 +40,9 @@ async function fetchCsrfToken(): Promise<string | null> {
 
 /**
  * Start auto-refresh CSRF token
- * @param intervalMinutes - Refresh interval in minutes (default: 60)
+ * @param intervalMinutes - Refresh interval in minutes (default: 10)
  */
-export function startCsrfAutoRefresh(intervalMinutes: number = 60): void {
+export function startCsrfAutoRefresh(intervalMinutes: number = 10): void {
     // Clear existing interval if any
     if (refreshInterval) {
         clearInterval(refreshInterval);
@@ -51,12 +51,26 @@ export function startCsrfAutoRefresh(intervalMinutes: number = 60): void {
     // Refresh immediately on start
     fetchCsrfToken();
 
-    // Set up periodic refresh
+    // Set up periodic refresh (more frequent = less 419 errors)
     refreshInterval = setInterval(() => {
         fetchCsrfToken();
     }, intervalMinutes * 60 * 1000); // Convert minutes to milliseconds
 
     console.log(`[CSRF] Auto-refresh started (every ${intervalMinutes} minutes)`);
+
+    // Refresh when page becomes visible (user returns to tab)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            console.log('[CSRF] Page visible - refreshing token');
+            fetchCsrfToken();
+        }
+    });
+
+    // Refresh on window focus (user clicks on window)
+    window.addEventListener('focus', () => {
+        console.log('[CSRF] Window focused - refreshing token');
+        fetchCsrfToken();
+    });
 }
 
 /**

@@ -28,9 +28,9 @@ export default function AuthSimpleLayout({
 }: PropsWithChildren<AuthLayoutProps>) {
     const { authBranding } = usePage<{ authBranding: AuthBranding }>().props;
 
-    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    // Auto-refresh CSRF token every 10 minutes (aggressive) to prevent 419 errors
     useEffect(() => {
-        startCsrfAutoRefresh(60);
+        startCsrfAutoRefresh(10);
         return () => stopCsrfAutoRefresh();
     }, []);
 

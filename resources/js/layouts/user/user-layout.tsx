@@ -21,9 +21,9 @@ export default function UserLayout({ children }: PropsWithChildren) {
         }
     }, [flash?.success, flash?.error])
 
-    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    // Auto-refresh CSRF token every 10 minutes (aggressive) to prevent 419 errors
     useEffect(() => {
-        startCsrfAutoRefresh(60) // Refresh every 60 minutes
+        startCsrfAutoRefresh(10) // Refresh every 60 minutes
 
         return () => {
             stopCsrfAutoRefresh() // Cleanup on unmount

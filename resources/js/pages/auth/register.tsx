@@ -47,7 +47,7 @@ export default function Register() {
 
     // Auto-refresh CSRF token to prevent 419 errors
     useEffect(() => {
-        startCsrfAutoRefresh(60);
+        startCsrfAutoRefresh(10);
         return () => stopCsrfAutoRefresh();
     }, []);
 
