@@ -48,9 +48,27 @@ export default function Footer() {
                             )}
                         </Link>
 
-                        <p className="mb-6 text-sm font-medium text-slate-700 whitespace-pre-line">
+                        <p className="mb-2 text-sm font-medium text-slate-700 whitespace-pre-line">
                             {settings.footer_tagline || 'Omnichannel + CRM'}
                         </p>
+
+                        {/* Company Name - Show from settings or default */}
+                        {settings.footer_company_name ? (
+                            <h3 className="mb-6 text-base font-semibold text-slate-900">
+                                {settings.footer_company_name}
+                            </h3>
+                        ) : (
+                            <p className="mb-6 text-sm text-slate-600">
+                                <strong>Dikelola oleh PT. Simetric Consulting Group</strong>
+                            </p>
+                        )}
+
+                        {/* Address - HIDDEN (kept in database for emails) */}
+                        {/* {settings.footer_address && (
+                            <address className="mb-6 text-sm leading-relaxed text-slate-600 not-italic">
+                                {settings.footer_address}
+                            </address>
+                        )} */}
 
                         {/* Social Media Icons */}
                         <div className="flex flex-wrap gap-3">
