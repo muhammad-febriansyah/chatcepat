@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'payment/callback',
             'login',
             'logout',
+            'register',
             'agent/login',
             'agent/logout',
         ]);
