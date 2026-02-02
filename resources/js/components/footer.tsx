@@ -56,54 +56,6 @@ export default function Footer() {
                             <strong>Dikelola oleh PT. Simetric Consulting Group</strong>
                         </p>
 
-                        {/* Company Name - HIDDEN */}
-                        {/* {settings.footer_company_name && (
-                            <h3 className="mb-2 text-base font-semibold text-slate-900">
-                                {settings.footer_company_name}
-                            </h3>
-                        )} */}
-
-                        {/* Address - HIDDEN */}
-                        {/* {settings.footer_address && (
-                            <address className="mb-6 text-sm leading-relaxed text-slate-600 not-italic">
-                                {settings.footer_address}
-                            </address>
-                        )} */}
-
-                        {/* App Download Buttons - HIDDEN */}
-                        {/* {(settings.google_play_url || settings.app_store_url) && (
-                            <div className="mb-6 flex gap-3">
-                                {settings.google_play_url && (
-                                    <a
-                                        href={settings.google_play_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="transition-opacity hover:opacity-80"
-                                    >
-                                        <img
-                                            src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                                            alt="Get it on Google Play"
-                                            className="h-10"
-                                        />
-                                    </a>
-                                )}
-                                {settings.app_store_url && (
-                                    <a
-                                        href={settings.app_store_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="transition-opacity hover:opacity-80"
-                                    >
-                                        <img
-                                            src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
-                                            alt="Download on the App Store"
-                                            className="h-10"
-                                        />
-                                    </a>
-                                )}
-                            </div>
-                        )} */}
-
                         {/* Social Media Icons */}
                         <div className="flex flex-wrap gap-3">
                             {settings?.facebook_url && (

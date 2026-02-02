@@ -24,7 +24,7 @@ class PricingPackage extends Model
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
+        'price' => 'integer',
         'period' => 'integer',
         'features' => 'array',
         'feature_keys' => 'array',
