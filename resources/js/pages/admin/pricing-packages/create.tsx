@@ -25,11 +25,12 @@ export default function CreatePricingPackage() {
         order: 0,
     })
 
+    // Version 1.1 - Robust Price Formatter
     const formatRupiah = (value: string | number) => {
-        if (value === null || value === undefined) return ''
-        const stringValue = value.toString()
-        const mainValue = stringValue.split('.')[0]
-        const number = mainValue.replace(/[^0-9]/g, '')
+        if (value === null || value === undefined || value === '') return ''
+        // Split by dot or comma to ignore any decimal/cent parts (e.g. "10000.00" -> "10000")
+        const stringValue = value.toString().split(/[.,]/)[0]
+        const number = stringValue.replace(/[^0-9]/g, '')
         if (!number) return ''
         return new Intl.NumberFormat('id-ID').format(parseInt(number))
     }

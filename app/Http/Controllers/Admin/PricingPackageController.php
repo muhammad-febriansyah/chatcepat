@@ -14,7 +14,8 @@ class PricingPackageController extends Controller
 {
     public function __construct(
         protected PricingPackageService $pricingPackageService
-    ) {}
+    ) {
+    }
 
     public function index(): Response
     {
@@ -44,6 +45,12 @@ class PricingPackageController extends Controller
     public function edit(int $id): Response
     {
         $package = $this->pricingPackageService->getPackageById($id);
+
+        \Illuminate\Support\Facades\Log::info('Edit Pricing Package', [
+            'id' => $id,
+            'raw_price' => $package->getRawOriginal('price'),
+            'cast_price' => $package->price,
+        ]);
 
         return Inertia::render('admin/pricing-packages/edit', [
             'package' => $package,
