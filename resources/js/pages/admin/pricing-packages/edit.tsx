@@ -30,8 +30,11 @@ export default function EditPricingPackage({ package: pricingPackage }: EditPric
         order: pricingPackage.order || 0,
     })
 
-    const formatRupiah = (value: string) => {
-        const number = value.replace(/[^0-9]/g, '')
+    const formatRupiah = (value: string | number) => {
+        if (value === null || value === undefined) return ''
+        const stringValue = value.toString()
+        const mainValue = stringValue.split('.')[0]
+        const number = mainValue.replace(/[^0-9]/g, '')
         if (!number) return ''
         return new Intl.NumberFormat('id-ID').format(parseInt(number))
     }
