@@ -14,9 +14,10 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PricingPackage } from '@/types/pricing-package';
 import { User, Mail, Phone, Building2, Tag, MapPin, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, MessageSquare, Crown } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { home } from '@/routes';
+import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh';
 
 interface BusinessCategory {
     id: string;
@@ -43,6 +44,12 @@ export default function Register() {
     const [currentStep, setCurrentStep] = useState(1);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const recaptchaRef = useRef<ReCAPTCHA>(null);
+
+    // Auto-refresh CSRF token to prevent 419 errors
+    useEffect(() => {
+        startCsrfAutoRefresh(60);
+        return () => stopCsrfAutoRefresh();
+    }, []);
 
     return (
         <>
