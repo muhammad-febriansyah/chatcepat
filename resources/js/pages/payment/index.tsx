@@ -135,7 +135,6 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
             // If CSRF error (419), refresh token and retry once
             if (response.status === 419) {
                 console.log('CSRF token expired, refreshing...');
-                toast.info('Memperbarui sesi, mencoba ulang...');
                 const newToken = await refreshCsrfToken();
                 response = await makePaymentRequest(newToken);
             }
@@ -206,35 +205,22 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
         manualForm.setData('processing', true);
 
         try {
-            const formData = new FormData();
-            formData.append('package_id', String(selectedPackage?.id || ''));
-            formData.append('bank_id', manualForm.data.bank_id);
-            formData.append('customer_name', manualForm.data.customer_name);
-            formData.append('email', manualForm.data.email);
-            formData.append('phone', manualForm.data.phone || '');
-            formData.append('proof_image', proofFile);
-
-            const response = await fetch('/payment/create-manual', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    'Accept': 'application/json',
+            manualForm.post('/payment/create-manual', {
+                onSuccess: () => {
+                    toast.success('Pembayaran berhasil disubmit! Menunggu verifikasi admin.');
+                    router.visit('/user/transactions');
                 },
-                body: formData,
+                onError: (errors) => {
+                    console.error('Manual payment errors:', errors);
+                    toast.error('Gagal membuat pembayaran manual. Periksa kembali data Anda.');
+                },
+                onFinish: () => {
+                    manualForm.setData('processing', false);
+                }
             });
-
-            const result = await response.json();
-
-            if (result.success) {
-                toast.success('Pembayaran berhasil disubmit! Menunggu verifikasi admin.');
-                router.visit('/user/transactions');
-            } else {
-                toast.error(result.message || 'Gagal membuat pembayaran manual');
-            }
         } catch (error) {
             console.error('Manual payment failed:', error);
             toast.error('Gagal membuat pembayaran manual');
-        } finally {
             manualForm.setData('processing', false);
         }
     };
