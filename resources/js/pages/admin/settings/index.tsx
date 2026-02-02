@@ -130,6 +130,7 @@ interface SettingsProps {
         mail_template_upgrade_success: string
         mail_template_trial_reminder: string
         mail_template_package_reminder: string
+        mail_template_reset_password: string
     }
 }
 
@@ -245,6 +246,7 @@ export default function Settings({ settings }: SettingsProps) {
         mail_template_upgrade_success: settings?.mail_template_upgrade_success || `<p>Halo {user_name},</p><p>Selamat! Akun Anda telah berhasil ditingkatkan ke paket <b>{new_package_name}</b>.</p><p>Anda sekarang dapat menikmati fitur-fitur premium yang tersedia dalam paket ini. Silakan cek dasbor Anda untuk rincian selengkapnya.</p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
         mail_template_trial_reminder: settings?.mail_template_trial_reminder || `<p>Halo {user_name},</p><p>Masa uji coba (trial) Anda akan berakhir dalam <b>{days_left} hari</b>.</p><p>Untuk terus menikmati semua fitur tanpa hambatan, kami menyarankan agar Anda segera melakukan upgrade ke paket berbayar.</p><p>Jangan ragu untuk menghubungi kami jika Anda memiliki pertanyaan.</p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
         mail_template_package_reminder: settings?.mail_template_package_reminder || `<p>Halo {user_name},</p><p>Masa aktif paket <b>{package_name}</b> Anda akan berakhir pada tanggal <b>{expiry_date}</b>.</p><p>Untuk memastikan layanan tetap aktif dan pesan Anda terus terkirim, mohon segera melakukan perpanjangan paket sebelum masa aktif habis.</p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
+        mail_template_reset_password: settings?.mail_template_reset_password || `<p>Halo {user_name},</p><p>Anda menerima email ini karena kami menerima permintaan reset password untuk akun Anda.</p><p>Tautan ini akan aktif selama 60 menit.</p><p><a href="{reset_url}" target="_blank">Klik di sini untuk mengatur ulang kata sandi Anda</a></p><p>Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini.</p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
         _method: 'PUT' as const,
     });
 
@@ -2659,6 +2661,28 @@ https://www.google.com/maps/embed?pb=...'
                                                     </div>
                                                     <p className="text-[10px] text-muted-foreground italic">
                                                         Variabel tersedia: {'{user_name}'}, {'{package_name}'}, {'{expiry_date}'}
+                                                    </p>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                            {/* 7. Reset Password */}
+                                            <AccordionItem value="reset-password" className="border rounded-lg px-4 bg-muted/30">
+                                                <AccordionTrigger className="hover:no-underline py-4">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="font-semibold">7. Notifikasi Reset Password</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">Link pemulihan akun saat lupa kata sandi</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-6 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs">Isi Template</Label>
+                                                        <RichTextEditor
+                                                            content={data.mail_template_reset_password}
+                                                            onChange={(content) => setData('mail_template_reset_password', content)}
+                                                        />
+                                                        <InputError message={errors.mail_template_reset_password} />
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                        Variabel tersedia: {'{user_name}'}, {'{reset_url}'}
                                                     </p>
                                                 </AccordionContent>
                                             </AccordionItem>

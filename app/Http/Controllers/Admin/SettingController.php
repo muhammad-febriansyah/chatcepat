@@ -105,6 +105,7 @@ class SettingController extends Controller
             'mail_template_upgrade_success' => 'nullable|string',
             'mail_template_trial_reminder' => 'nullable|string',
             'mail_template_package_reminder' => 'nullable|string',
+            'mail_template_reset_password' => 'nullable|string',
         ]);
 
         foreach ($validated as $key => $value) {
@@ -168,7 +169,8 @@ class SettingController extends Controller
                 'mail_template_password_change',
                 'mail_template_upgrade_success',
                 'mail_template_trial_reminder',
-                'mail_template_package_reminder'
+                'mail_template_package_reminder',
+                'mail_template_reset_password'
             ])
                 ? 'text'
                 : 'string';
@@ -189,7 +191,7 @@ class SettingController extends Controller
             'recipient_email' => 'required|email',
             'mailketing_from_email' => 'required|email',
             'mailketing_api_token' => 'required|string',
-            'template_key' => 'nullable|string|in:mail_template_registration_success,mail_template_payment_success,mail_template_password_change,mail_template_upgrade_success,mail_template_trial_reminder,mail_template_package_reminder',
+            'template_key' => 'nullable|string|in:mail_template_registration_success,mail_template_payment_success,mail_template_password_change,mail_template_upgrade_success,mail_template_trial_reminder,mail_template_package_reminder,mail_template_reset_password',
             'template_content' => 'nullable|string',
         ]);
 
@@ -233,6 +235,7 @@ class SettingController extends Controller
                     'mail_template_upgrade_success' => 'Selamat! Upgrade Paket Berhasil',
                     'mail_template_trial_reminder' => 'Penting: Masa Trial Anda Akan Segera Berakhir',
                     'mail_template_package_reminder' => 'Pengingat: Masa Aktif Paket Anda Segera Berakhir',
+                    'mail_template_reset_password' => 'Link Reset Password Akun Anda',
                 ];
                 $subject = ($subjectMap[$validated['template_key']] ?? 'Email Testing') . ' - ' . $siteName;
             }
