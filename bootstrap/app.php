@@ -17,11 +17,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'payment/callback',
-            'login',
-            'logout',
-            'register',
-            'agent/login',
-            'agent/logout',
         ]);
 
         $middleware->web(append: [
