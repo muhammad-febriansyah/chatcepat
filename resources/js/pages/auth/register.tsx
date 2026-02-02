@@ -18,6 +18,7 @@ import { useState, useRef, useEffect } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { home } from '@/routes';
 import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh';
+import { Toaster } from 'sonner';
 
 interface BusinessCategory {
     id: string;
@@ -456,6 +457,7 @@ export default function Register() {
                     </div>
                 </div>
             </div>
+            <Toaster richColors position="top-right" />
         </>
     );
 }

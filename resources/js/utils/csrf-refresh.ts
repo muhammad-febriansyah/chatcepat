@@ -6,11 +6,33 @@
  */
 
 let refreshInterval: NodeJS.Timeout | null = null;
+let isRefreshing = false;
+let lastRefreshTime = 0;
+let eventListenersAdded = false;
+
+// Minimum interval between refreshes (5 seconds) to prevent spam
+const MIN_REFRESH_INTERVAL = 5000;
 
 /**
  * Fetch fresh CSRF token from server
  */
 async function fetchCsrfToken(): Promise<string | null> {
+    // Prevent concurrent refresh requests
+    if (isRefreshing) {
+        console.log('[CSRF] Refresh already in progress, skipping...');
+        return null;
+    }
+
+    // Prevent too frequent refreshes
+    const now = Date.now();
+    if (now - lastRefreshTime < MIN_REFRESH_INTERVAL) {
+        console.log('[CSRF] Too soon since last refresh, skipping...');
+        return null;
+    }
+
+    isRefreshing = true;
+    lastRefreshTime = now;
+
     try {
         const response = await fetch('/api/csrf/refresh', {
             method: 'POST',
@@ -34,8 +56,28 @@ async function fetchCsrfToken(): Promise<string | null> {
         }
     } catch (error) {
         console.error('[CSRF] Failed to refresh token:', error);
+    } finally {
+        isRefreshing = false;
     }
     return null;
+}
+
+/**
+ * Handle visibility change events
+ */
+function handleVisibilityChange() {
+    if (!document.hidden) {
+        console.log('[CSRF] Page visible - refreshing token');
+        fetchCsrfToken();
+    }
+}
+
+/**
+ * Handle window focus events
+ */
+function handleWindowFocus() {
+    console.log('[CSRF] Window focused - refreshing token');
+    fetchCsrfToken();
 }
 
 /**
@@ -58,19 +100,13 @@ export function startCsrfAutoRefresh(intervalMinutes: number = 10): void {
 
     console.log(`[CSRF] Auto-refresh started (every ${intervalMinutes} minutes)`);
 
-    // Refresh when page becomes visible (user returns to tab)
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-            console.log('[CSRF] Page visible - refreshing token');
-            fetchCsrfToken();
-        }
-    });
-
-    // Refresh on window focus (user clicks on window)
-    window.addEventListener('focus', () => {
-        console.log('[CSRF] Window focused - refreshing token');
-        fetchCsrfToken();
-    });
+    // Add event listeners only once (prevent duplicate listeners)
+    if (!eventListenersAdded) {
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleWindowFocus);
+        eventListenersAdded = true;
+        console.log('[CSRF] Event listeners added');
+    }
 }
 
 /**
@@ -81,6 +117,14 @@ export function stopCsrfAutoRefresh(): void {
         clearInterval(refreshInterval);
         refreshInterval = null;
         console.log('[CSRF] Auto-refresh stopped');
+    }
+
+    // Remove event listeners
+    if (eventListenersAdded) {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleWindowFocus);
+        eventListenersAdded = false;
+        console.log('[CSRF] Event listeners removed');
     }
 }
 
