@@ -150,7 +150,17 @@ class DuitkuService
                 'expiryPeriod' => $expiryPeriod,
             ];
 
-            Log::info('Duitku Create Invoice Request', array_merge($params, ['url' => $popUrl]));
+            Log::info('Duitku Create Invoice Request', [
+                'url' => $popUrl,
+                'merchantCode' => $this->merchantCode,
+                'merchantOrderId' => $merchantOrderId,
+                'paymentAmount' => $paymentAmount,
+                'email' => $email,
+                'callbackUrl' => $callbackUrl,
+                'timestamp' => $timestamp,
+                // Do not log sensitive apiKey or signature in full if possible, or log signature for debugging
+                'signature_check' => $signature
+            ]);
 
             // Call Duitku POP API with required headers
             $response = Http::asJson()
@@ -165,7 +175,10 @@ class DuitkuService
 
             Log::info('Duitku Create Invoice Response', [
                 'status' => $response->status(),
-                'result' => $result,
+                'statusCode' => $result['statusCode'] ?? 'N/A',
+                'statusMessage' => $result['statusMessage'] ?? 'N/A',
+                'paymentUrl' => $result['paymentUrl'] ?? 'N/A',
+                'reference' => $result['reference'] ?? 'N/A',
             ]);
 
             if ($response->successful() && isset($result['statusCode']) && $result['statusCode'] === '00') {
