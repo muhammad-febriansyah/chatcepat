@@ -2,8 +2,8 @@ import axios from 'axios';
 import { router } from '@inertiajs/react';
 
 // Configure axios to send CSRF token with every request
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-axios.defaults.withCredentials = true;
+axios.defaults.withCredentials = true
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
 // Get CSRF token from meta tag and set it in axios headers
 const token = document.head.querySelector('meta[name="csrf-token"]');
