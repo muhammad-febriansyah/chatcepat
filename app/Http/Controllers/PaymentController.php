@@ -182,17 +182,8 @@ class PaymentController extends Controller
                     // Don't fail the transaction if email fails
                 }
 
-                // Return success response for trial activation
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Paket trial berhasil diaktifkan!',
-                    'is_trial' => true,
-                    'data' => [
-                        'transaction_id' => $transaction->id,
-                        'invoice_number' => $invoiceNumber,
-                        'redirect_url' => route('user.transactions.index'),
-                    ],
-                ]);
+                // Return success redirect for trial activation
+                return redirect()->route('user.transactions.index')->with('success', 'Paket trial berhasil diaktifkan!');
             }
 
             // For paid packages, continue with normal payment flow
@@ -354,14 +345,8 @@ class PaymentController extends Controller
 
             // Manual payment pending - no email needed, admin will verify
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Pembayaran manual berhasil dibuat. Menunggu verifikasi admin.',
-                'data' => [
-                    'transaction_id' => $transaction->id,
-                    'invoice_number' => $invoiceNumber,
-                ],
-            ]);
+            // Redirect to transactions page with success message
+            return redirect()->route('user.transactions.index')->with('success', 'Pembayaran manual berhasil dibuat. Menunggu verifikasi admin.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Create Manual Payment Error', [

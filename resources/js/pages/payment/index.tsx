@@ -140,15 +140,14 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                 response = await makePaymentRequest(newToken);
             }
 
-            const result = await response.json();
-
-            // Check if this is a trial activation
-            if (result.success && result.is_trial) {
-                toast.success(result.message || 'Paket trial berhasil diaktifkan!');
-                // Redirect to transactions page
-                router.visit('/user/transactions');
+            // If it's an Inertia response (trial redirect), let Inertia handle it
+            if (response.headers.get('X-Inertia')) {
+                const result = await response.json();
+                router.visit(result.url || '/user/transactions');
                 return;
             }
+
+            const result = await response.json();
 
             if (result.success && result.data?.payment_url) {
                 const paymentUrl = result.data.payment_url;
@@ -206,8 +205,7 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
         try {
             manualForm.post('/payment/create-manual', {
                 onSuccess: () => {
-                    toast.success('Pembayaran berhasil disubmit! Menunggu verifikasi admin.');
-                    router.visit('/user/transactions');
+                    // Berhasil! Redireksi dan toast ditangani oleh Controller & UserLayout
                 },
                 onError: (errors) => {
                     console.error('Manual payment errors:', errors);
