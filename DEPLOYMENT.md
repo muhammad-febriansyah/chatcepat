@@ -2,17 +2,17 @@
 
 ## Setelah Git Pull
 
-Jalankan perintah berikut setelah melakukan `git pull`:
+⚠️ **PENTING: Jalankan dalam URUTAN INI!** Jangan skip step install!
 
 ```bash
 # 1. Pull perubahan terbaru
 git pull origin main
 
-# 2. Install/Update dependencies
+# 2. ⭐ INSTALL/UPDATE DEPENDENCIES (WAJIB - JANGAN SKIP!)
 composer install --no-dev --optimize-autoloader
 npm install --production
 
-# 3. Build assets production
+# 3. Build assets production (setelah npm install selesai)
 npm run build
 
 # 4. Clear semua cache Laravel
@@ -129,6 +129,13 @@ Build menggunakan code-splitting untuk performance optimal:
 - Dan chunks lainnya...
 
 ## Troubleshooting
+
+### Error: Cannot find package '@laravel/vite-plugin-wayfinder'
+```bash
+# Solusi: Install dependencies dulu
+npm install
+npm run build
+```
 
 ### 419 Page Expired Error
 ```bash
