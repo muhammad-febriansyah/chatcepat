@@ -7,7 +7,7 @@ export default function Footer() {
     const { settings } = usePage<SharedData>().props;
 
     return (
-        <footer className="bg-red-50 py-16">
+        <footer className="py-16" style={{ backgroundColor: '#F7F8FD' }}>
             <div className="container mx-auto max-w-7xl px-6">
                 {/* Main Footer Content */}
                 <div className="grid gap-12 lg:grid-cols-12">
