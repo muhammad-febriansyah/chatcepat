@@ -52,19 +52,19 @@ export default function Footer() {
                             {settings.footer_tagline || 'Omnichannel + CRM'}
                         </p>
 
-                        {/* Company Name - Only show if exists in settings */}
-                        {settings.footer_company_name && (
+                        {/* Company Name - HIDDEN */}
+                        {/* {settings.footer_company_name && (
                             <h3 className="mb-2 text-base font-semibold text-slate-900">
                                 {settings.footer_company_name}
                             </h3>
-                        )}
+                        )} */}
 
-                        {/* Address - Only show if exists in settings */}
-                        {settings.footer_address && (
+                        {/* Address - HIDDEN */}
+                        {/* {settings.footer_address && (
                             <address className="mb-6 text-sm leading-relaxed text-slate-600 not-italic">
                                 {settings.footer_address}
                             </address>
-                        )}
+                        )} */}
 
                         {/* App Download Buttons - HIDDEN */}
                         {/* {(settings.google_play_url || settings.app_store_url) && (
