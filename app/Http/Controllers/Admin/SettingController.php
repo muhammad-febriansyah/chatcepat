@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Http;
+use App\Services\MailketingService;
+use Illuminate\Support\Facades\Log;
 
 class SettingController extends Controller
 {
@@ -97,6 +99,12 @@ class SettingController extends Controller
             'email_support' => 'nullable|email',
             'mailketing_from_email' => 'nullable|email',
             'mailketing_api_token' => 'nullable|string',
+            'mail_template_registration_success' => 'nullable|string',
+            'mail_template_payment_success' => 'nullable|string',
+            'mail_template_password_change' => 'nullable|string',
+            'mail_template_upgrade_success' => 'nullable|string',
+            'mail_template_trial_reminder' => 'nullable|string',
+            'mail_template_package_reminder' => 'nullable|string',
         ]);
 
         foreach ($validated as $key => $value) {
@@ -146,7 +154,22 @@ class SettingController extends Controller
             }
 
             // Handle text settings
-            $type = in_array($key, ['site_description', 'address', 'google_maps_embed', 'meta_keywords', 'meta_description', 'auth_description', 'footer_address', 'mailketing_api_token'])
+            $type = in_array($key, [
+                'site_description',
+                'address',
+                'google_maps_embed',
+                'meta_keywords',
+                'meta_description',
+                'auth_description',
+                'footer_address',
+                'mailketing_api_token',
+                'mail_template_registration_success',
+                'mail_template_payment_success',
+                'mail_template_password_change',
+                'mail_template_upgrade_success',
+                'mail_template_trial_reminder',
+                'mail_template_package_reminder'
+            ])
                 ? 'text'
                 : 'string';
 
@@ -160,33 +183,72 @@ class SettingController extends Controller
             ->with('success', 'Pengaturan berhasil diperbarui!');
     }
 
-    public function testMailketing(Request $request)
+    public function testMailketing(Request $request, MailketingService $mailketingService)
     {
         $validated = $request->validate([
             'recipient_email' => 'required|email',
             'mailketing_from_email' => 'required|email',
             'mailketing_api_token' => 'required|string',
+            'template_key' => 'nullable|string|in:mail_template_registration_success,mail_template_payment_success,mail_template_password_change,mail_template_upgrade_success,mail_template_trial_reminder,mail_template_package_reminder',
+            'template_content' => 'nullable|string',
         ]);
 
-        try {
-            $response = Http::asForm()->post('https://api.mailketing.co.id/api/v1/send', [
-                'api_token' => $validated['mailketing_api_token'],
-                'from_name' => Setting::get('site_name', 'ChatCepat'),
-                'from_email' => $validated['mailketing_from_email'],
-                'recipient' => $validated['recipient_email'],
-                'subject' => 'Test Koneksi Mailketing - ' . Setting::get('site_name', 'ChatCepat'),
-                'content' => 'Halo, ini adalah email tes untuk memverifikasi konfigurasi Mailketing Anda pada platform ' . Setting::get('site_name', 'ChatCepat') . '. Jika Anda menerima email ini, berarti konfigurasi Anda sudah benar.',
-            ]);
+        Log::info('Mailketing Test Template', [
+            'key' => $validated['template_key'] ?? 'none',
+            'has_content' => !empty($validated['template_content']),
+            'length' => strlen($validated['template_content'] ?? '')
+        ]);
 
-            $result = $response->json();
+        $siteName = Setting::get('site_name', 'ChatCepat');
+        $subject = 'Test Koneksi Mailketing - ' . $siteName;
+        $content = '<p>Halo,</p><p>Ini adalah email tes untuk memverifikasi konfigurasi Mailketing Anda pada platform <b>' . $siteName . '</b>.</p><p>Jika Anda menerima email ini, berarti konfigurasi Anda sudah benar dan siap digunakan.</p>';
 
-            if ($response->successful() && ($result['status'] ?? '') === 'success') {
-                return back()->with('success', 'Email tes berhasil dikirim! Silakan cek inbox email tujuan.');
+        if (($validated['template_key'] ?? false) || ($validated['template_content'] ?? false)) {
+            $templateContent = $validated['template_content'] ?? Setting::get($validated['template_key']);
+
+            if ($templateContent !== null && $templateContent !== '') {
+                $content = $templateContent;
+
+                // Sample data for replacement
+                $replacements = [
+                    '{user_name}' => 'User Testing',
+                    '{site_name}' => $siteName,
+                    '{payment_amount}' => 'Rp 150.000',
+                    '{payment_link}' => url('/payment/sample'),
+                    '{transaction_id}' => 'TRX-' . strtoupper(bin2hex(random_bytes(4))),
+                    '{package_name}' => 'Pro Plan',
+                    '{new_package_name}' => 'Enterprise Plan',
+                    '{date_time}' => now()->format('d M Y H:i'),
+                    '{days_left}' => '3',
+                    '{expiry_date}' => now()->addDays(30)->format('d M Y'),
+                ];
+
+                $content = str_replace(array_keys($replacements), array_values($replacements), $content);
+
+                // Adjust subject based on template
+                $subjectMap = [
+                    'mail_template_registration_success' => 'Registrasi Berhasil & Instruksi Pembayaran',
+                    'mail_template_payment_success' => 'Pembayaran Berhasil Diterima',
+                    'mail_template_password_change' => 'Keamanan: Kata Sandi Anda Telah Diubah',
+                    'mail_template_upgrade_success' => 'Selamat! Upgrade Paket Berhasil',
+                    'mail_template_trial_reminder' => 'Penting: Masa Trial Anda Akan Segera Berakhir',
+                    'mail_template_package_reminder' => 'Pengingat: Masa Aktif Paket Anda Segera Berakhir',
+                ];
+                $subject = ($subjectMap[$validated['template_key']] ?? 'Email Testing') . ' - ' . $siteName;
             }
-
-            return back()->with('error', 'Gagal mengirim email tes: ' . ($result['message'] ?? 'Respons tidak dikenal dari server Mailketing.'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan saat menghubungi API Mailketing: ' . $e->getMessage());
         }
+
+        // Temporarily override settings if they are provided in the test request
+        // (This ensures we test with what's on the screen)
+        config(['services.mailketing.api_token' => $validated['mailketing_api_token']]);
+        config(['services.mailketing.from_email' => $validated['mailketing_from_email']]);
+
+        $success = $mailketingService->send($validated['recipient_email'], $subject, $content);
+
+        if ($success) {
+            return back()->with('success', 'Email tes berhasil dikirim! Silakan cek inbox email tujuan.');
+        }
+
+        return back()->with('error', 'Gagal mengirim email tes. Silakan cek log untuk detail kesalahan atau pastikan kredensial Anda benar.');
     }
 }

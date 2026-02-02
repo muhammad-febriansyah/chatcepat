@@ -162,11 +162,7 @@
     <div class="email-wrapper">
         <!-- Header with Logo -->
         <div class="email-header">
-            @if(isset($settings) && $settings->logo)
-                <img src="{{ asset('storage/' . $settings->logo) }}" alt="{{ $settings->app_name ?? 'ChatCepat' }}">
-            @else
-                <img src="{{ asset('images/logo-white.png') }}" alt="ChatCepat">
-            @endif
+            <img src="{{ url('chatcepat.png') }}" alt="{{ $settings->app_name ?? 'ChatCepat' }}">
         </div>
 
         <!-- Email Body -->

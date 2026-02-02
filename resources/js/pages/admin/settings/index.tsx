@@ -44,6 +44,15 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import axios from 'axios'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 interface SettingsProps {
     settings: {
@@ -115,6 +124,12 @@ interface SettingsProps {
         email_support: string
         mailketing_from_email: string
         mailketing_api_token: string
+        mail_template_registration_success: string
+        mail_template_payment_success: string
+        mail_template_password_change: string
+        mail_template_upgrade_success: string
+        mail_template_trial_reminder: string
+        mail_template_package_reminder: string
     }
 }
 
@@ -224,11 +239,18 @@ export default function Settings({ settings }: SettingsProps) {
         email_support: settings?.email_support || 'support@chatcepat.com',
         mailketing_from_email: settings?.mailketing_from_email || '',
         mailketing_api_token: settings?.mailketing_api_token || '',
+        mail_template_registration_success: settings?.mail_template_registration_success || `<p>Halo {user_name},</p><p>Terima kasih telah mendaftar di {site_name}. Akun Anda telah berhasil dibuat.</p><p>Untuk mengaktifkan layanan, silakan lakukan pembayaran sebesar <b>{payment_amount}</b> melalui tautan berikut:</p><p><a href="{payment_link}" target="_blank">Klik di sini untuk melakukan pembayaran</a></p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
+        mail_template_payment_success: settings?.mail_template_payment_success || `<p>Halo {user_name},</p><p>Kami telah menerima pembayaran Anda dengan nomor transaksi <b>{transaction_id}</b>.</p><p>Paket <b>{package_name}</b> Anda telah aktif dan siap digunakan. Silakan masuk ke panel Anda untuk mulai menggunakan layanan.</p><p>Terima kasih atas kepercayaan Anda,</p><p>Tim {site_name}</p>`,
+        mail_template_password_change: settings?.mail_template_password_change || `<p>Halo {user_name},</p><p>Pemberitahuan keamanan: Kata sandi akun Anda di {site_name} telah berhasil diubah pada {date_time}.</p><p>Jika Anda tidak merasa melakukan perubahan ini, segera hubungi tim dukungan kami.</p><p>Terima kasih,</p><p>Tim Keamanan {site_name}</p>`,
+        mail_template_upgrade_success: settings?.mail_template_upgrade_success || `<p>Halo {user_name},</p><p>Selamat! Akun Anda telah berhasil ditingkatkan ke paket <b>{new_package_name}</b>.</p><p>Anda sekarang dapat menikmati fitur-fitur premium yang tersedia dalam paket ini. Silakan cek dasbor Anda untuk rincian selengkapnya.</p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
+        mail_template_trial_reminder: settings?.mail_template_trial_reminder || `<p>Halo {user_name},</p><p>Masa uji coba (trial) Anda akan berakhir dalam <b>{days_left} hari</b>.</p><p>Untuk terus menikmati semua fitur tanpa hambatan, kami menyarankan agar Anda segera melakukan upgrade ke paket berbayar.</p><p>Jangan ragu untuk menghubungi kami jika Anda memiliki pertanyaan.</p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
+        mail_template_package_reminder: settings?.mail_template_package_reminder || `<p>Halo {user_name},</p><p>Masa aktif paket <b>{package_name}</b> Anda akan berakhir pada tanggal <b>{expiry_date}</b>.</p><p>Untuk memastikan layanan tetap aktif dan pesan Anda terus terkirim, mohon segera melakukan perpanjangan paket sebelum masa aktif habis.</p><p>Terima kasih,</p><p>Tim {site_name}</p>`,
         _method: 'PUT' as const,
     });
 
     const [isTestModalOpen, setIsTestModalOpen] = useState(false);
     const [testRecipient, setTestRecipient] = useState('');
+    const [selectedTestTemplate, setSelectedTestTemplate] = useState<string>('generic');
     const [isTesting, setIsTesting] = useState(false);
 
     const handleTestMailketing = async () => {
@@ -248,6 +270,8 @@ export default function Settings({ settings }: SettingsProps) {
                 recipient_email: testRecipient,
                 mailketing_from_email: data.mailketing_from_email,
                 mailketing_api_token: data.mailketing_api_token,
+                template_key: selectedTestTemplate !== 'generic' ? selectedTestTemplate : null,
+                template_content: selectedTestTemplate !== 'generic' ? (data as any)[selectedTestTemplate] : null,
             });
 
             if (response.data.success || response.status === 200) {
@@ -2374,6 +2398,24 @@ https://www.google.com/maps/embed?pb=...'
                                                 </DialogHeader>
                                                 <div className="space-y-4 py-4">
                                                     <div className="space-y-2">
+                                                        <Label htmlFor="test_template">Pilih Template untuk Dites</Label>
+                                                        <Select value={selectedTestTemplate} onValueChange={setSelectedTestTemplate}>
+                                                            <SelectTrigger id="test_template">
+                                                                <SelectValue placeholder="Pilih template" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="generic">Default (Email Tes Koneksi)</SelectItem>
+                                                                <SelectItem value="mail_template_registration_success">1. Registrasi Berhasil & Instruksi Bayar</SelectItem>
+                                                                <SelectItem value="mail_template_payment_success">2. Konfirmasi Pembayaran Berhasil</SelectItem>
+                                                                <SelectItem value="mail_template_password_change">3. Ganti Password</SelectItem>
+                                                                <SelectItem value="mail_template_upgrade_success">4. Berhasil Upgrade Paket</SelectItem>
+                                                                <SelectItem value="mail_template_trial_reminder">5. Pengingat Masa Trial Berakhir</SelectItem>
+                                                                <SelectItem value="mail_template_package_reminder">6. Pengingat Paket Berakhir</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
+                                                    <div className="space-y-2">
                                                         <Label htmlFor="test_recipient">Email Tujuan</Label>
                                                         <Input
                                                             id="test_recipient"
@@ -2386,6 +2428,14 @@ https://www.google.com/maps/embed?pb=...'
                                                         <p className="font-semibold mb-1">Data yang akan dikirim:</p>
                                                         <ul className="list-disc list-inside space-y-0.5">
                                                             <li>From: {data.mailketing_from_email || '(belum diisi)'}</li>
+                                                            <li>Template: {
+                                                                selectedTestTemplate === 'generic' ? 'Default Test' :
+                                                                    selectedTestTemplate === 'mail_template_registration_success' ? 'Registrasi' :
+                                                                        selectedTestTemplate === 'mail_template_payment_success' ? 'Pembayaran' :
+                                                                            selectedTestTemplate === 'mail_template_password_change' ? 'Keamanan' :
+                                                                                selectedTestTemplate === 'mail_template_upgrade_success' ? 'Upgrade' :
+                                                                                    selectedTestTemplate === 'mail_template_trial_reminder' ? 'Trial' : 'Paket'
+                                                            }</li>
                                                             <li>API Token: {data.mailketing_api_token ? '••••••••••••' : '(belum diisi)'}</li>
                                                         </ul>
                                                     </div>
@@ -2465,6 +2515,154 @@ https://www.google.com/maps/embed?pb=...'
                                                 <p>Pengaturan ini digunakan untuk pengiriman email melalui layanan <a href="https://mailketing.co.id" target="_blank" className="font-bold underline uppercase">Mailketing</a>. Pastikan kredensial yang dimasukkan valid sesuai dengan dokumentasi Mailketing.</p>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    {/* Email Templates Section */}
+                                    <div className="mt-8 space-y-4">
+                                        <div className="flex items-center gap-2 border-b pb-2">
+                                            <Mail className="size-5 text-primary" />
+                                            <h3 className="font-semibold text-base">Template Email</h3>
+                                        </div>
+
+                                        <Accordion type="single" collapsible className="w-full space-y-2 border-none">
+                                            {/* 1. Registration & Payment Instructions */}
+                                            <AccordionItem value="reg-success" className="border rounded-lg px-4 bg-muted/30">
+                                                <AccordionTrigger className="hover:no-underline py-4">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="font-semibold">1. Notifikasi Registrasi Berhasil & Instruksi Pembayaran</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">Dikirim saat user baru mendaftar</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-6 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs">Isi Template</Label>
+                                                        <RichTextEditor
+                                                            content={data.mail_template_registration_success}
+                                                            onChange={(content) => setData('mail_template_registration_success', content)}
+                                                        />
+                                                        <InputError message={errors.mail_template_registration_success} />
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                        Variabel tersedia: {'{user_name}'}, {'{site_name}'}, {'{payment_amount}'}, {'{payment_link}'}
+                                                    </p>
+                                                </AccordionContent>
+                                            </AccordionItem>
+
+                                            {/* 2. Payment Success */}
+                                            <AccordionItem value="pay-success" className="border rounded-lg px-4 bg-muted/30">
+                                                <AccordionTrigger className="hover:no-underline py-4">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="font-semibold">2. Notifikasi Pembayaran Berhasil</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">Dikirim konfirmasi instan setelah transaksi sukses</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-6 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs">Isi Template</Label>
+                                                        <RichTextEditor
+                                                            content={data.mail_template_payment_success}
+                                                            onChange={(content) => setData('mail_template_payment_success', content)}
+                                                        />
+                                                        <InputError message={errors.mail_template_payment_success} />
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                        Variabel tersedia: {'{user_name}'}, {'{transaction_id}'}, {'{package_name}'}
+                                                    </p>
+                                                </AccordionContent>
+                                            </AccordionItem>
+
+                                            {/* 3. Password Change */}
+                                            <AccordionItem value="pwd-change" className="border rounded-lg px-4 bg-muted/30">
+                                                <AccordionTrigger className="hover:no-underline py-4">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="font-semibold">3. Notifikasi Ganti Password</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">Pemberitahuan keamanan saat password diubah</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-6 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs">Isi Template</Label>
+                                                        <RichTextEditor
+                                                            content={data.mail_template_password_change}
+                                                            onChange={(content) => setData('mail_template_password_change', content)}
+                                                        />
+                                                        <InputError message={errors.mail_template_password_change} />
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                        Variabel tersedia: {'{user_name}'}, {'{date_time}'}
+                                                    </p>
+                                                </AccordionContent>
+                                            </AccordionItem>
+
+                                            {/* 4. Upgrade Success */}
+                                            <AccordionItem value="upg-success" className="border rounded-lg px-4 bg-muted/30">
+                                                <AccordionTrigger className="hover:no-underline py-4">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="font-semibold">4. Notifikasi Berhasil Upgrade</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">Selamat atas aktivasi paket baru</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-6 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs">Isi Template</Label>
+                                                        <RichTextEditor
+                                                            content={data.mail_template_upgrade_success}
+                                                            onChange={(content) => setData('mail_template_upgrade_success', content)}
+                                                        />
+                                                        <InputError message={errors.mail_template_upgrade_success} />
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                        Variabel tersedia: {'{user_name}'}, {'{new_package_name}'}
+                                                    </p>
+                                                </AccordionContent>
+                                            </AccordionItem>
+
+                                            {/* 5. Trial Reminder */}
+                                            <AccordionItem value="trial-reminder" className="border rounded-lg px-4 bg-muted/30">
+                                                <AccordionTrigger className="hover:no-underline py-4">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="font-semibold">5. Pengingat Masa Trial Berakhir</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">Ajakan upgrade sebelum trial selesai</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-6 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs">Isi Template</Label>
+                                                        <RichTextEditor
+                                                            content={data.mail_template_trial_reminder}
+                                                            onChange={(content) => setData('mail_template_trial_reminder', content)}
+                                                        />
+                                                        <InputError message={errors.mail_template_trial_reminder} />
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                        Variabel tersedia: {'{user_name}'}, {'{days_left}'}
+                                                    </p>
+                                                </AccordionContent>
+                                            </AccordionItem>
+
+                                            {/* 6. Package Expired Reminder */}
+                                            <AccordionItem value="pkg-reminder" className="border rounded-lg px-4 bg-muted/30">
+                                                <AccordionTrigger className="hover:no-underline py-4">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="font-semibold">6. Pengingat Paket Berakhir</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">Pemberitahuan perpanjangan paket (Basic/Medium/Pro/Enterprise)</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="pt-2 pb-6 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-xs">Isi Template</Label>
+                                                        <RichTextEditor
+                                                            content={data.mail_template_package_reminder}
+                                                            onChange={(content) => setData('mail_template_package_reminder', content)}
+                                                        />
+                                                        <InputError message={errors.mail_template_package_reminder} />
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                        Variabel tersedia: {'{user_name}'}, {'{package_name}'}, {'{expiry_date}'}
+                                                    </p>
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        </Accordion>
                                     </div>
                                 </div>
                             </CardContent>
