@@ -53,7 +53,7 @@ export default function Footer() {
                         </p>
 
                         <p className="mb-6 text-sm text-slate-600">
-                            <strong>Dikelola oleh PT. Simetric Consulting Group</strong>
+                            <strong>Dikelola oleh PT. Simetric Consulting Group (v1.2)</strong>
                         </p>
 
                         {/* Social Media Icons */}

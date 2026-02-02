@@ -73,7 +73,7 @@ export default function EditPricingPackage({ package: pricingPackage }: EditPric
         <AdminLayout>
             <Head title="Edit Paket Harga" />
 
-            <PageHeader title="Edit Paket Harga" description="Perbarui informasi paket harga" />
+            <PageHeader title="Edit Paket Harga (v1.2)" description="Perbarui informasi paket harga" />
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Card>
