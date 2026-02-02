@@ -48,12 +48,8 @@ export default function Footer() {
                             )}
                         </Link>
 
-                        <p className="mb-2 text-sm font-medium text-slate-700 whitespace-pre-line">
+                        <p className="mb-6 text-sm font-medium text-slate-700 whitespace-pre-line">
                             {settings.footer_tagline || 'Omnichannel + CRM'}
-                        </p>
-
-                        <p className="mb-6 text-sm text-slate-600">
-                            <strong>Dikelola oleh PT. Simetric Consulting Group (v1.3 - RED TEST)</strong>
                         </p>
 
                         {/* Social Media Icons */}
