@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 import { Head, router } from '@inertiajs/react'
 import { LeafletMap } from '@/components/admin/LeafletMap'
 import { Button } from '@/components/ui/button'
@@ -125,23 +126,8 @@ export default function MapsPage({ places: initialPlaces, categories }: MapsPage
         setIsLoading(true)
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-
-            if (!csrfToken) {
-                throw new Error('CSRF token tidak ditemukan')
-            }
-
-            const response = await fetch('/admin/google-maps-scraper/scrape', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                },
-                body: JSON.stringify(formData),
-            })
-
-            const data = await response.json()
+            const response = await axios.post('/admin/google-maps-scraper/scrape', formData)
+            const data = response.data
 
             console.log('Scraping response:', data)
 

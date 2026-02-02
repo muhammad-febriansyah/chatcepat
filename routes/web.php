@@ -631,11 +631,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     // AI Assistant Types
     Route::resource('ai-assistant-types', App\Http\Controllers\Admin\AiAssistantTypeController::class)->except(['show', 'create', 'edit']);
 
-    // Meta Management (Documentation, Templates, Webhook Logs)
+    // Meta Management (Templates, Webhook Logs)
     Route::prefix('meta')->name('meta.')->group(function () {
-        // Documentation
-        Route::resource('documentation', App\Http\Controllers\Admin\MetaDocumentationController::class);
-        Route::post('/documentation/{documentation}/toggle', [App\Http\Controllers\Admin\MetaDocumentationController::class, 'toggle'])->name('documentation.toggle');
 
         // Message Templates
         Route::resource('templates', App\Http\Controllers\Admin\MetaTemplateController::class);
@@ -676,6 +673,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     // Settings
     Route::get('/settings', [App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings');
     Route::put('/settings', [App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
+    Route::post('/settings/mailketing/test', [App\Http\Controllers\Admin\SettingController::class, 'testMailketing'])->name('settings.mailketing.test');
 
     // Scraper Categories
     Route::resource('scraper-categories', App\Http\Controllers\Admin\ScraperCategoryController::class)->except(['show']);

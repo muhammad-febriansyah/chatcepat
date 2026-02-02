@@ -37,6 +37,11 @@ export interface Settings {
     meta_description: string;
     logo: string;
     favicon: string;
+    footer_tagline?: string;
+    footer_company_name?: string;
+    footer_address?: string;
+    whatsapp_support?: string;
+    email_support?: string;
     [key: string]: unknown;
 }
 

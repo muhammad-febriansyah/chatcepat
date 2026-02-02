@@ -12,9 +12,12 @@ export interface GuideCategory {
 export interface GuideArticle {
     id: number
     guide_category_id: number
+    platform?: string
     title: string
     slug: string
     content: string
+    video_url?: string
+    icon?: string
     sort_order: number
     is_published: boolean
     featured_image?: string

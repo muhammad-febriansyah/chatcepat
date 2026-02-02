@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,16 +86,11 @@ export default function ContactsIndex({ contacts, sessions, stats, filters }: Co
         setScrapingResult(null);
 
         try {
-            const response = await fetch('/user/contacts/scrape', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ session_id: selectedSession }),
+            const response = await axios.post('/user/contacts/scrape', {
+                session_id: selectedSession
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setScrapingResult({
@@ -139,16 +135,11 @@ export default function ContactsIndex({ contacts, sessions, stats, filters }: Co
         setAlertMessage(null);
 
         try {
-            const response = await fetch('/user/contacts/scrape/reset', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ session_id: selectedSession }),
+            const response = await axios.post('/user/contacts/scrape/reset', {
+                session_id: selectedSession
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setAlertMessage({
@@ -234,11 +225,10 @@ export default function ContactsIndex({ contacts, sessions, stats, filters }: Co
                                                         <SelectItem key={session.id} value={session.session_id}>
                                                             <div className="flex items-center gap-2">
                                                                 <span>{session.name}</span>
-                                                                <span className={`text-xs px-2 py-0.5 rounded ${
-                                                                    session.status === 'connected'
+                                                                <span className={`text-xs px-2 py-0.5 rounded ${session.status === 'connected'
                                                                         ? 'bg-green-100 text-green-700'
                                                                         : 'bg-gray-100 text-gray-700'
-                                                                }`}>
+                                                                    }`}>
                                                                     {session.status}
                                                                 </span>
                                                             </div>

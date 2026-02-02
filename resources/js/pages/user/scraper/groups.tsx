@@ -1,4 +1,5 @@
 import { Head, router, Link } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -127,16 +128,10 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
         setScrapeResult(null);
 
         try {
-            const response = await fetch('/user/groups/scrape', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ session_id: selectedSession }),
+            const response = await axios.post('/user/groups/scrape', {
+                session_id: selectedSession
             });
-
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setScrapeResult({
@@ -170,15 +165,8 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
         setMetaAlertMessage(null);
 
         try {
-            const response = await fetch('/user/groups/scrape/whatsapp-cloud', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
-
-            const data = await response.json();
+            const response = await axios.post('/user/groups/scrape/whatsapp-cloud');
+            const data = response.data;
 
             if (data.success) {
                 setMetaAlertMessage({
@@ -212,13 +200,8 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
         setMemberSearchQuery('');
 
         try {
-            const response = await fetch(`/user/groups/${group.id}/members`, {
-                headers: {
-                    'Accept': 'application/json',
-                },
-            });
-
-            const data = await response.json();
+            const response = await axios.get(`/user/groups/${group.id}/members`);
+            const data = response.data;
 
             if (data.success) {
                 setMembers(data.data.members);
@@ -237,15 +220,8 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
         setIsScrapingMembers(true);
 
         try {
-            const response = await fetch(`/user/groups/${selectedGroup.id}/members/scrape`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
-
-            const data = await response.json();
+            const response = await axios.post(`/user/groups/${selectedGroup.id}/members/scrape`);
+            const data = response.data;
 
             if (data.success) {
                 // Refresh members list

@@ -178,12 +178,6 @@ export const adminNavigation: AdminNavGroup[] = [
                 ],
             },
             {
-                title: 'Meta Documentation',
-                href: '/admin/meta/documentation',
-                icon: BookOpen,
-                roles: ['admin'],
-            },
-            {
                 title: 'Message Templates',
                 href: '/admin/meta/templates',
                 icon: MessageSquare,

@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -120,8 +121,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
             const allMembers: string[] = [];
 
             for (const groupId of selectedGroups) {
-                const response = await fetch(`/user/contact-groups/${groupId}/members`);
-                const data = await response.json();
+                const response = await axios.get(`/user/contact-groups/${groupId}/members`);
+                const data = response.data;
                 if (data.members) {
                     data.members.forEach((member: { phone_number: string }) => {
                         allMembers.push(member.phone_number);

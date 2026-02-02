@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -171,15 +172,10 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
         if (!selectedSession) return;
         setLoading(true);
         try {
-            const response = await fetch('/user/reply-manual/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({ session_id: selectedSession }),
+            const response = await axios.post('/user/reply-manual/messages', {
+                session_id: selectedSession
             });
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 const filteredConversations = data.data.conversations
                     .map((conv: Conversation) => ({
@@ -200,18 +196,11 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
         if (!selectedSession) return;
         setLoadingContacts(true);
         try {
-            const response = await fetch('/user/reply-manual/contacts', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    session_id: selectedSession,
-                    search: contactSearch
-                }),
+            const response = await axios.post('/user/reply-manual/contacts', {
+                session_id: selectedSession,
+                search: contactSearch
             });
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setContacts(data.data.contacts);
             }
@@ -226,19 +215,12 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
         if (!messageText.trim() || !selectedSession || !selectedConversation) return;
         setSending(true);
         try {
-            const response = await fetch('/user/reply-manual/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    session_id: selectedSession,
-                    to_number: selectedConversation,
-                    message: messageText,
-                }),
+            const response = await axios.post('/user/reply-manual/send', {
+                session_id: selectedSession,
+                to_number: selectedConversation,
+                message: messageText,
             });
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setMessageText('');
                 loadConversations();
@@ -265,23 +247,12 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 formData.append('caption', fileCaption);
             }
 
-            const response = await fetch('/user/reply-manual/send-media', {
-                method: 'POST',
+            const response = await axios.post('/user/reply-manual/send-media', formData, {
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: formData,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
-
-            // Check if response is OK
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server error:', response.status, errorText);
-                alert(`Error ${response.status}: ${errorText.substring(0, 200)}`);
-                return;
-            }
-
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setSelectedFile(null);
                 setFileCaption('');
@@ -344,17 +315,10 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
 
         // Save contact name if provided
         if (manualName && selectedSession) {
-            fetch('/user/reply-manual/update-contact', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    session_id: selectedSession,
-                    phone_number: cleanNumber,
-                    display_name: manualName,
-                }),
+            axios.post('/user/reply-manual/update-contact', {
+                session_id: selectedSession,
+                phone_number: cleanNumber,
+                display_name: manualName,
             });
         }
 
@@ -366,19 +330,12 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
         if (!editingName.trim() || !selectedSession) return;
         setSavingContact(true);
         try {
-            const response = await fetch('/user/reply-manual/update-contact', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    session_id: selectedSession,
-                    phone_number: contactNumber,
-                    display_name: editingName.trim(),
-                }),
+            const response = await axios.post('/user/reply-manual/update-contact', {
+                session_id: selectedSession,
+                phone_number: contactNumber,
+                display_name: editingName.trim(),
             });
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setConversations(prev => prev.map(conv =>
                     conv.contact_number === contactNumber

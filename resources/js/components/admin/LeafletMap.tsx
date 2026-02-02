@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import axios from 'axios'
 
 // Get primary color - using the website's primary color (blue)
 // oklch(0.47 0.23 264) converts to approximately #2563eb
@@ -270,16 +271,23 @@ export function LeafletMap({
 
                 try {
                     // Reverse geocoding using Nominatim (free, no API key needed)
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=id`,
+                    const response = await axios.get(
+                        `https://nominatim.openstreetmap.org/reverse`,
                         {
+                            params: {
+                                format: 'json',
+                                lat: lat,
+                                lon: lng,
+                                addressdetails: 1,
+                                'accept-language': 'id'
+                            },
                             headers: {
                                 'User-Agent': 'ChatCepat Maps Scraper',
                             },
                         }
                     )
 
-                    const data = await response.json()
+                    const data = response.data
 
                     if (data.address) {
                         // Extract kecamatan and kota from address components

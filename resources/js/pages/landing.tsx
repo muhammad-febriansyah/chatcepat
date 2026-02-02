@@ -65,12 +65,18 @@ export default function Landing({
         >
             <HeroSection settings={settings} canRegister={canRegister} />
             <PartnersSection partners={partners} />
-            <FeaturesSection features={features} settings={settings} />
+            <div id="features">
+                <FeaturesSection features={features} settings={settings} />
+            </div>
             <WhyChooseSection settings={settings} />
-            <FiturUnggulanSection fiturUnggulans={fiturUnggulans} />
+            <div id="produk">
+                <FiturUnggulanSection fiturUnggulans={fiturUnggulans} />
+            </div>
             <TestimonialsSection testimonials={testimonials} />
             <HelpSectionWrapper settings={settings} />
-            <FaqSection faqs={faqs} settings={settings} />
+            <div id="faq">
+                <FaqSection faqs={faqs} settings={settings} />
+            </div>
         </HomeLayout>
     );
 }

@@ -1,4 +1,5 @@
 import { Head, useForm, router } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,81 +74,20 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
         proof_image: null as File | null,
     });
 
-    // Function to get fresh CSRF token
-    const getCsrfToken = (): string => {
-        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    };
-
-    // Function to refresh CSRF token
-    const refreshCsrfToken = async (): Promise<string> => {
-        try {
-            const response = await fetch('/csrf-token', {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json',
-                },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.token) {
-                    // Update meta tag with new token
-                    const metaTag = document.querySelector('meta[name="csrf-token"]');
-                    if (metaTag) {
-                        metaTag.setAttribute('content', data.token);
-                    }
-                    return data.token;
-                }
-            }
-        } catch (error) {
-            console.error('Failed to refresh CSRF token:', error);
-        }
-        return getCsrfToken();
-    };
 
     const handleGatewaySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         setGatewayProcessing(true);
 
-        // Helper function to make the payment request
-        const makePaymentRequest = async (csrfToken: string) => {
-            return fetch('/payment/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-XSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    package_id: gatewayForm.data.package_id,
-                    customer_name: gatewayForm.data.customer_name,
-                    email: gatewayForm.data.email,
-                    phone: gatewayForm.data.phone,
-                }),
-            });
-        };
-
         try {
-            let response = await makePaymentRequest(getCsrfToken());
+            const response = await axios.post('/payment/create', {
+                package_id: gatewayForm.data.package_id,
+                customer_name: gatewayForm.data.customer_name,
+                email: gatewayForm.data.email,
+                phone: gatewayForm.data.phone,
+            });
 
-            // If CSRF error (419), refresh token and retry once
-            if (response.status === 419) {
-                console.log('CSRF token expired, refreshing...');
-                const newToken = await refreshCsrfToken();
-                response = await makePaymentRequest(newToken);
-            }
-
-            // If it's an Inertia response (trial redirect), let Inertia handle it
-            if (response.headers.get('X-Inertia')) {
-                const result = await response.json();
-                router.visit(result.url || '/user/transactions');
-                return;
-            }
-
-            const result = await response.json();
+            const result = response.data;
 
             if (result.success && result.data?.payment_url) {
                 const paymentUrl = result.data.payment_url;

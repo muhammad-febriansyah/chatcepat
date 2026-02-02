@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -82,13 +83,11 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
     const loadGroups = async () => {
         setIsLoadingGroups(true);
         try {
-            const response = await fetch(`/user/broadcast/groups/list?session_id=${selectedSession}`, {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
+            const response = await axios.get(`/user/broadcast/groups/list`, {
+                params: { session_id: selectedSession }
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setGroups(data.data.groups || []);
@@ -279,15 +278,13 @@ export default function GroupBroadcast({ sessions }: GroupBroadcastProps) {
                 }
             }
 
-            const response = await fetch('/user/broadcast/groups/send', {
-                method: 'POST',
+            const response = await axios.post('/user/broadcast/groups/send', formData, {
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: formData,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 const result = data.data;

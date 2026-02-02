@@ -1,5 +1,6 @@
 import { qrCode, recoveryCodes, secretKey } from '@/routes/two-factor';
 import { useCallback, useMemo, useState } from 'react';
+import axios from 'axios';
 
 interface TwoFactorSetupData {
     svg: string;
@@ -13,15 +14,11 @@ interface TwoFactorSecretKey {
 export const OTP_MAX_LENGTH = 6;
 
 const fetchJson = async <T>(url: string): Promise<T> => {
-    const response = await fetch(url, {
+    const response = await axios.get<T>(url, {
         headers: { Accept: 'application/json' },
     });
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status}`);
-    }
-
-    return response.json();
+    return response.data;
 };
 
 export const useTwoFactorAuth = () => {

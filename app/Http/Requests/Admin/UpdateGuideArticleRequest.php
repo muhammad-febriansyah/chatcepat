@@ -15,8 +15,11 @@ class UpdateGuideArticleRequest extends FormRequest
     {
         return [
             'guide_category_id' => ['required', 'exists:guide_categories,id'],
-            'title' => ['required', 'string', 'max:255', 'unique:guide_articles,title,' . $this->route('guide_article')],
+            'platform' => ['nullable', 'string', 'max:50'],
+            'title' => ['required', 'string', 'max:255', 'unique:guide_articles,title,' . $this->route('article')],
             'content' => ['required', 'string'],
+            'video_url' => ['nullable', 'url', 'max:255'],
+            'icon' => ['nullable', 'string', 'max:50'],
             'featured_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'sort_order' => ['integer', 'min:0'],
             'is_published' => ['boolean'],

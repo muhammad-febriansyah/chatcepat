@@ -7,6 +7,7 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Http;
 
 class SettingController extends Controller
 {
@@ -94,6 +95,8 @@ class SettingController extends Controller
             'youtube_url' => 'nullable|url',
             'whatsapp_support' => 'nullable|string|max:20',
             'email_support' => 'nullable|email',
+            'mailketing_from_email' => 'nullable|email',
+            'mailketing_api_token' => 'nullable|string',
         ]);
 
         foreach ($validated as $key => $value) {
@@ -143,7 +146,7 @@ class SettingController extends Controller
             }
 
             // Handle text settings
-            $type = in_array($key, ['site_description', 'address', 'google_maps_embed', 'meta_keywords', 'meta_description', 'auth_description', 'footer_address'])
+            $type = in_array($key, ['site_description', 'address', 'google_maps_embed', 'meta_keywords', 'meta_description', 'auth_description', 'footer_address', 'mailketing_api_token'])
                 ? 'text'
                 : 'string';
 
@@ -155,5 +158,35 @@ class SettingController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Pengaturan berhasil diperbarui!');
+    }
+
+    public function testMailketing(Request $request)
+    {
+        $validated = $request->validate([
+            'recipient_email' => 'required|email',
+            'mailketing_from_email' => 'required|email',
+            'mailketing_api_token' => 'required|string',
+        ]);
+
+        try {
+            $response = Http::asForm()->post('https://api.mailketing.co.id/api/v1/send', [
+                'api_token' => $validated['mailketing_api_token'],
+                'from_name' => Setting::get('site_name', 'ChatCepat'),
+                'from_email' => $validated['mailketing_from_email'],
+                'recipient' => $validated['recipient_email'],
+                'subject' => 'Test Koneksi Mailketing - ' . Setting::get('site_name', 'ChatCepat'),
+                'content' => 'Halo, ini adalah email tes untuk memverifikasi konfigurasi Mailketing Anda pada platform ' . Setting::get('site_name', 'ChatCepat') . '. Jika Anda menerima email ini, berarti konfigurasi Anda sudah benar.',
+            ]);
+
+            $result = $response->json();
+
+            if ($response->successful() && ($result['status'] ?? '') === 'success') {
+                return back()->with('success', 'Email tes berhasil dikirim! Silakan cek inbox email tujuan.');
+            }
+
+            return back()->with('error', 'Gagal mengirim email tes: ' . ($result['message'] ?? 'Respons tidak dikenal dari server Mailketing.'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menghubungi API Mailketing: ' . $e->getMessage());
+        }
     }
 }

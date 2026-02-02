@@ -6,7 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class GuideArticle extends Model
 {
-    protected $fillable = ['guide_category_id', 'title', 'slug', 'content', 'sort_order', 'is_published', 'featured_image'];
+    protected $fillable = [
+        'guide_category_id',
+        'platform',
+        'title',
+        'slug',
+        'content',
+        'video_url',
+        'icon',
+        'sort_order',
+        'is_published',
+        'featured_image'
+    ];
 
     public function category()
     {

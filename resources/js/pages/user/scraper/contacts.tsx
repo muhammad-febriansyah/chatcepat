@@ -1,4 +1,5 @@
 import { Head, router, Link } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -98,16 +99,10 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
         setScrapeResult(null);
 
         try {
-            const response = await fetch('/user/contacts/scrape', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: JSON.stringify({ session_id: selectedSession }),
+            const response = await axios.post('/user/contacts/scrape', {
+                session_id: selectedSession
             });
-
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setScrapeResult({
@@ -152,15 +147,13 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
             formData.append('file', importFile);
             formData.append('session_id', selectedSessionId.toString());
 
-            const response = await fetch('/user/contacts/import', {
-                method: 'POST',
+            const response = await axios.post('/user/contacts/import', formData, {
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                body: formData,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setImportResult({
@@ -205,8 +198,8 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
 
     const loadMetaStats = async () => {
         try {
-            const response = await fetch('/user/scraper/meta/stats');
-            const data = await response.json();
+            const response = await axios.get('/user/scraper/meta/stats');
+            const data = response.data;
             if (data.success) {
                 setMetaStats(data.data);
             }
@@ -218,8 +211,8 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
     const loadMetaContacts = async (platform?: string) => {
         try {
             const url = platform ? `/user/scraper/meta/contacts?platform=${platform}` : '/user/scraper/meta/contacts';
-            const response = await fetch(url);
-            const data = await response.json();
+            const response = await axios.get(url);
+            const data = response.data;
             if (data.success) {
                 setMetaContacts(data.data.data);
             }
@@ -235,15 +228,9 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
 
         try {
             const endpoint = platform === 'whatsapp' ? 'whatsapp-cloud' : platform;
-            const response = await fetch(`/user/contacts/scrape/${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            const response = await axios.post(`/user/contacts/scrape/${endpoint}`);
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success) {
                 setMetaAlertMessage({

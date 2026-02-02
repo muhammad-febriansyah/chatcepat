@@ -1,7 +1,10 @@
+import React from 'react'
 import { Head, Link } from '@inertiajs/react'
 import GuideLayout from '@/layouts/guide-layout'
 import { GuideCategory, GuideArticle } from '@/types/guide'
+import * as lucide from 'lucide-react'
 import { BookOpen, FileText, ArrowRight } from 'lucide-react'
+import { route } from 'ziggy-js'
 
 interface DocsGuideCategory extends GuideCategory {
     articles: GuideArticle[]
@@ -71,7 +74,11 @@ export default function DocsIndex({ categories, search }: DocsIndexProps) {
                                             <div className="relative flex items-start gap-4">
                                                 <div className="flex-shrink-0 mt-1">
                                                     <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                                                        <FileText className="h-5 w-5" />
+                                                        {article.icon && (lucide as any)[article.icon] ? (
+                                                            React.createElement((lucide as any)[article.icon], { className: "h-5 w-5" })
+                                                        ) : (
+                                                            <FileText className="h-5 w-5" />
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">

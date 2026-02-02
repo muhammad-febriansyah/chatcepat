@@ -223,7 +223,7 @@ export default function Footer() {
                             <ul className="space-y-3">
                                 <li>
                                     <Link
-                                        href="/"
+                                        href="/#produk"
                                         className="text-sm text-slate-600 transition-colors hover:text-primary"
                                     >
                                         WhatsApp Broadcast
@@ -231,7 +231,7 @@ export default function Footer() {
                                 </li>
                                 <li>
                                     <Link
-                                        href="/"
+                                        href="/#produk"
                                         className="text-sm text-slate-600 transition-colors hover:text-primary"
                                     >
                                         CRM Omnichannel
@@ -239,7 +239,7 @@ export default function Footer() {
                                 </li>
                                 <li>
                                     <Link
-                                        href="/"
+                                        href="/#features"
                                         className="text-sm text-slate-600 transition-colors hover:text-primary"
                                     >
                                         Chatbot AI
@@ -247,7 +247,7 @@ export default function Footer() {
                                 </li>
                                 <li>
                                     <Link
-                                        href="/"
+                                        href="/#features"
                                         className="text-sm text-slate-600 transition-colors hover:text-primary"
                                     >
                                         Auto Reply
@@ -255,7 +255,7 @@ export default function Footer() {
                                 </li>
                                 <li>
                                     <Link
-                                        href="/"
+                                        href="/#features"
                                         className="text-sm text-slate-600 transition-colors hover:text-primary"
                                     >
                                         Contact Management

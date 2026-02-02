@@ -22,8 +22,11 @@ export default function EditGuideArticle({ article, categories }: EditGuideArtic
     const { data, setData, post, processing, errors } = useForm({
         _method: 'PUT',
         guide_category_id: article.guide_category_id.toString(),
+        platform: article.platform || '',
         title: article.title,
         content: article.content,
+        video_url: article.video_url || '',
+        icon: article.icon || '',
         sort_order: article.sort_order,
         is_published: article.is_published,
         featured_image: null as File | null,
@@ -96,12 +99,55 @@ export default function EditGuideArticle({ article, categories }: EditGuideArtic
                                 </Select>
                                 <InputError message={errors.guide_category_id} />
                             </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="platform">Platform (Opsional)</Label>
+                                <Select
+                                    value={data.platform}
+                                    onValueChange={(value) => setData('platform', value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih Platform" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                                        <SelectItem value="instagram">Instagram</SelectItem>
+                                        <SelectItem value="facebook">Facebook</SelectItem>
+                                        <SelectItem value="generic">Generic</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.platform} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="icon">Icon (Opsional)</Label>
+                                <Input
+                                    id="icon"
+                                    value={data.icon}
+                                    onChange={(e) => setData('icon', e.target.value)}
+                                    placeholder="Contoh: MessageSquare, Instagram, etc."
+                                />
+                                <p className="text-[10px] text-muted-foreground">Gunakan nama icon dari Lucide React</p>
+                                <InputError message={errors.icon} />
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="video_url">Video Preview URL (Opsional)</Label>
+                                <Input
+                                    id="video_url"
+                                    value={data.video_url}
+                                    onChange={(e) => setData('video_url', e.target.value)}
+                                    placeholder="https://..."
+                                />
+                                <InputError message={errors.video_url} />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="featured_image">Gambar Artikel (Opsional)</Label>
                             <ImageUpload
-                                value={data.featured_image || article.featured_image}
+                                value={data.featured_image}
+                                currentImage={article.featured_image}
                                 onChange={(file) => setData('featured_image', file)}
                             />
                             <InputError message={errors.featured_image} />

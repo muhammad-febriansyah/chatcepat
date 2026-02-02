@@ -24,6 +24,15 @@ export const columns: ColumnDef<GuideArticle>[] = [
         cell: ({ row }) => <div className="font-medium max-w-xs truncate">{row.getValue('title')}</div>,
     },
     {
+        accessorKey: 'platform',
+        header: 'Platform',
+        cell: ({ row }) => (
+            <Badge variant="secondary" className="font-normal capitalize">
+                {row.getValue('platform') || 'Generic'}
+            </Badge>
+        ),
+    },
+    {
         accessorKey: 'category.name',
         header: 'Kategori',
         cell: ({ row }) => (

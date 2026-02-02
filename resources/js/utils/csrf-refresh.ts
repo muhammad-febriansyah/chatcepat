@@ -4,6 +4,7 @@
  * Automatically refreshes CSRF token every 60 minutes to prevent 419 errors
  * on long-running admin pages.
  */
+import axios from 'axios';
 
 let refreshInterval: NodeJS.Timeout | null = null;
 let isRefreshing = false;
@@ -34,25 +35,20 @@ async function fetchCsrfToken(): Promise<string | null> {
     lastRefreshTime = now;
 
     try {
-        const response = await fetch('/api/csrf/refresh', {
-            method: 'POST',
-            credentials: 'same-origin',
+        const response = await axios.post('/api/csrf/refresh', {}, {
             headers: {
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
             },
         });
 
-        if (response.ok) {
-            const data = await response.json();
+        const data = response.data;
 
-            // Update CSRF token in meta tag
-            const metaTag = document.querySelector('meta[name="csrf-token"]');
-            if (metaTag && data.csrf_token) {
-                metaTag.setAttribute('content', data.csrf_token);
-                console.log('[CSRF] Token refreshed successfully');
-                return data.csrf_token;
-            }
+        // Update CSRF token in meta tag
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag && data.csrf_token) {
+            metaTag.setAttribute('content', data.csrf_token);
+            console.log('[CSRF] Token refreshed successfully');
+            return data.csrf_token;
         }
     } catch (error) {
         console.error('[CSRF] Failed to refresh token:', error);

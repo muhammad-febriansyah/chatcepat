@@ -1,7 +1,7 @@
+import React, { useMemo } from 'react'
 import { Head } from '@inertiajs/react'
 import GuideLayout from '@/layouts/guide-layout'
 import { GuideArticle, GuideCategory } from '@/types/guide'
-import { useMemo } from 'react'
 
 interface DocsCategoryWithArticles extends GuideCategory {
     articles: GuideArticle[]
@@ -42,9 +42,9 @@ function generateTableOfContents(content: string): TableOfContentsItem[] {
     return toc
 }
 
-function parseMarkdownContent(content: string): JSX.Element[] {
+function parseMarkdownContent(content: string): React.ReactNode[] {
     const lines = content.split('\n')
-    const elements: JSX.Element[] = []
+    const elements: React.ReactNode[] = []
     let key = 0
 
     lines.forEach((line, index) => {
@@ -58,7 +58,7 @@ function parseMarkdownContent(content: string): JSX.Element[] {
                 .replace(/[^a-z0-9\s-]/g, '')
                 .replace(/\s+/g, '-')
 
-            const HeaderTag = `h${level}` as keyof JSX.IntrinsicElements
+            const HeaderTag = `h${level}` as any
             elements.push(
                 <HeaderTag key={key++} id={id} className="scroll-mt-20">
                     {text}
@@ -128,6 +128,18 @@ export default function DocsShow({ article, allCategories }: DocsShowProps) {
                             alt={article.title}
                             className="h-full w-full object-cover"
                         />
+                    </div>
+                )}
+
+                {/* Video Preview */}
+                {article.video_url && (
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg border mb-8 bg-black">
+                        <iframe
+                            src={article.video_url}
+                            className="absolute inset-0 h-full w-full"
+                            allow="autoplay; fullscreen"
+                            allowFullScreen
+                        ></iframe>
                     </div>
                 )}
 

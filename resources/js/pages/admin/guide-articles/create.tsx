@@ -20,8 +20,11 @@ interface CreateGuideArticleProps {
 export default function CreateGuideArticle({ categories }: CreateGuideArticleProps) {
     const { data, setData, post, processing, errors } = useForm({
         guide_category_id: '',
+        platform: '',
         title: '',
         content: '',
+        video_url: '',
+        icon: '',
         sort_order: 0,
         is_published: true,
         featured_image: null as File | null,
@@ -92,6 +95,48 @@ export default function CreateGuideArticle({ categories }: CreateGuideArticlePro
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.guide_category_id} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="platform">Platform (Opsional)</Label>
+                                <Select
+                                    value={data.platform}
+                                    onValueChange={(value) => setData('platform', value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih Platform" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                                        <SelectItem value="instagram">Instagram</SelectItem>
+                                        <SelectItem value="facebook">Facebook</SelectItem>
+                                        <SelectItem value="generic">Generic</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.platform} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="icon">Icon (Opsional)</Label>
+                                <Input
+                                    id="icon"
+                                    value={data.icon}
+                                    onChange={(e) => setData('icon', e.target.value)}
+                                    placeholder="Contoh: MessageSquare, Instagram, etc."
+                                />
+                                <p className="text-[10px] text-muted-foreground">Gunakan nama icon dari Lucide React</p>
+                                <InputError message={errors.icon} />
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="video_url">Video Preview URL (Opsional)</Label>
+                                <Input
+                                    id="video_url"
+                                    value={data.video_url}
+                                    onChange={(e) => setData('video_url', e.target.value)}
+                                    placeholder="https://..."
+                                />
+                                <InputError message={errors.video_url} />
                             </div>
                         </div>
 

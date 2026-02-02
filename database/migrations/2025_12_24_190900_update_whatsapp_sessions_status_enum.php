@@ -5,14 +5,15 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE whatsapp_sessions MODIFY COLUMN status ENUM('qr_pending', 'connecting', 'connected', 'disconnected', 'failed') NOT NULL DEFAULT 'qr_pending'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE whatsapp_sessions MODIFY COLUMN status ENUM('qr_pending', 'connecting', 'connected', 'disconnected', 'failed') NOT NULL DEFAULT 'qr_pending'");
+        }
     }
 
     /**
@@ -20,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE whatsapp_sessions MODIFY COLUMN status ENUM('qr_pending', 'connected', 'disconnected', 'failed') NOT NULL DEFAULT 'qr_pending'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE whatsapp_sessions MODIFY COLUMN status ENUM('qr_pending', 'connected', 'disconnected', 'failed') NOT NULL DEFAULT 'qr_pending'");
+        }
     }
 };

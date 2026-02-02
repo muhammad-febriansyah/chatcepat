@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 import { Head, router } from '@inertiajs/react'
 import { LeafletMap } from '@/components/admin/LeafletMap'
 import { Button } from '@/components/ui/button'
@@ -102,56 +103,30 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
         setIsLoading(true)
 
         try {
-            const xsrfCookie = document.cookie.split('; ').find(c => c.startsWith('XSRF-TOKEN='))
-            const csrfToken = xsrfCookie
-                ? decodeURIComponent(xsrfCookie.substring('XSRF-TOKEN='.length))
-                : document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            // Axios automatically handles XSRF-TOKEN cookie for CSRF protection
+            const response = await axios.post('/user/scraper/scrape', formData)
+            const result = response.data
 
-            if (!csrfToken) {
-                throw new Error('CSRF token tidak ditemukan')
-            }
+            console.log('Scraping response:', result)
 
-            const response = await fetch('/user/scraper/scrape', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                },
-                body: JSON.stringify(formData),
-            })
-
-            const data = await response.json()
-
-            console.log('Scraping response:', data)
-
-            if (data.status === 'success' || data.success) {
+            if (result.status === 'success' || result.success) {
                 console.log('✅ Scraping job queued successfully!')
 
                 // Show success notification for async job
-                toast.success('Scraping Dimulai!', {
-                    description: 'Proses scraping sedang berjalan. Halaman akan dimuat ulang untuk menampilkan hasil...',
-                    duration: 3000,
+                toast.success('Pencarian dimulai', {
+                    description: result.message || 'Proses sedang berjalan di background.',
+                    duration: 5000,
                 })
 
-                // Reset form
-                setFormData({
-                    category_id: '',
-                    location: '',
+                // Reset selection
+                setFormData(prev => ({
+                    ...prev,
                     kecamatan: '',
-                    max_results: 20,
-                })
-
-                // Reload page after 3 seconds to show fresh data from completed job
-                console.log('⏳ Reloading page in 3 seconds...')
-                setTimeout(() => {
-                    console.log('🔄 Reloading page now...')
-                    window.location.reload()
-                }, 3000)
+                }))
             } else {
-                console.error('❌ Scraping failed:', data.message)
+                console.error('❌ Scraping failed:', result.message)
                 toast.error('Scraping Gagal', {
-                    description: data.message || 'Terjadi kesalahan saat scraping',
+                    description: result.message || 'Terjadi kesalahan saat memulai scraping',
                 })
             }
         } catch (error: any) {

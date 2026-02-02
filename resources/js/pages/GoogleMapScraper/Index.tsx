@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import axios from 'axios'
 import { Head, router } from '@inertiajs/react'
 import AdminLayout from '@/layouts/admin/admin-layout'
 import { PageHeader } from '@/components/admin/common/page-header'
@@ -64,38 +65,8 @@ export default function GoogleMapScraperIndex({ places }: GoogleMapScraperIndexP
         setIsScrapingState(true)
 
         try {
-            // Get CSRF token
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-
-            if (!csrfToken) {
-                toast.error('CSRF token tidak ditemukan')
-                setIsScrapingState(false)
-                return
-            }
-
-            const response = await fetch('/admin/google-maps-scraper/scrape', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify(formData),
-                credentials: 'same-origin',
-            })
-
-            // Check if response is JSON
-            const contentType = response.headers.get('content-type')
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text()
-                console.error('Non-JSON response:', text.substring(0, 500))
-                toast.error('Server mengembalikan response yang tidak valid')
-                setIsScrapingState(false)
-                return
-            }
-
-            const data = await response.json()
+            const response = await axios.post('/admin/google-maps-scraper/scrape', formData)
+            const data = response.data
 
             if (data.status === 'success') {
                 toast.success(`Berhasil scraping ${data.total} tempat!`)

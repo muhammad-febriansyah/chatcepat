@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import axios from 'axios';
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -135,15 +136,10 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
         if (!selectedSession) return;
         setLoading(true);
         try {
-            const response = await fetch('/user/reply-manual/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({ session_id: selectedSession }),
+            const response = await axios.post('/user/reply-manual/messages', {
+                session_id: selectedSession
             });
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 const filteredConversations = data.data.conversations
                     .map((conv: Conversation) => ({
@@ -164,15 +160,11 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
         if (!selectedSession) return;
         setLoadingContacts(true);
         try {
-            const response = await fetch('/user/reply-manual/contacts', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({ session_id: selectedSession, search: contactSearch }),
+            const response = await axios.post('/user/reply-manual/contacts', {
+                session_id: selectedSession,
+                search: contactSearch
             });
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setContacts(data.data.contacts);
             }
@@ -187,19 +179,12 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
         if (!messageText.trim() || !selectedSession || !selectedConversation) return;
         setSending(true);
         try {
-            const response = await fetch('/user/reply-manual/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    session_id: selectedSession,
-                    to_number: selectedConversation,
-                    message: messageText,
-                }),
+            const response = await axios.post('/user/reply-manual/send', {
+                session_id: selectedSession,
+                to_number: selectedConversation,
+                message: messageText,
             });
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setMessageText('');
                 loadConversations();

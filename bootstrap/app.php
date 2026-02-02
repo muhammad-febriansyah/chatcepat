@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'payment/callback',
+            'api/meta/webhook',
         ]);
 
         $middleware->web(append: [

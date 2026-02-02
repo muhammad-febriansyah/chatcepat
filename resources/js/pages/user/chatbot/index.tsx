@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -204,29 +205,20 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
         setSaving(true);
         setSaveSuccess(false);
         try {
-            const response = await fetch(`/user/chatbot/${selectedSession.id}/settings`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':
-                        document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    ai_assistant_type: aiType,
-                    auto_reply_enabled: autoReplyEnabled,
-                    primary_language: primaryLanguage,
-                    communication_tone: communicationTone,
-                    ai_description: aiDescription,
-                    products: products,
-                    temperature: parseFloat(temperature),
-                    max_tokens: parseInt(maxTokens),
-                    response_delay: parseInt(responseDelay),
-                    blacklist: blacklist.split(',').map((s) => s.trim()).filter(Boolean),
-                    whitelist: whitelist.split(',').map((s) => s.trim()).filter(Boolean),
-                }),
+            const response = await axios.post(`/user/chatbot/${selectedSession.id}/settings`, {
+                ai_assistant_type: aiType,
+                auto_reply_enabled: autoReplyEnabled,
+                primary_language: primaryLanguage,
+                communication_tone: communicationTone,
+                ai_description: aiDescription,
+                products: products,
+                temperature: parseFloat(temperature),
+                max_tokens: parseInt(maxTokens),
+                response_delay: parseInt(responseDelay),
+                blacklist: blacklist.split(',').map((s) => s.trim()).filter(Boolean),
+                whitelist: whitelist.split(',').map((s) => s.trim()).filter(Boolean),
             });
-
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setSaveSuccess(true);
                 setTimeout(() => setSaveSuccess(false), 3000);
@@ -247,19 +239,10 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
         setTesting(true);
         setTestResponse('');
         try {
-            const response = await fetch(`/user/chatbot/${selectedSession.id}/test`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':
-                        document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    message: testMessage,
-                }),
+            const response = await axios.post(`/user/chatbot/${selectedSession.id}/test`, {
+                message: testMessage,
             });
-
-            const data = await response.json();
+            const data = response.data;
             if (data.success) {
                 setTestResponse(data.data.response);
             } else {

@@ -115,20 +115,12 @@ class WhatsAppApiService {
   constructor() {
     this.axios = axios.create({
       baseURL: '/admin/whatsapp',
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
       },
-    });
-
-    // Add CSRF token to all requests
-    this.axios.interceptors.request.use((config) => {
-      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      if (token) {
-        config.headers['X-CSRF-TOKEN'] = token;
-      }
-      return config;
     });
   }
 

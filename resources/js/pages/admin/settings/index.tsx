@@ -1,4 +1,5 @@
 import { Head, usePage, useForm } from '@inertiajs/react'
+import { route } from 'ziggy-js'
 import { update } from '@/routes/admin/settings'
 import AdminLayout from '@/layouts/admin/admin-layout'
 import { PageHeader } from '@/components/admin/common/page-header'
@@ -25,9 +26,24 @@ import {
     FileImage,
     Plus,
     Trash2,
-    Map
+    Map,
+    Layers,
+    Send,
+    RefreshCcw,
+    CheckCircle
 } from 'lucide-react'
 import { useState, useEffect, FormEventHandler } from 'react'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
+import axios from 'axios'
 
 interface SettingsProps {
     settings: {
@@ -97,6 +113,8 @@ interface SettingsProps {
         youtube_url: string
         whatsapp_support: string
         email_support: string
+        mailketing_from_email: string
+        mailketing_api_token: string
     }
 }
 
@@ -204,8 +222,47 @@ export default function Settings({ settings }: SettingsProps) {
         youtube_url: settings?.youtube_url || 'https://youtube.com',
         whatsapp_support: settings?.whatsapp_support || '6281234567890',
         email_support: settings?.email_support || 'support@chatcepat.com',
+        mailketing_from_email: settings?.mailketing_from_email || '',
+        mailketing_api_token: settings?.mailketing_api_token || '',
         _method: 'PUT' as const,
-    })
+    });
+
+    const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+    const [testRecipient, setTestRecipient] = useState('');
+    const [isTesting, setIsTesting] = useState(false);
+
+    const handleTestMailketing = async () => {
+        if (!testRecipient) {
+            toast.error('Mohon masukkan email tujuan');
+            return;
+        }
+
+        if (!data.mailketing_from_email || !data.mailketing_api_token) {
+            toast.error('Kredensial Mailketing belum lengkap');
+            return;
+        }
+
+        setIsTesting(true);
+        try {
+            const response = await axios.post(route('admin.settings.mailketing.test'), {
+                recipient_email: testRecipient,
+                mailketing_from_email: data.mailketing_from_email,
+                mailketing_api_token: data.mailketing_api_token,
+            });
+
+            if (response.data.success || response.status === 200) {
+                toast.success('Email tes berhasil dikirim!');
+                setIsTestModalOpen(false);
+                setTestRecipient('');
+            } else {
+                toast.error(response.data.error || 'Gagal mengirim email tes');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Terjadi kesalahan saat mengetes Mailketing');
+        } finally {
+            setIsTesting(false);
+        }
+    };
 
     const [logoPreview, setLogoPreview] = useState<string | null>(null)
     const [faviconPreview, setFaviconPreview] = useState<string | null>(null)
@@ -397,7 +454,7 @@ export default function Settings({ settings }: SettingsProps) {
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <Tabs defaultValue="general" className="space-y-6">
-                    <TabsList className="grid w-full grid-cols-7">
+                    <TabsList className="grid w-full grid-cols-8">
                         <TabsTrigger value="general">
                             <Globe className="size-4 mr-2" />
                             Umum
@@ -425,6 +482,10 @@ export default function Settings({ settings }: SettingsProps) {
                         <TabsTrigger value="footer">
                             <FileImage className="size-4 mr-2" />
                             Footer
+                        </TabsTrigger>
+                        <TabsTrigger value="integrations">
+                            <Layers className="size-4 mr-2" />
+                            Integrasi
                         </TabsTrigger>
                     </TabsList>
 
@@ -2260,6 +2321,150 @@ https://www.google.com/maps/embed?pb=...'
                                             Email untuk customer support
                                         </p>
                                         <InputError message={errors.email_support} />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* Integrations Tab Content */}
+                    <TabsContent value="integrations" className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                                        <Layers className="size-5 text-primary" strokeWidth={2} />
+                                    </div>
+                                    <div>
+                                        <CardTitle>Integrasi Pihak Ketiga</CardTitle>
+                                        <CardDescription>
+                                            Hubungkan website Anda dengan layanan eksternal
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Mailketing Section */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between border-b pb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="size-8 rounded bg-[#FE0000] flex items-center justify-center text-white font-bold text-xs">M</div>
+                                            <h3 className="font-semibold text-base">Mailketing</h3>
+                                        </div>
+
+                                        <Dialog open={isTestModalOpen} onOpenChange={setIsTestModalOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2"
+                                                    disabled={!data.mailketing_from_email || !data.mailketing_api_token}
+                                                >
+                                                    <RefreshCcw className="size-3.5" />
+                                                    Test Koneksi
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Test Koneksi Mailketing</DialogTitle>
+                                                    <DialogDescription>
+                                                        Kirim email percobaan untuk memastikan konfigurasi sudah benar.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4 py-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="test_recipient">Email Tujuan</Label>
+                                                        <Input
+                                                            id="test_recipient"
+                                                            placeholder="nama@example.com"
+                                                            value={testRecipient}
+                                                            onChange={(e) => setTestRecipient(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground p-3 bg-muted rounded-lg border">
+                                                        <p className="font-semibold mb-1">Data yang akan dikirim:</p>
+                                                        <ul className="list-disc list-inside space-y-0.5">
+                                                            <li>From: {data.mailketing_from_email || '(belum diisi)'}</li>
+                                                            <li>API Token: {data.mailketing_api_token ? '••••••••••••' : '(belum diisi)'}</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => setIsTestModalOpen(false)}
+                                                        disabled={isTesting}
+                                                    >
+                                                        Batal
+                                                    </Button>
+                                                    <Button
+                                                        onClick={handleTestMailketing}
+                                                        disabled={isTesting}
+                                                        className="gap-2"
+                                                    >
+                                                        {isTesting ? (
+                                                            <RefreshCcw className="size-4 animate-spin" />
+                                                        ) : (
+                                                            <Send className="size-4" />
+                                                        )}
+                                                        {isTesting ? 'Mengirim...' : 'Kirim Email Tes'}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+
+                                    <div className="grid gap-5 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="mailketing_from_email" className="text-sm font-medium">
+                                                Gmail (From Email)
+                                            </Label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                                                <Input
+                                                    id="mailketing_from_email"
+                                                    name="mailketing_from_email"
+                                                    type="email"
+                                                    value={data.mailketing_from_email}
+                                                    onChange={(e) => setData('mailketing_from_email', e.target.value)}
+                                                    placeholder="akunanda@gmail.com"
+                                                    className="pl-10"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Email Gmail yang terhubung dengan akun Mailketing Anda
+                                            </p>
+                                            <InputError message={errors.mailketing_from_email} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="mailketing_api_token" className="text-sm font-medium">
+                                                API Token
+                                            </Label>
+                                            <Input
+                                                id="mailketing_api_token"
+                                                name="mailketing_api_token"
+                                                type="password"
+                                                value={data.mailketing_api_token}
+                                                onChange={(e) => setData('mailketing_api_token', e.target.value)}
+                                                placeholder="Masukkan API Token Mailketing"
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Dapatkan token API dari dashboard Mailketing
+                                            </p>
+                                            <InputError message={errors.mailketing_api_token} />
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-lg bg-blue-50 p-4 border border-blue-100 mt-2">
+                                        <div className="flex items-start gap-3">
+                                            <div className="size-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold">i</div>
+                                            <div className="text-sm text-blue-800">
+                                                <p className="font-semibold mb-1">Informasi:</p>
+                                                <p>Pengaturan ini digunakan untuk pengiriman email melalui layanan <a href="https://mailketing.co.id" target="_blank" className="font-bold underline uppercase">Mailketing</a>. Pastikan kredensial yang dimasukkan valid sesuai dengan dokumentasi Mailketing.</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
