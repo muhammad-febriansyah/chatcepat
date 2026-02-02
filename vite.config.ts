@@ -33,37 +33,29 @@ export default defineConfig({
                 manualChunks: (id) => {
                     // Vendor chunk strategy - split large libraries
                     if (id.includes('node_modules')) {
-                        // Icon libraries (separate FIRST before React check)
+                        // Icon libraries (separate FIRST - largest culprits)
                         if (id.includes('lucide-react')) {
-                            return 'vendor-icons-lucide';
-                        }
-                        if (id.includes('@tabler/icons-react')) {
-                            return 'vendor-icons-tabler';
+                            return 'vendor-icons';
                         }
 
-                        // React core (without react-* packages)
-                        if (id.includes('/react/') || id.includes('/react-dom/')) {
-                            return 'vendor-react-core';
-                        }
-
-                        // Inertia
-                        if (id.includes('@inertiajs')) {
-                            return 'vendor-inertia';
-                        }
-
-                        // Chart libraries
-                        if (id.includes('apexcharts') || id.includes('react-apexcharts')) {
+                        // Chart libraries (second largest)
+                        if (id.includes('apexcharts')) {
                             return 'vendor-charts';
                         }
 
                         // Rich text editor (TipTap)
-                        if (id.includes('@tiptap') || id.includes('prosemirror')) {
+                        if (id.includes('@tiptap')) {
                             return 'vendor-editor';
                         }
 
                         // Map libraries (Leaflet)
-                        if (id.includes('leaflet') || id.includes('react-leaflet')) {
+                        if (id.includes('leaflet')) {
                             return 'vendor-maps';
+                        }
+
+                        // Animation libraries
+                        if (id.includes('framer-motion')) {
+                            return 'vendor-animation';
                         }
 
                         // UI component libraries (Radix)
@@ -72,36 +64,17 @@ export default defineConfig({
                         }
 
                         // Date/time libraries
-                        if (id.includes('date-fns') || id.includes('react-datepicker')) {
+                        if (id.includes('date-fns')) {
                             return 'vendor-date';
                         }
 
-                        // Animation libraries
-                        if (id.includes('framer-motion') || id.includes('motion')) {
-                            return 'vendor-animation';
-                        }
-
-                        // Table libraries
-                        if (id.includes('@tanstack/react-table')) {
-                            return 'vendor-table';
-                        }
-
-                        // Socket.io
-                        if (id.includes('socket.io')) {
-                            return 'vendor-socket';
-                        }
-
-                        // Other React ecosystem packages
-                        if (id.includes('react-')) {
-                            return 'vendor-react-ecosystem';
-                        }
-
-                        // Other vendors
-                        return 'vendor-misc';
+                        // All other React ecosystem (includes React, ReactDOM, Inertia, react-*, etc)
+                        // This catches everything else to avoid circular dependencies
+                        return 'vendor-react';
                     }
                 },
             },
         },
-        chunkSizeWarningLimit: 600, // Slightly increase limit for vendor chunks
+        chunkSizeWarningLimit: 1000, // Increase limit since vendor-react will be larger
     },
 });
