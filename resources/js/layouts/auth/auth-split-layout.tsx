@@ -2,7 +2,8 @@ import { home } from '@/routes';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Sparkles } from 'lucide-react';
-import { type PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
+import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh';
 
 interface AuthLayoutProps {
     title?: string;
@@ -15,6 +16,12 @@ export default function AuthSplitLayout({
     description,
 }: PropsWithChildren<AuthLayoutProps>) {
     const { name, quote } = usePage<SharedData>().props;
+
+    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    useEffect(() => {
+        startCsrfAutoRefresh(60);
+        return () => stopCsrfAutoRefresh();
+    }, []);
 
     return (
         <div className="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">

@@ -24,4 +24,29 @@ router.on('before', (event) => {
     }
 });
 
+// Global error handler for 419 CSRF token errors
+router.on('error', (event) => {
+    const response = event.detail.page?.props?.errors;
+
+    // Check if it's a 419 error (CSRF token mismatch)
+    if (event.detail.page?.component === 'Error' && event.detail.page?.props?.status === 419) {
+        console.warn('[CSRF] 419 error detected - Token mismatch. Reloading page to refresh token...');
+
+        // Reload the page to get a fresh CSRF token
+        window.location.reload();
+    }
+});
+
+// Axios interceptor for 419 errors
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 419) {
+            console.warn('[CSRF] 419 error detected in axios request - Token mismatch. Reloading page...');
+            window.location.reload();
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default axios;

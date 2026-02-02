@@ -8,7 +8,8 @@ import {
 import { home } from '@/routes';
 import { Link } from '@inertiajs/react';
 import { Sparkles } from 'lucide-react';
-import { type PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
+import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh';
 
 export default function AuthCardLayout({
     children,
@@ -19,6 +20,12 @@ export default function AuthCardLayout({
     title?: string;
     description?: string;
 }>) {
+    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    useEffect(() => {
+        startCsrfAutoRefresh(60);
+        return () => stopCsrfAutoRefresh();
+    }, []);
+
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
             <div className="flex w-full max-w-md flex-col gap-6">

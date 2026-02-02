@@ -1,9 +1,10 @@
-import { PropsWithChildren, useState } from 'react'
+import { PropsWithChildren, useState, useEffect } from 'react'
 import { Link, usePage } from '@inertiajs/react'
 import { ChevronRight, BookOpen, Menu, X, Search, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh'
 
 interface TableOfContentsItem {
     id: string
@@ -71,6 +72,12 @@ export default function GuideLayout({
     )
 
     const [copied, setCopied] = useState(false)
+
+    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    useEffect(() => {
+        startCsrfAutoRefresh(60);
+        return () => stopCsrfAutoRefresh();
+    }, []);
 
     const copyToClipboard = async () => {
         const url = window.location.href

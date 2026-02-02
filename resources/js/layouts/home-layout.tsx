@@ -6,6 +6,7 @@ import { type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import { Toaster, toast } from 'sonner';
 import { useEffect, useRef } from 'react';
+import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh';
 
 interface HomeLayoutProps {
     children: React.ReactNode;
@@ -33,6 +34,15 @@ export default function HomeLayout({
             lastFlashRef.current.error = flash.error
         }
     }, [flash?.success, flash?.error]);
+
+    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    useEffect(() => {
+        startCsrfAutoRefresh(60) // Refresh every 60 minutes
+
+        return () => {
+            stopCsrfAutoRefresh() // Cleanup on unmount
+        }
+    }, []);
 
     return (
         <>

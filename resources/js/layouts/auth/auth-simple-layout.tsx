@@ -1,7 +1,8 @@
 import { home } from '@/routes';
 import { Link, usePage } from '@inertiajs/react';
 import { MessageSquare, Sparkles } from 'lucide-react';
-import { type PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
+import { startCsrfAutoRefresh, stopCsrfAutoRefresh } from '@/utils/csrf-refresh';
 
 interface AuthLayoutProps {
     name?: string;
@@ -26,6 +27,13 @@ export default function AuthSimpleLayout({
     description,
 }: PropsWithChildren<AuthLayoutProps>) {
     const { authBranding } = usePage<{ authBranding: AuthBranding }>().props;
+
+    // Auto-refresh CSRF token every 60 minutes to prevent 419 errors
+    useEffect(() => {
+        startCsrfAutoRefresh(60);
+        return () => stopCsrfAutoRefresh();
+    }, []);
+
     return (
         <div className="flex h-screen overflow-hidden bg-background">
             {/* Left Side - Branding & Illustration */}
