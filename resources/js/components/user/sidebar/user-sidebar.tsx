@@ -63,6 +63,9 @@ export function UserSidebar() {
 
     // Check if user has access to a specific feature
     const hasFeature = (key: FeatureKey): boolean => {
+        // Admin always has access to all features
+        if (user?.role === 'admin') return true
+
         if (!hasSubscription) return false
         // If feature_keys is empty, grant all access (backward compatibility)
         if (featureKeys.length === 0) return true
@@ -161,8 +164,8 @@ export function UserSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="px-3 py-2">
-                {/* Subscription Status Badge */}
-                {!hasSubscription && (
+                {/* Subscription Status Badge - Hidden for admin */}
+                {user?.role !== 'admin' && !hasSubscription && (
                     <div className="px-2 pb-2">
                         <div
                             onClick={() => router.visit('/user/topup')}
@@ -178,7 +181,7 @@ export function UserSidebar() {
                     </div>
                 )}
 
-                {hasSubscription && subscription && (
+                {user?.role !== 'admin' && hasSubscription && subscription && (
                     <div className="px-2 pb-2">
                         <div className="flex items-center gap-2 p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-200">
                             <Crown className="size-5 text-green-600" />
