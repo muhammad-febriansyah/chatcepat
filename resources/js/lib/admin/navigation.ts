@@ -202,32 +202,6 @@ export const adminNavigation: AdminNavGroup[] = [
         ],
     },
     {
-        title: 'WhatsApp CRM',
-        // Admin juga bisa akses semua fitur user (unlimited & no expiration)
-        items: [
-            {
-                title: 'Sessions',
-                href: '/admin/whatsapp/sessions',
-                icon: Radio,
-            },
-            {
-                title: 'Broadcasts',
-                href: '/admin/whatsapp/broadcasts',
-                icon: MailOpen,
-            },
-            {
-                title: 'Messages',
-                href: '/admin/whatsapp/messages',
-                icon: MessageCircle,
-            },
-            {
-                title: 'Template Pesan',
-                href: '/admin/whatsapp/message-templates',
-                icon: MessageSquare,
-            },
-        ],
-    },
-    {
         title: 'Google Maps Scraper',
         items: [
             {
