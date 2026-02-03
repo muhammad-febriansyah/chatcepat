@@ -742,6 +742,41 @@ Route::middleware(['auth'])->prefix('payment')->name('payment.')->group(function
 Route::post('/payment/callback', [App\Http\Controllers\PaymentController::class, 'callback'])->name('payment.callback');
 Route::get('/payment/return', [App\Http\Controllers\PaymentController::class, 'return'])->name('payment.return');
 
+// Custom Password Reset Route (override Fortify to handle authenticated users)
+// This route logs out authenticated users before showing the reset form
+Route::get('/reset-password/{token}', function (Request $request, $token) {
+    // If user is authenticated, log them out first
+    if ($request->user()) {
+        auth()->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    }
+
+    $settings = App\Models\Setting::first();
+    $authBranding = [
+        'logo' => App\Models\Setting::get('auth_logo')
+            ? '/storage/' . App\Models\Setting::get('auth_logo')
+            : (App\Models\Setting::get('logo') ? '/storage/' . App\Models\Setting::get('logo') : null),
+        'logo_name' => App\Models\Setting::get('auth_logo_name', 'ChatCepat'),
+        'tagline' => App\Models\Setting::get('auth_tagline', 'Smart, Fast & Reliable'),
+        'heading' => App\Models\Setting::get('auth_heading', 'Kelola website Anda dengan mudah dan cepat'),
+        'description' => App\Models\Setting::get('auth_description', 'Platform manajemen konten modern dengan fitur lengkap untuk mengembangkan bisnis Anda.'),
+        'features' => json_decode(App\Models\Setting::get('auth_features', json_encode([
+            'Dashboard analytics yang powerful',
+            'Manajemen konten yang intuitif',
+            'Keamanan tingkat enterprise',
+        ])), true),
+        'copyright' => App\Models\Setting::get('auth_copyright', '© 2025 ChatCepat. All rights reserved.'),
+        'hero_image' => App\Models\Setting::get('auth_hero_image') ? '/storage/' . App\Models\Setting::get('auth_hero_image') : null,
+    ];
+
+    return Inertia::render('auth/reset-password', [
+        'email' => $request->email,
+        'token' => $token,
+        'authBranding' => $authBranding,
+    ]);
+})->middleware('web')->name('password.reset');
+
 // Agent Authentication Routes
 Route::prefix('agent')->name('agent.')->group(function () {
     // Guest routes (login)
