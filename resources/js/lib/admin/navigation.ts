@@ -26,6 +26,16 @@ import {
     BookOpen,
     Building,
     Activity,
+    MessagesSquare,
+    UserCog,
+    Megaphone,
+    Bot,
+    Reply,
+    Send,
+    Facebook,
+    Instagram,
+    Database,
+    TrendingUp,
     type LucideIcon,
 } from 'lucide-react'
 
@@ -259,6 +269,148 @@ export const adminNavigation: AdminNavGroup[] = [
                 title: 'AI Assistant Types',
                 href: '/admin/ai-assistant-types',
                 icon: Brain,
+            },
+        ],
+    },
+    {
+        title: 'Fitur User - CRM & Chat',
+        // Fitur user yang bisa diakses admin (unlimited)
+        items: [
+            {
+                title: 'CRM Chat App',
+                href: '/user/crm-chat',
+                icon: MessageSquare,
+            },
+            {
+                title: 'Widget Live Chat',
+                href: '/user/widget',
+                icon: MessagesSquare,
+            },
+            {
+                title: 'Human Agent',
+                href: '/user/human-agents',
+                icon: UserCog,
+            },
+        ],
+    },
+    {
+        title: 'Fitur User - Marketing',
+        // Fitur marketing & broadcast user
+        items: [
+            {
+                title: 'Scraping Contacts',
+                href: '/user/scraper',
+                icon: Users,
+                children: [
+                    {
+                        title: 'dari Google Maps',
+                        href: '/user/scraper',
+                        icon: MapPin,
+                    },
+                    {
+                        title: 'dari Contacts HP',
+                        href: '/user/scraper/contacts',
+                        icon: Users,
+                    },
+                    {
+                        title: 'dari Group WhatsApp',
+                        href: '/user/scraper/groups',
+                        icon: MessageCircle,
+                    },
+                ],
+            },
+            {
+                title: 'Broadcast Pesan',
+                href: '/user/broadcast',
+                icon: Megaphone,
+                children: [
+                    {
+                        title: 'Broadcast WhatsApp',
+                        href: '/user/broadcast',
+                        icon: MessageCircle,
+                    },
+                    {
+                        title: 'Broadcast Group WA',
+                        href: '/user/broadcast/groups',
+                        icon: Users,
+                    },
+                    {
+                        title: 'Up Selling',
+                        href: '/user/upselling',
+                        icon: TrendingUp,
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        title: 'Fitur User - Automasi',
+        // Fitur chatbot & automasi
+        items: [
+            {
+                title: 'Chat Otomatis',
+                href: '/user/chatbot',
+                icon: Bot,
+                children: [
+                    {
+                        title: 'Auto Reply Manual',
+                        href: '/user/reply-manual',
+                        icon: Reply,
+                    },
+                    {
+                        title: 'Chatbot AI Cerdas',
+                        href: '/user/chatbot',
+                        icon: Bot,
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        title: 'Fitur User - Platform',
+        // Kelola platforms
+        items: [
+            {
+                title: 'Kelola Platforms',
+                href: '/user/whatsapp',
+                icon: Layers,
+                children: [
+                    {
+                        title: 'WhatsApp Personal',
+                        href: '/user/whatsapp',
+                        icon: MessageCircle,
+                    },
+                    {
+                        title: 'WhatsApp Business API',
+                        href: '/user/meta/settings',
+                        icon: MessageCircle,
+                    },
+                    {
+                        title: 'Telegram',
+                        href: '/user/telegram',
+                        icon: Send,
+                    },
+                    {
+                        title: 'Facebook Messenger',
+                        href: '/user/meta/messenger',
+                        icon: Facebook,
+                    },
+                    {
+                        title: 'DM Instagram',
+                        href: '/user/meta/instagram',
+                        icon: Instagram,
+                    },
+                ],
+            },
+            {
+                title: 'Template Pesan',
+                href: '/user/templates?type=whatsapp',
+                icon: FileText,
+            },
+            {
+                title: 'Master Data',
+                href: '/user/contacts',
+                icon: Database,
             },
         ],
     },
