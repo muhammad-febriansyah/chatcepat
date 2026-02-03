@@ -168,9 +168,26 @@ class User extends Authenticatable
     /**
      * Get the active subscription (latest paid transaction with valid period).
      * Uses subscription_expires_at for accurate expiration tracking (supports extension).
+     *
+     * Admin always gets unlimited access without expiration.
      */
     public function getActiveSubscription()
     {
+        // Admin always has active "unlimited" subscription (never expires)
+        if ($this->role === 'admin') {
+            return [
+                'transaction_id' => null,
+                'package_id' => null,
+                'package_name' => 'Admin Unlimited',
+                'package_slug' => 'admin',
+                'features' => [],
+                'feature_keys' => [],
+                'paid_at' => null,
+                'expires_at' => null, // Never expires
+                'days_remaining' => PHP_INT_MAX,
+            ];
+        }
+
         $paidTransaction = Transaction::where('user_id', $this->id)
             ->where('status', 'paid')
             ->whereNotNull('pricing_package_id')
@@ -217,9 +234,15 @@ class User extends Authenticatable
 
     /**
      * Check if user has an active subscription.
+     * Admin always has active subscription.
      */
     public function hasActiveSubscription(): bool
     {
+        // Admin always has active subscription
+        if ($this->role === 'admin') {
+            return true;
+        }
+
         return $this->getActiveSubscription() !== null;
     }
 

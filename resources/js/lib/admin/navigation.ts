@@ -193,7 +193,7 @@ export const adminNavigation: AdminNavGroup[] = [
     },
     {
         title: 'WhatsApp CRM',
-        roles: ['user'],
+        // Admin juga bisa akses semua fitur user (unlimited & no expiration)
         items: [
             {
                 title: 'Sessions',
@@ -231,7 +231,7 @@ export const adminNavigation: AdminNavGroup[] = [
                 href: '/admin/google-maps-scraper/maps',
                 icon: Map,
                 external: true,
-                roles: ['user'],
+                // Admin juga bisa akses
             },
             {
                 title: 'Data Hasil Scraping',
@@ -253,7 +253,7 @@ export const adminNavigation: AdminNavGroup[] = [
     },
     {
         title: 'AI & Chatbot',
-        roles: ['admin'],
+        // Biarkan visible ke semua role
         items: [
             {
                 title: 'AI Assistant Types',
