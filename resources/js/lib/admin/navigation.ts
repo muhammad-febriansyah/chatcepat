@@ -255,11 +255,11 @@ export const adminNavigation: AdminNavGroup[] = [
                 href: '/user/crm-chat',
                 icon: MessageSquare,
             },
-            {
-                title: 'Widget Live Chat',
-                href: '/user/widget',
-                icon: MessagesSquare,
-            },
+            // {
+            //     title: 'Widget Live Chat',
+            //     href: '/user/widget',
+            //     icon: MessagesSquare,
+            // },
             {
                 title: 'Human Agent',
                 href: '/user/human-agents',

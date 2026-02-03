@@ -251,7 +251,8 @@ export function UserSidebar() {
                                     <LockedMenuButton icon={MessageSquare} label="CRM Chat App" />
                                 )}
                             </SidebarMenuItem>
-                            <SidebarMenuItem>
+                            {/* Widget Live Chat - Hidden (belum lengkap) */}
+                            {/* <SidebarMenuItem>
                                 {hasFeature('crm_chat') ? (
                                     <SidebarMenuButton
                                         asChild
@@ -269,7 +270,7 @@ export function UserSidebar() {
                                 ) : (
                                     <LockedMenuButton icon={MessagesSquare} label="Widget Live Chat" />
                                 )}
-                            </SidebarMenuItem>
+                            </SidebarMenuItem> */}
                             <SidebarMenuItem>
                                 {hasFeature('human_agents') ? (
                                     <SidebarMenuButton

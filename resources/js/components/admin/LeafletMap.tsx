@@ -306,16 +306,15 @@ export function LeafletMap({
                         // More comprehensive fallback for kota (city/regency level)
                         const kota = address.city ||
                             address.town ||
-                            address.village ||
                             address.county ||
                             address.state_district ||
                             address.municipality ||
                             address.state ||
                             address.region || ''
 
-                        // Smart fallback: if one is missing, use the other
-                        const finalKecamatan = kecamatan || kota || 'Unknown'
-                        const finalKota = kota || kecamatan || address.country || 'Unknown'
+                        // FIX: Don't cross-fallback to avoid duplicates (e.g., "Depok, Depok")
+                        const finalKecamatan = kecamatan || address.village || 'Unknown'
+                        const finalKota = kota || address.country || 'Unknown'
 
                         // Log for debugging
                         console.log('Geocoding result:', {
