@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Models\User;
 use App\Models\PricingPackage;
 use App\Models\Transaction;
+use App\Notifications\RegistrationSuccessNotification;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -85,6 +86,7 @@ class CreateNewUser implements CreatesNewUsers
         ]);
 
         // Auto-activate Trial package if selected
+        $transaction = null;
         if (isset($input['pricing_package_id'])) {
             $package = PricingPackage::find($input['pricing_package_id']);
 
@@ -98,7 +100,7 @@ class CreateNewUser implements CreatesNewUsers
                     default => $now->copy()->addDays($package->period),
                 };
 
-                Transaction::create([
+                $transaction = Transaction::create([
                     'user_id' => $user->id,
                     'pricing_package_id' => $package->id,
                     'invoice_number' => Transaction::generateInvoiceNumber(),
@@ -113,6 +115,18 @@ class CreateNewUser implements CreatesNewUsers
                 // Clear session since trial is auto-activated
                 Session::forget('selected_package_id');
             }
+        }
+
+        // Send registration success email notification
+        try {
+            $user->notify(new RegistrationSuccessNotification($transaction));
+            \Log::info('Registration success email sent', ['user_id' => $user->id, 'email' => $user->email]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send registration email', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail registration if email fails
         }
 
         return $user;

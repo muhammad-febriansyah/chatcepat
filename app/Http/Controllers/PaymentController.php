@@ -7,6 +7,8 @@ use App\Models\PricingPackage;
 use App\Models\Bank;
 use App\Services\DuitkuService;
 use App\Notifications\PaymentSuccessNotification;
+use App\Notifications\PaymentFailedNotification;
+use App\Notifications\RegistrationSuccessNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -256,7 +258,17 @@ class PaymentController extends Controller
 
             DB::commit();
 
-            // Payment pending notification removed - will be sent via RegistrationSuccessNotification with payment instructions
+            // Send pending payment notification with payment instructions
+            try {
+                $transaction->user->notify(new RegistrationSuccessNotification($transaction));
+                Log::info('Pending payment email sent', ['transaction_id' => $transaction->id, 'email' => $request->email]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send pending payment email', [
+                    'transaction_id' => $transaction->id,
+                    'error' => $e->getMessage(),
+                ]);
+                // Don't fail the transaction if email fails
+            }
 
             // Redirect to Duitku payment page
             return response()->json([
@@ -447,6 +459,18 @@ class PaymentController extends Controller
                 $status = 'pending';
             } else {
                 $transaction->markAsFailed();
+
+                // Send payment failed email
+                try {
+                    $transaction->user->notify(new PaymentFailedNotification($transaction));
+                    Log::info('Payment failed email sent', ['transaction_id' => $transaction->id, 'email' => $transaction->user->email]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send payment failed email', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
                 $message = 'Payment failed. Please try again.';
                 $status = 'failed';
             }
@@ -515,8 +539,30 @@ class PaymentController extends Controller
             // Update transaction status
             if (isset($statusData['statusCode']) && $statusData['statusCode'] === '00') {
                 $transaction->markAsPaid();
+
+                // Send payment success email
+                try {
+                    $transaction->user->notify(new PaymentSuccessNotification($transaction));
+                    Log::info('Payment success email sent (checkStatus)', ['transaction_id' => $transaction->id]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send payment success email (checkStatus)', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             } elseif (isset($statusData['statusCode']) && $statusData['statusCode'] === '02') {
                 $transaction->markAsFailed();
+
+                // Send payment failed email
+                try {
+                    $transaction->user->notify(new PaymentFailedNotification($transaction));
+                    Log::info('Payment failed email sent (checkStatus)', ['transaction_id' => $transaction->id]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send payment failed email (checkStatus)', [
+                        'transaction_id' => $transaction->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             return response()->json([
