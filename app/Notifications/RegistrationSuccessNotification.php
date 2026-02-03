@@ -2,15 +2,12 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Transaction;
 
-class RegistrationSuccessNotification extends Notification implements ShouldQueue
+class RegistrationSuccessNotification extends Notification
 {
-    use Queueable;
 
     protected $transaction;
 
@@ -33,8 +30,8 @@ class RegistrationSuccessNotification extends Notification implements ShouldQueu
 
         // Check if this is a trial package (free/auto-activated)
         $isTrial = $this->transaction &&
-                   $this->transaction->payment_method === 'free_trial' &&
-                   $this->transaction->status === 'paid';
+            $this->transaction->payment_method === 'free_trial' &&
+            $this->transaction->status === 'paid';
 
         if ($isTrial) {
             // Trial activated template
@@ -78,8 +75,8 @@ class RegistrationSuccessNotification extends Notification implements ShouldQueu
 
         // Check if this is a trial package (free/auto-activated)
         $isTrial = $this->transaction &&
-                   $this->transaction->payment_method === 'free_trial' &&
-                   $this->transaction->status === 'paid';
+            $this->transaction->payment_method === 'free_trial' &&
+            $this->transaction->status === 'paid';
 
         $subject = $isTrial
             ? 'Trial Anda di ' . $siteName . ' Telah Aktif!'
