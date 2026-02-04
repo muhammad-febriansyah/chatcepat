@@ -98,28 +98,17 @@
         <div class="error-code">419</div>
         <h1 class="error-title">Sesi Telah Berakhir</h1>
         <p class="error-message">
-            Sesi Anda telah berakhir. Silakan <strong>tekan Ctrl+Shift+R</strong>
-            (atau Cmd+Shift+R di Mac) untuk memuat ulang halaman.
+            Sesi Anda telah berakhir. Silakan refresh halaman untuk melanjutkan.
         </p>
-
-        <div style="margin: 24px auto; padding: 16px; background: #fff3cd; border-radius: 12px; max-width: 400px; text-align: left; font-size: 14px; line-height: 1.6;">
-            <strong style="color: #856404;">💡 Masih error setelah refresh?</strong>
-            <ol style="margin: 12px 0 0 20px; color: #856404;">
-                <li>Bersihkan cache browser (<strong>Ctrl+Shift+Delete</strong>)</li>
-                <li>Centang "Cookies" dan "Cached images"</li>
-                <li>Klik "Clear data"</li>
-                <li>Tutup dan buka browser lagi</li>
-            </ol>
-        </div>
 
         <div>
             <a href="javascript:forceReload()" class="btn-primary" id="refreshBtn">
-                Refresh Halaman (Auto dalam <span id="countdown">5</span>s)
+                Refresh Halaman (Auto dalam <span id="countdown">3</span>s)
             </a>
         </div>
 
         <script>
-            let countdown = 5;
+            let countdown = 3;
             const countdownEl = document.getElementById('countdown');
             const btn = document.getElementById('refreshBtn');
 
