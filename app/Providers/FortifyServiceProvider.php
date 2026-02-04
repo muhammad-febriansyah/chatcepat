@@ -192,19 +192,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureAuthentication(): void
     {
-        Fortify::authenticateUsing(function (Request $request) {
-            // Validate reCAPTCHA
-            $request->validate([
-                'g-recaptcha-response' => ['required', 'captcha'],
-            ]);
-
-            $user = User::where('email', $request->email)->first();
-
-            if ($user && Hash::check($request->password, $user->password)) {
-                return $user;
-            }
-
-            return null;
-        });
+        // Using standard Laravel authentication - no custom logic
+        // Fortify will handle authentication automatically
     }
 }
