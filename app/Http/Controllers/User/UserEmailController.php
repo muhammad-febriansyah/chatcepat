@@ -91,4 +91,28 @@ class UserEmailController extends Controller
         return redirect()->back()
             ->with('success', 'Email berhasil dihapus.');
     }
+
+    /**
+     * Get approved emails for broadcast (API endpoint)
+     */
+    public function getApprovedEmails()
+    {
+        $user = auth()->user();
+
+        $approvedEmails = UserEmail::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($email) {
+                return [
+                    'id' => $email->id,
+                    'email' => $email->email,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'emails' => $approvedEmails,
+        ]);
+    }
 }

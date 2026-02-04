@@ -21,11 +21,10 @@ class EmailBroadcastController extends Controller
     {
         $userId = Auth::id();
 
-        // Get user's verified emails (Mailketing identities)
-        $verifiedEmails = UserEmail::where('user_id', $userId)
-            ->approved()
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // Get all user's emails to check status
+        $allUserEmails = UserEmail::where('user_id', $userId)->get();
+        $verifiedEmails = $allUserEmails->where('status', 'approved')->values();
+        $hasPendingEmails = $allUserEmails->where('status', 'pending')->count() > 0;
 
         // Get all user's verified SMTP settings
         $smtpSettings = SmtpSetting::where('user_id', $userId)
@@ -41,6 +40,7 @@ class EmailBroadcastController extends Controller
 
         return Inertia::render('user/email-broadcast/index', [
             'verifiedEmails' => $verifiedEmails,
+            'hasPendingEmails' => $hasPendingEmails,
             'smtpSettings' => $smtpSettings,
             'emailTemplates' => $emailTemplates,
         ]);

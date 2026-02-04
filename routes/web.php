@@ -227,6 +227,7 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
     // Email Settings
     Route::prefix('email-settings')->name('email-settings.')->group(function () {
         Route::get('/', [App\Http\Controllers\User\UserEmailController::class, 'index'])->name('index');
+        Route::get('/approved', [App\Http\Controllers\User\UserEmailController::class, 'getApprovedEmails'])->name('approved');
         Route::post('/', [App\Http\Controllers\User\UserEmailController::class, 'store'])->name('store');
         Route::delete('/{id}', [App\Http\Controllers\User\UserEmailController::class, 'destroy'])->name('destroy');
     });

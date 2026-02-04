@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import UserLayout from '@/layouts/user/user-layout';
 import { Head, router, useForm, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Send, Mail, Settings, AlertCircle, Plus, History } from 'lucide-react';
+import { Send, Mail, Settings, AlertCircle, Plus, History, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RichTextEditor } from '@/components/editor/RichTextEditor';
 import { Layout, X, Info, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import axios from 'axios';
 
 interface SmtpSetting {
     id: number;
@@ -40,21 +41,25 @@ interface Props {
     verifiedEmails?: UserEmail[];
     smtpSettings?: SmtpSetting[];
     emailTemplates?: EmailTemplate[];
+    hasPendingEmails?: boolean;
 }
 
 export default function EmailBroadcastIndex({
     verifiedEmails = [],
     smtpSettings = [],
-    emailTemplates = []
+    emailTemplates = [],
+    hasPendingEmails = false
 }: Props) {
     const [recipientInput, setRecipientInput] = useState('');
     const [variables, setVariables] = useState<Array<{ name: string; example: string }>>([]);
     const [newVarName, setNewVarName] = useState('');
     const [newVarExample, setNewVarExample] = useState('');
+    const [loadingSettings, setLoadingSettings] = useState(true);
+    const [emailSettings, setEmailSettings] = useState<UserEmail[]>([]);
 
     const { data, setData, post, processing } = useForm({
-        sender_type: verifiedEmails.length > 0 ? 'mailketing' : 'smtp',
-        user_email_id: verifiedEmails.length > 0 ? verifiedEmails[0].id.toString() : '',
+        sender_type: 'mailketing',
+        user_email_id: '',
         smtp_setting_id: smtpSettings.length > 0 ? smtpSettings[0].id.toString() : '',
         template_id: '',
         subject: '',
@@ -68,6 +73,39 @@ export default function EmailBroadcastIndex({
         recipient_emails: [] as string[],
         content: '', // Added back for transformed submission
     });
+
+    // Fetch email settings on component mount
+    useEffect(() => {
+        const fetchEmailSettings = async () => {
+            try {
+                setLoadingSettings(true);
+                const response = await axios.get('/user/email-settings/approved');
+
+                const approvedEmails = response.data.emails || [];
+                setEmailSettings(approvedEmails);
+
+                if (approvedEmails.length === 0) {
+                    toast.error('Belum ada email pengirim yang aktif', {
+                        description: 'Silakan buat email pengirim terlebih dahulu di Email Settings',
+                        action: {
+                            label: 'Buat Sekarang',
+                            onClick: () => router.visit('/user/email-settings')
+                        },
+                        duration: 10000,
+                    });
+                } else {
+                    setData('user_email_id', approvedEmails[0].id.toString());
+                }
+            } catch (error) {
+                console.error('Failed to fetch email settings:', error);
+                toast.error('Gagal memuat email settings');
+            } finally {
+                setLoadingSettings(false);
+            }
+        };
+
+        fetchEmailSettings();
+    }, []);
 
     const handleAddRecipients = () => {
         const emails = recipientInput
@@ -137,9 +175,21 @@ export default function EmailBroadcastIndex({
             return;
         }
 
-        if (data.sender_type === 'mailketing' && !data.user_email_id) {
-            toast.error('Pilih identitas email terlebih dahulu');
-            return;
+        if (data.sender_type === 'mailketing') {
+            if (emailSettings.length === 0) {
+                toast.error('Belum ada email pengirim', {
+                    description: 'Silakan buat email pengirim terlebih dahulu',
+                    action: {
+                        label: 'Buat Sekarang',
+                        onClick: () => router.visit('/user/email-settings')
+                    }
+                });
+                return;
+            }
+            if (!data.user_email_id) {
+                toast.error('Pilih identitas email terlebih dahulu');
+                return;
+            }
         }
 
         if (data.sender_type === 'smtp' && !data.smtp_setting_id) {
@@ -185,7 +235,7 @@ export default function EmailBroadcastIndex({
                     <div>
                         <h1 className="text-3xl font-bold">Email Broadcast</h1>
                         <p className="text-muted-foreground mt-1">
-                            Kirim email ke multiple recipients sekaligus
+                            Kirim email broadcast menggunakan Mailketing atau SMTP manual
                         </p>
                     </div>
                     <Link href="/user/email-broadcast/history">
@@ -196,26 +246,22 @@ export default function EmailBroadcastIndex({
                     </Link>
                 </div>
 
-                {/* Warning if no Sender available */}
-                {smtpSettings.length === 0 && verifiedEmails.length === 0 && (
+                {/* Status Guidance */}
+                {!loadingSettings && emailSettings.length === 0 && (
                     <Alert variant="destructive">
                         <AlertCircle className="size-4" />
                         <AlertDescription>
-                            Anda belum memiliki email pengirim. Silakan{' '}
+                            Anda belum memiliki email pengirim yang aktif. Silakan{' '}
                             <Link href="/user/email-settings" className="font-medium underline">
-                                verifikasi email
+                                buat email pengirim
                             </Link>{' '}
-                            atau{' '}
-                            <Link href="/user/smtp-settings" className="font-medium underline">
-                                tambahkan SMTP setting
-                            </Link>{' '}
-                            terlebih dahulu.
+                            terlebih dahulu untuk dapat melakukan broadcast.
                         </AlertDescription>
                     </Alert>
                 )}
 
-                {/* Form */}
-                {(smtpSettings.length > 0 || verifiedEmails.length > 0) && (
+                {/* Form - Always show */}
+                {!loadingSettings && (
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid gap-6 lg:grid-cols-3">
                             {/* Main Form */}
@@ -242,11 +288,9 @@ export default function EmailBroadcastIndex({
                                                     <SelectValue placeholder="Pilih metode pengiriman" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {verifiedEmails.length > 0 && (
-                                                        <SelectItem value="mailketing">
-                                                            Mailketing (Email Terverifikasi)
-                                                        </SelectItem>
-                                                    )}
+                                                    <SelectItem value="mailketing">
+                                                        Mailketing (Direkomendasikan - Otomatis)
+                                                    </SelectItem>
                                                     {smtpSettings.length > 0 && (
                                                         <SelectItem value="smtp">
                                                             SMTP (Koneksi Manual)
@@ -259,21 +303,33 @@ export default function EmailBroadcastIndex({
                                         {data.sender_type === 'mailketing' ? (
                                             <div className="space-y-2">
                                                 <Label htmlFor="user_email">Identitas Email (From)</Label>
-                                                <Select
-                                                    value={data.user_email_id}
-                                                    onValueChange={(value) => setData('user_email_id', value)}
-                                                >
-                                                    <SelectTrigger id="user_email">
-                                                        <SelectValue placeholder="Pilih email pengirim" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {verifiedEmails.map((email) => (
-                                                            <SelectItem key={email.id} value={email.id.toString()}>
-                                                                {email.email}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                                {emailSettings.length === 0 ? (
+                                                    <Alert variant="destructive" className="mt-2">
+                                                        <AlertCircle className="size-4" />
+                                                        <AlertDescription>
+                                                            Belum ada email pengirim.{' '}
+                                                            <Link href="/user/email-settings" className="font-medium underline">
+                                                                Buat email pengirim
+                                                            </Link>
+                                                        </AlertDescription>
+                                                    </Alert>
+                                                ) : (
+                                                    <Select
+                                                        value={data.user_email_id}
+                                                        onValueChange={(value) => setData('user_email_id', value)}
+                                                    >
+                                                        <SelectTrigger id="user_email">
+                                                            <SelectValue placeholder="Pilih email pengirim" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {emailSettings.map((email) => (
+                                                                <SelectItem key={email.id} value={email.id.toString()}>
+                                                                    {email.email}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="space-y-2">

@@ -941,12 +941,14 @@ export function UserSidebar() {
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {/* SMTP Settings - Hidden for now
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
                                     isActive={isActive('/user/smtp-settings')}
-                                    className="h-10 rounded-lg"
+                                    className={cn(
+                                        'h-10 rounded-lg',
+                                        isActive('/user/smtp-settings') && 'bg-primary/10 text-primary font-semibold'
+                                    )}
                                 >
                                     <Link href="/user/smtp-settings">
                                         <Mail className="size-5" />
@@ -954,7 +956,6 @@ export function UserSidebar() {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
-*/}
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
