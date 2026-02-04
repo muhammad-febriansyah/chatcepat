@@ -691,24 +691,34 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
 
                                     <div className="space-y-2">
                                         {memberInputs.map((input, index) => (
-                                            <div key={index} className="flex gap-2 items-center">
-                                                <Input
-                                                    placeholder="08123456789"
-                                                    value={input.phone_number}
-                                                    onChange={(e) => updateMemberInput(index, 'phone_number', e.target.value)}
-                                                    className="h-9"
-                                                />
-                                                {memberInputs.length > 1 && (
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive"
-                                                        onClick={() => removeMemberInput(index)}
-                                                    >
-                                                        <X className="size-4" />
-                                                    </Button>
-                                                )}
+                                            <div key={index} className="space-y-2 p-3 border rounded-lg bg-muted/30">
+                                                <div className="flex gap-2 items-start">
+                                                    <div className="flex-1 space-y-2">
+                                                        <Input
+                                                            placeholder="Nomor: 08123456789"
+                                                            value={input.phone_number}
+                                                            onChange={(e) => updateMemberInput(index, 'phone_number', e.target.value)}
+                                                            className="h-9"
+                                                        />
+                                                        <Input
+                                                            placeholder="Nama: Budi Santoso (opsional)"
+                                                            value={input.name}
+                                                            onChange={(e) => updateMemberInput(index, 'name', e.target.value)}
+                                                            className="h-9"
+                                                        />
+                                                    </div>
+                                                    {memberInputs.length > 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive"
+                                                            onClick={() => removeMemberInput(index)}
+                                                        >
+                                                            <X className="size-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
