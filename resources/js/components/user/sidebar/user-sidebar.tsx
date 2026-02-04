@@ -397,10 +397,8 @@ export function UserSidebar() {
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton
-                                            isActive={isBroadcastActive}
                                             className={cn(
                                                 'h-10 rounded-lg',
-                                                isBroadcastActive && 'bg-primary/10 text-primary font-semibold',
                                                 !hasFeature('broadcast_wa') && !hasFeature('broadcast_group') && 'opacity-50'
                                             )}
                                         >
