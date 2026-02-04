@@ -233,6 +233,11 @@ export const adminNavigation: AdminNavGroup[] = [
                 href: '/admin/contacts',
                 icon: Mail,
             },
+            {
+                title: 'Verifikasi Email',
+                href: '/admin/email-verifications',
+                icon: MailOpen,
+            },
         ],
     },
     {

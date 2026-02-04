@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import {
     Table,
     TableBody,
@@ -29,7 +30,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Mail, CheckCircle2, XCircle, Clock, Send, User } from 'lucide-react';
+import { Mail, CheckCircle2, XCircle, Clock, Send, User, Eye, Info } from 'lucide-react';
 import { useState, FormEventHandler } from 'react';
 
 interface UserEmail {
@@ -64,6 +65,7 @@ export default function EmailVerifications({ emails, stats, currentStatus }: Ema
     const [selectedEmail, setSelectedEmail] = useState<UserEmail | null>(null);
     const [approveDialogOpen, setApproveDialogOpen] = useState(false);
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+    const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
     const approveForm = useForm({
         notes: '',
@@ -239,6 +241,7 @@ export default function EmailVerifications({ emails, stats, currentStatus }: Ema
                                             <TableHead>Email Broadcast</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Tanggal Submit</TableHead>
+                                            <TableHead>Verified At</TableHead>
                                             <TableHead className="text-right">Aksi</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -273,8 +276,21 @@ export default function EmailVerifications({ emails, stats, currentStatus }: Ema
                                                 <TableCell className="text-sm text-muted-foreground">
                                                     {email.created_at}
                                                 </TableCell>
+                                                <TableCell className="text-sm text-muted-foreground">
+                                                    {email.verified_at || '-'}
+                                                </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => {
+                                                                setSelectedEmail(email);
+                                                                setDetailDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </Button>
                                                         {email.status === 'pending' && (
                                                             <>
                                                                 <Button
@@ -412,6 +428,98 @@ export default function EmailVerifications({ emails, stats, currentStatus }: Ema
                             </Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Detail Dialog */}
+            <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Detail Verifikasi</DialogTitle>
+                        <DialogDescription>
+                            Informasi lengkap verifikasi email
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedEmail && (
+                        <div className="space-y-4 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label className="text-muted-foreground text-xs uppercase">User</Label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <User className="w-4 h-4 text-muted-foreground" />
+                                        <p className="font-medium">{selectedEmail.user_name}</p>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground ml-6">{selectedEmail.user_email}</p>
+                                </div>
+                                <div>
+                                    <Label className="text-muted-foreground text-xs uppercase">Email Broadcast</Label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <Mail className="w-4 h-4 text-muted-foreground" />
+                                        <p className="font-mono text-sm">{selectedEmail.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label className="text-muted-foreground text-xs uppercase">Status</Label>
+                                    <div className="mt-1">{getStatusBadge(selectedEmail.status)}</div>
+                                </div>
+                                <div>
+                                    <Label className="text-muted-foreground text-xs uppercase">Tanggal Submit</Label>
+                                    <p className="text-sm mt-1">{selectedEmail.created_at}</p>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="grid grid-cols-2 gap-4">
+                                {selectedEmail.approved_at && (
+                                    <div>
+                                        <Label className="text-muted-foreground text-xs uppercase">Tanggal Diproses</Label>
+                                        <p className="text-sm mt-1">{selectedEmail.approved_at}</p>
+                                    </div>
+                                )}
+                                {selectedEmail.approved_by && (
+                                    <div>
+                                        <Label className="text-muted-foreground text-xs uppercase">Diproses Oleh</Label>
+                                        <p className="text-sm mt-1 font-medium">{selectedEmail.approved_by}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {selectedEmail.verified_at && (
+                                <div>
+                                    <Label className="text-muted-foreground text-xs uppercase">Verified At (Mailketing)</Label>
+                                    <p className="text-sm mt-1 text-green-600 font-medium">✅ {selectedEmail.verified_at}</p>
+                                </div>
+                            )}
+
+                            {selectedEmail.rejection_reason && (
+                                <div className="space-y-2">
+                                    <Label className="text-muted-foreground text-xs uppercase">Alasan Penolakan</Label>
+                                    <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-800">
+                                        {selectedEmail.rejection_reason}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedEmail.notes && (
+                                <div className="space-y-2">
+                                    <Label className="text-muted-foreground text-xs uppercase text-primary">Catatan Admin</Label>
+                                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-100 text-sm text-blue-800 flex gap-2">
+                                        <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                                        <p>{selectedEmail.notes}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+                            Tutup
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </AdminLayout>
