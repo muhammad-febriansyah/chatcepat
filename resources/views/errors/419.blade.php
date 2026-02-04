@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background-color: #F7F8FD;
@@ -20,11 +22,13 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .error-container {
             text-align: center;
             max-width: 500px;
             width: 100%;
         }
+
         .error-icon {
             width: 120px;
             height: 120px;
@@ -36,11 +40,13 @@
             justify-content: center;
             box-shadow: 0 8px 24px rgba(37, 71, 249, 0.15);
         }
+
         .error-icon svg {
             width: 64px;
             height: 64px;
             color: white;
         }
+
         .error-code {
             font-size: 72px;
             font-weight: 700;
@@ -49,18 +55,21 @@
             margin-bottom: 16px;
             font-family: 'Space Grotesk', 'Inter', sans-serif;
         }
+
         .error-title {
             font-size: 24px;
             font-weight: 600;
             color: #1a1a1a;
             margin-bottom: 12px;
         }
+
         .error-message {
             font-size: 16px;
             color: #6b7280;
             line-height: 1.6;
             margin-bottom: 32px;
         }
+
         .btn-primary {
             display: inline-block;
             padding: 14px 32px;
@@ -73,26 +82,31 @@
             transition: all 0.2s;
             box-shadow: 0 4px 12px rgba(37, 71, 249, 0.2);
         }
+
         .btn-primary:hover {
             background-color: #1d39c7;
             box-shadow: 0 6px 16px rgba(37, 71, 249, 0.3);
             transform: translateY(-2px);
         }
+
         @media (max-width: 640px) {
             .error-code {
                 font-size: 56px;
             }
+
             .error-title {
                 font-size: 20px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="error-container">
         <div class="error-icon">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
         </div>
         <div class="error-code">419</div>
@@ -108,14 +122,14 @@
         </div>
 
         <script>
+            // Define globally immediately
+            window.forceReload = function () {
+                window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+            };
+
             let countdown = 3;
             const countdownEl = document.getElementById('countdown');
             const btn = document.getElementById('refreshBtn');
-
-            function forceReload() {
-                // Force reload dengan bypass cache
-                window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
-            }
 
             const interval = setInterval(() => {
                 countdown--;
@@ -125,15 +139,18 @@
 
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    forceReload();
+                    window.forceReload();
                 }
             }, 1000);
 
             // Stop countdown jika user klik manual
-            btn.addEventListener('click', () => {
-                clearInterval(interval);
-            });
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    clearInterval(interval);
+                });
+            }
         </script>
     </div>
 </body>
+
 </html>
