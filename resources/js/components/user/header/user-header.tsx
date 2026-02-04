@@ -82,7 +82,13 @@ export function UserHeader() {
     }
 
     const handleLogout = () => {
-        router.post('/logout')
+        router.post('/logout', {}, {
+            onError: (errors) => {
+                // If we get a 419 error (CSRF token mismatch), redirect to login anyway
+                // because the session is likely expired
+                window.location.href = '/login'
+            },
+        })
     }
 
     const getInitials = (name: string) => {

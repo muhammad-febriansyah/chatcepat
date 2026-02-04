@@ -94,7 +94,9 @@ export function UserSidebar() {
     })
 
     const handleLogout = () => {
-        router.post('/logout')
+        router.post('/logout', {}, {
+            onError: () => window.location.href = '/login'
+        })
     }
 
     const toggleSection = (section: string) => {

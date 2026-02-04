@@ -178,7 +178,9 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    onClick={() => router.post('/logout')}
+                                    onClick={() => router.post('/logout', {}, {
+                                        onError: () => window.location.href = '/login'
+                                    })}
                                     className="cursor-pointer text-red-600 focus:text-red-600"
                                 >
                                     <LogOut className="mr-2 h-4 w-4" />
@@ -332,7 +334,9 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
-                                        router.post('/logout');
+                                        router.post('/logout', {}, {
+                                            onError: () => window.location.href = '/login'
+                                        });
                                     }}
                                     className="flex w-full items-center gap-2 rounded-[100px] bg-red-50 px-4 py-3 font-medium text-red-600 transition-colors hover:bg-red-100"
                                 >

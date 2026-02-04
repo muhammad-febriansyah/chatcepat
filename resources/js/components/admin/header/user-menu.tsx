@@ -25,7 +25,9 @@ export function UserMenu() {
     const { auth } = usePage<{ auth: { user: User } }>().props
 
     const handleLogout = () => {
-        router.post('/logout')
+        router.post('/logout', {}, {
+            onError: () => window.location.href = '/login'
+        })
     }
 
     const getInitials = (name: string) => {
