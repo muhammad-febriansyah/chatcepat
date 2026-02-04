@@ -319,10 +319,19 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/groups', [App\Http\Controllers\User\GroupBroadcastController::class, 'index'])->name('groups');
         Route::get('/groups/list', [App\Http\Controllers\User\GroupBroadcastController::class, 'getGroups'])->name('groups.list');
         Route::post('/groups/send', [App\Http\Controllers\User\GroupBroadcastController::class, 'send'])->name('groups.send');
+    });
 
-        // Email Broadcast
-        Route::get('/email', [App\Http\Controllers\User\BroadcastEmailController::class, 'index'])->name('email');
-        Route::post('/email/send', [App\Http\Controllers\User\BroadcastEmailController::class, 'send'])->name('email.send');
+    // Email Broadcast (Unified)
+    Route::prefix('email-broadcast')->name('email-broadcast.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\EmailBroadcastController::class, 'index'])->name('index');
+        Route::post('/send', [App\Http\Controllers\User\EmailBroadcastController::class, 'send'])->name('send');
+        Route::get('/history', [App\Http\Controllers\User\EmailBroadcastController::class, 'history'])->name('history');
+        Route::get('/{broadcast}', [App\Http\Controllers\User\EmailBroadcastController::class, 'show'])->name('show');
+    });
+
+    // Legacy Email Broadcast Route (Redirect to unified route)
+    Route::get('user/broadcast/email', function () {
+        return redirect()->route('user.email-broadcast.index');
     });
 
     // Contact Groups (untuk broadcast)
@@ -484,13 +493,7 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::post('/{smtpSetting}/test', [App\Http\Controllers\User\SmtpSettingController::class, 'test'])->name('test');
     });
 
-    // Email Broadcast
-    Route::prefix('email-broadcast')->name('email-broadcast.')->group(function () {
-        Route::get('/', [App\Http\Controllers\User\EmailBroadcastController::class, 'index'])->name('index');
-        Route::post('/send', [App\Http\Controllers\User\EmailBroadcastController::class, 'send'])->name('send');
-        Route::get('/history', [App\Http\Controllers\User\EmailBroadcastController::class, 'history'])->name('history');
-        Route::get('/{broadcast}', [App\Http\Controllers\User\EmailBroadcastController::class, 'show'])->name('show');
-    });
+    // Email Broadcast is now handled above in unified prefix
 
     // Reports
     Route::prefix('reports')->name('reports.')->group(function () {

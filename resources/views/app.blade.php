@@ -206,6 +206,15 @@
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
     @inertiaHead
+
+    {{-- Session Keep-Alive (Heartbeat) to prevent 419 Page Expired errors --}}
+    <script>
+        setInterval(function () {
+            fetch('/csrf-token').then(response => {
+                if (!response.ok) console.warn('Heartbeat failed');
+            }).catch(error => console.error('Heartbeat error:', error));
+        }, 1000 * 60 * 5); // Ping every 5 minutes
+    </script>
 </head>
 
 <body class="font-sans antialiased">
