@@ -8,19 +8,16 @@ use Illuminate\Support\Facades\Log;
 
 class MailketingService
 {
-    public function send($recipient, $subject, $content, $templateKey = null)
+    public function send($recipient, $subject, $content, $senderEmail = null)
     {
         $apiToken = Setting::get('mailketing_api_token');
-        $fromEmail = Setting::get('mailketing_from_email');
+        $fromEmail = $senderEmail ?? Setting::get('mailketing_from_email');
         $siteName = Setting::get('site_name', 'ChatCepat');
 
         if (!$apiToken || !$fromEmail) {
-            Log::warning('Mailketing credentials not set. Email not sent.');
+            Log::warning('Mailketing credentials not set or sender email missing. Email not sent.');
             return false;
         }
-
-        // If templateKey is provided, we can fetch and replace variables here if needed
-        // but for now, we assume the content is already prepared or we provide a helper
 
         $payload = [
             'api_token' => $apiToken,

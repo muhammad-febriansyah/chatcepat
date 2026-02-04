@@ -4,11 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Mail, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SmtpSetting {
     id: number;
     name: string;
     from_address: string;
+}
+
+interface UserEmail {
+    id: number;
+    email: string;
 }
 
 interface EmailBroadcast {
@@ -20,6 +26,7 @@ interface EmailBroadcast {
     status: string;
     created_at: string;
     smtp_setting: SmtpSetting | null;
+    user_email: UserEmail | null;
 }
 
 interface PaginatedBroadcasts {
@@ -48,7 +55,7 @@ export default function EmailBroadcastHistory({ broadcasts, stats, currentStatus
         const statusConfig = {
             pending: { variant: 'secondary' as const, icon: Clock, label: 'Pending' },
             processing: { variant: 'default' as const, icon: Loader2, label: 'Processing' },
-            completed: { variant: 'success' as const, icon: CheckCircle, label: 'Completed' },
+            completed: { variant: 'default' as const, icon: CheckCircle, label: 'Completed', className: 'bg-green-500 hover:bg-green-600 text-white' },
             failed: { variant: 'destructive' as const, icon: XCircle, label: 'Failed' },
         };
 
@@ -56,7 +63,7 @@ export default function EmailBroadcastHistory({ broadcasts, stats, currentStatus
         const Icon = config.icon;
 
         return (
-            <Badge variant={config.variant} className="flex items-center gap-1">
+            <Badge variant={config.variant} className={cn("flex items-center gap-1", (config as any).className)}>
                 <Icon className="size-3" />
                 {config.label}
             </Badge>
@@ -158,6 +165,9 @@ export default function EmailBroadcastHistory({ broadcasts, stats, currentStatus
                                             </div>
                                             <CardDescription>
                                                 Dikirim pada {formatDate(broadcast.created_at)}
+                                                {broadcast.user_email && (
+                                                    <> via {broadcast.user_email.email}</>
+                                                )}
                                                 {broadcast.smtp_setting && (
                                                     <> via {broadcast.smtp_setting.name} ({broadcast.smtp_setting.from_address})</>
                                                 )}
@@ -215,11 +225,10 @@ export default function EmailBroadcastHistory({ broadcasts, stats, currentStatus
                                         key={index}
                                         href={link.url || '#'}
                                         preserveState
-                                        className={`px-4 py-2 rounded-md ${
-                                            link.active
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-muted hover:bg-muted/80'
-                                        } ${!link.url && 'opacity-50 cursor-not-allowed'}`}
+                                        className={`px-4 py-2 rounded-md ${link.active
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-muted hover:bg-muted/80'
+                                            } ${!link.url && 'opacity-50 cursor-not-allowed'}`}
                                     >
                                         <span dangerouslySetInnerHTML={{ __html: link.label }} />
                                     </Link>

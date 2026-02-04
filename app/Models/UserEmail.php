@@ -44,6 +44,14 @@ class UserEmail extends Model
     }
 
     /**
+     * Get the broadcasts sent using this email
+     */
+    public function broadcasts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EmailBroadcast::class);
+    }
+
+    /**
      * Scope to get only pending emails
      */
     public function scopePending($query)

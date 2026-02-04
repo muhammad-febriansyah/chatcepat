@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Services\MailketingService;
 
 class SendBroadcastEmail implements ShouldQueue
 {
@@ -33,18 +34,29 @@ class SendBroadcastEmail implements ShouldQueue
             // Mark as processing
             $this->broadcast->markAsProcessing();
 
-            $smtpSetting = $this->broadcast->smtpSetting;
+            $senderEmail = null;
+            $useMailketing = false;
 
-            // Configure mail with broadcast SMTP
-            config([
-                'mail.mailers.smtp.host' => $smtpSetting->host,
-                'mail.mailers.smtp.port' => $smtpSetting->port,
-                'mail.mailers.smtp.username' => $smtpSetting->username,
-                'mail.mailers.smtp.password' => $smtpSetting->password,
-                'mail.mailers.smtp.encryption' => $smtpSetting->encryption === 'none' ? null : $smtpSetting->encryption,
-                'mail.from.address' => $smtpSetting->from_address,
-                'mail.from.name' => $smtpSetting->from_name,
-            ]);
+            if ($this->broadcast->user_email_id) {
+                $userEmail = $this->broadcast->userEmail;
+                $senderEmail = $userEmail->email;
+                $useMailketing = true;
+            } else {
+                $smtpSetting = $this->broadcast->smtpSetting;
+
+                // Configure mail with broadcast SMTP
+                config([
+                    'mail.mailers.smtp.host' => $smtpSetting->host,
+                    'mail.mailers.smtp.port' => $smtpSetting->port,
+                    'mail.mailers.smtp.username' => $smtpSetting->username,
+                    'mail.mailers.smtp.password' => $smtpSetting->password,
+                    'mail.mailers.smtp.encryption' => $smtpSetting->encryption === 'none' ? null : $smtpSetting->encryption,
+                    'mail.from.address' => $smtpSetting->from_address,
+                    'mail.from.name' => $smtpSetting->from_name,
+                ]);
+            }
+
+            $mailketingService = app(MailketingService::class);
 
             $failedEmails = [];
             $sentCount = 0;
@@ -52,11 +64,23 @@ class SendBroadcastEmail implements ShouldQueue
             // Send email to each recipient
             foreach ($this->broadcast->recipient_emails as $email) {
                 try {
-                    Mail::send([], [], function ($message) use ($email) {
-                        $message->to($email)
-                            ->subject($this->broadcast->subject)
-                            ->html($this->broadcast->content);
-                    });
+                    if ($useMailketing) {
+                        $sent = $mailketingService->send(
+                            $email,
+                            $this->broadcast->subject,
+                            $this->broadcast->content,
+                            $senderEmail
+                        );
+                        if (!$sent) {
+                            throw new \Exception('Mailketing API failed to send');
+                        }
+                    } else {
+                        Mail::send([], [], function ($message) use ($email) {
+                            $message->to($email)
+                                ->subject($this->broadcast->subject)
+                                ->html($this->broadcast->content);
+                        });
+                    }
 
                     $sentCount++;
                     $this->broadcast->incrementSent();

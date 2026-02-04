@@ -10,6 +10,7 @@ class EmailBroadcast extends Model
     protected $fillable = [
         'user_id',
         'smtp_setting_id',
+        'user_email_id',
         'message_template_id',
         'subject',
         'content',
@@ -47,6 +48,14 @@ class EmailBroadcast extends Model
     public function smtpSetting(): BelongsTo
     {
         return $this->belongsTo(SmtpSetting::class);
+    }
+
+    /**
+     * Relationship with UserEmail
+     */
+    public function userEmail(): BelongsTo
+    {
+        return $this->belongsTo(UserEmail::class);
     }
 
     /**
