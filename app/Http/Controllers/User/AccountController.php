@@ -21,6 +21,28 @@ class AccountController extends Controller
         $user = auth()->user();
         $user->load('businessCategory');
 
+        $emails = \App\Models\UserEmail::where('user_id', $user->id)
+            ->with('approver:id,name')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($email) {
+                return [
+                    'id' => $email->id,
+                    'email' => $email->email,
+                    'status' => $email->status,
+                    'verified_at' => $email->verified_at?->format('d M Y H:i'),
+                    'approved_at' => $email->approved_at?->format('d M Y H:i'),
+                    'approved_by' => $email->approver?->name,
+                    'rejection_reason' => $email->rejection_reason,
+                    'notes' => $email->notes,
+                    'created_at' => $email->created_at->format('d M Y H:i'),
+                ];
+            });
+
+        $smtpSettings = \App\Models\SmtpSetting::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return Inertia::render('user/account/index', [
             'user' => [
                 'id' => $user->id,
@@ -36,6 +58,8 @@ class AccountController extends Controller
                 'created_at' => $user->created_at->format('d M Y'),
             ],
             'businessCategories' => \App\Models\BusinessCategory::where('is_active', true)->get(),
+            'emails' => $emails,
+            'smtpSettings' => $smtpSettings,
         ]);
     }
 

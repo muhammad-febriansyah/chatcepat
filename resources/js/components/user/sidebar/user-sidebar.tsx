@@ -44,6 +44,7 @@ import {
     Coins,
     Instagram,
     Facebook,
+    Clock,
 } from 'lucide-react'
 import { Link, router, usePage } from '@inertiajs/react'
 import { cn } from '@/lib/utils'
@@ -79,7 +80,7 @@ export function UserSidebar() {
 
     // Determine which sections should be open based on active URL
     const isScrapingActive = isAnyActive(['/user/scraper'])
-    const isBroadcastActive = isAnyActive(['/user/broadcast', '/user/contact-groups'])
+    const isBroadcastActive = isAnyActive(['/user/broadcast', '/user/contact-groups', '/user/email-broadcast'])
     const isChatbotActive = isAnyActive(['/user/chatbot', '/user/reply-manual'])
     const isPlatformsActive = isAnyActive(['/user/whatsapp'])
     const isTemplatesActive = isAnyActive(['/user/templates', '/user/products'])
@@ -452,7 +453,6 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={Users} label="Broadcast Group WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
-                                            {/* Broadcast Email - Hidden for now
                                             <SidebarMenuSubItem>
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
@@ -471,7 +471,24 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={Mail} label="Broadcast Email" />
                                                 )}
                                             </SidebarMenuSubItem>
-                                            */}
+                                            <SidebarMenuSubItem>
+                                                {hasFeature('broadcast_wa') ? (
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={isActive('/user/email-broadcast/history')}
+                                                        className={cn(
+                                                            isActive('/user/email-broadcast/history') && 'bg-primary/10 text-primary font-semibold'
+                                                        )}
+                                                    >
+                                                        <Link href="/user/email-broadcast/history">
+                                                            <Clock className="size-4 text-orange-500" />
+                                                            <span>Riwayat Broadcast Email</span>
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                ) : (
+                                                    <LockedSubMenuButton icon={Clock} label="Riwayat Broadcast Email" />
+                                                )}
+                                            </SidebarMenuSubItem>
                                             <SidebarMenuSubItem>
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
@@ -764,17 +781,16 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={MessageCircle} label="Template WhatsApp" />
                                                 )}
                                             </SidebarMenuSubItem>
-                                            {/* Template Email - Hidden for now
                                             <SidebarMenuSubItem>
                                                 {hasFeature('templates') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={url.startsWith('/user/templates/email')}
+                                                        isActive={url === '/user/templates?type=email'}
                                                         className={cn(
-                                                            url.startsWith('/user/templates/email') && 'bg-primary/10 text-primary font-semibold'
+                                                            url === '/user/templates?type=email' && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
-                                                        <Link href="/user/templates/email">
+                                                        <Link href="/user/templates?type=email">
                                                             <Mail className="size-4 text-gray-700" />
                                                             <span>Template Email</span>
                                                         </Link>
@@ -783,7 +799,6 @@ export function UserSidebar() {
                                                     <LockedSubMenuButton icon={Mail} label="Template Email" />
                                                 )}
                                             </SidebarMenuSubItem>
-                                            */}
                                             {/* Katalog Produk - Hidden for now
                                             <SidebarMenuSubItem>
                                                 {hasFeature('templates') ? (
@@ -955,6 +970,24 @@ export function UserSidebar() {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isActive('/user/email-settings')}
+                                    className={cn(
+                                        'transition-all duration-200',
+                                        isActive('/user/email-settings')
+                                            ? 'bg-primary/10 text-primary font-semibold shadow-sm'
+                                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                                    )}
+                                >
+                                    <Link href="/user/email-settings">
+                                        <Mail className="size-5" />
+                                        <span>Verifikasi Email</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild

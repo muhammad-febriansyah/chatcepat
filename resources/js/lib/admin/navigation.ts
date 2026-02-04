@@ -8,6 +8,7 @@ import {
     Sparkles,
     DollarSign,
     ShieldCheck,
+    Clock,
     ScrollText,
     Target,
     Info,
@@ -314,6 +315,23 @@ export const adminNavigation: AdminNavGroup[] = [
                         icon: Users,
                     },
                     {
+                        title: 'Broadcast Email',
+                        href: '/user/broadcast/email',
+                        icon: Mail,
+                        children: [
+                            {
+                                title: 'Buat Broadcast',
+                                href: '/user/broadcast/email',
+                                icon: Send,
+                            },
+                            {
+                                title: 'Riwayat Broadcast',
+                                href: '/user/email-broadcast/history',
+                                icon: Clock,
+                            },
+                        ],
+                    },
+                    {
                         title: 'Up Selling',
                         href: '/user/upselling',
                         icon: TrendingUp,
@@ -383,13 +401,30 @@ export const adminNavigation: AdminNavGroup[] = [
             },
             {
                 title: 'Template Pesan',
-                href: '/user/templates?type=whatsapp',
+                href: '/user/templates',
                 icon: FileText,
+                children: [
+                    {
+                        title: 'Template WhatsApp',
+                        href: '/user/templates?type=whatsapp',
+                        icon: MessageCircle,
+                    },
+                    {
+                        title: 'Template Email',
+                        href: '/user/templates?type=email',
+                        icon: Mail,
+                    },
+                ],
             },
             {
                 title: 'Master Data',
                 href: '/user/contacts',
                 icon: Database,
+            },
+            {
+                title: 'Verifikasi Email',
+                href: '/user/email-settings',
+                icon: Mail,
             },
         ],
     },

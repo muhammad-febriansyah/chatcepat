@@ -1,4 +1,4 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
 import { logger } from '@/utils/logger';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { User, Lock, Shield, Camera, Eye, EyeOff, Mail, Phone as PhoneIcon, MapPin, Briefcase, Building2, Calendar, Save, Info } from 'lucide-react';
+import { User, Lock, Shield, Camera, Eye, EyeOff, Mail, Phone as PhoneIcon, MapPin, Briefcase, Building2, Calendar, Save, Info, Settings } from 'lucide-react';
 import { FormEventHandler, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -37,12 +37,41 @@ interface BusinessCategory {
     name: string;
 }
 
+interface UserEmail {
+    id: number;
+    email: string;
+    status: 'pending' | 'approved' | 'rejected';
+    verified_at: string | null;
+    approved_at: string | null;
+    approved_by: string | null;
+    rejection_reason: string | null;
+    notes: string | null;
+    created_at: string;
+}
+
+interface SmtpSetting {
+    id: number;
+    name: string;
+    host: string;
+    port: number;
+    username: string;
+    encryption: string;
+    from_address: string;
+    from_name: string;
+    is_active: boolean;
+    is_verified: boolean;
+    verified_at: string | null;
+    created_at: string;
+}
+
 interface AccountIndexProps {
     user: UserData;
     businessCategories: BusinessCategory[];
+    emails: UserEmail[];
+    smtpSettings: SmtpSetting[];
 }
 
-export default function AccountIndex({ user, businessCategories }: AccountIndexProps) {
+export default function AccountIndex({ user, businessCategories, emails, smtpSettings }: AccountIndexProps) {
     const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatar);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -270,10 +299,18 @@ export default function AccountIndex({ user, businessCategories }: AccountIndexP
 
                 {/* Settings Tabs */}
                 <Tabs defaultValue="profile" className="w-full">
-                    <TabsList className="grid w-full max-w-md grid-cols-2 h-12">
+                    <TabsList className="grid w-full max-w-2xl grid-cols-4 h-12">
                         <TabsTrigger value="profile" className="gap-2">
                             <User className="size-4" />
                             Informasi Profil
+                        </TabsTrigger>
+                        <TabsTrigger value="email" className="gap-2">
+                            <Mail className="size-4" />
+                            Verifikasi Email
+                        </TabsTrigger>
+                        <TabsTrigger value="smtp" className="gap-2">
+                            <Settings className="size-4" />
+                            SMTP
                         </TabsTrigger>
                         <TabsTrigger value="security" className="gap-2">
                             <Lock className="size-4" />
@@ -418,6 +455,117 @@ export default function AccountIndex({ user, businessCategories }: AccountIndexP
                                         </Button>
                                     </div>
                                 </form>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    {/* Email Verification Tab */}
+                    <TabsContent value="email" className="mt-6">
+                        <Card className="overflow-hidden border-2">
+                            <div className="h-1 bg-gradient-to-r from-red-500 to-pink-500" />
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Mail className="size-5 text-primary" />
+                                            Verifikasi Email (Mailketing)
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Kelola identitas pengirim email Anda
+                                        </CardDescription>
+                                    </div>
+                                    <Link href="/user/email-settings">
+                                        <Button variant="outline" size="sm">
+                                            Kelola Selengkapnya
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {emails.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <Mail className="size-12 mx-auto text-muted-foreground mb-4" />
+                                        <p className="text-muted-foreground">Belum ada email yang didaftarkan</p>
+                                        <Link href="/user/email-settings">
+                                            <Button variant="link">Tambah Email Sekarang</Button>
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {emails.map((email) => (
+                                            <div key={email.id} className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                                                <div className="flex items-center gap-3">
+                                                    <Mail className="size-4 text-muted-foreground" />
+                                                    <div>
+                                                        <p className="font-medium">{email.email}</p>
+                                                        <p className="text-xs text-muted-foreground">Ditambahkan pada {email.created_at}</p>
+                                                    </div>
+                                                </div>
+                                                <Badge
+                                                    variant={email.status === 'approved' ? 'default' : email.status === 'pending' ? 'secondary' : 'destructive'}
+                                                    className={email.status === 'approved' ? 'bg-green-500' : ''}
+                                                >
+                                                    {email.status === 'approved' ? 'Disetujui' : email.status === 'pending' ? 'Menunggu' : 'Ditolak'}
+                                                </Badge>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* SMTP Settings Tab */}
+                    <TabsContent value="smtp" className="mt-6">
+                        <Card className="overflow-hidden border-2">
+                            <div className="h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Settings className="size-5 text-primary" />
+                                            SMTP Settings
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Konfigurasi server email untuk pengiriman
+                                        </CardDescription>
+                                    </div>
+                                    <Link href="/user/smtp-settings">
+                                        <Button variant="outline" size="sm">
+                                            Kelola SMTP
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {smtpSettings.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <Settings className="size-12 mx-auto text-muted-foreground mb-4" />
+                                        <p className="text-muted-foreground">Belum ada SMTP yang dikonfigurasi</p>
+                                        <Link href="/user/smtp-settings">
+                                            <Button variant="link">Atur SMTP Sekarang</Button>
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {smtpSettings.map((smtp) => (
+                                            <div key={smtp.id} className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                                                <div className="flex items-center gap-3">
+                                                    <Settings className="size-4 text-muted-foreground" />
+                                                    <div>
+                                                        <p className="font-medium">{smtp.name}</p>
+                                                        <p className="text-xs text-muted-foreground">{smtp.host}:{smtp.port}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {smtp.is_active && <Badge variant="default" className="bg-blue-500 text-[10px]">Aktif</Badge>}
+                                                    <Badge variant={smtp.is_verified ? 'default' : 'secondary'} className={smtp.is_verified ? 'bg-green-500' : ''}>
+                                                        {smtp.is_verified ? 'Terverifikasi' : 'Belum Verifikasi'}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -620,6 +768,6 @@ export default function AccountIndex({ user, businessCategories }: AccountIndexP
                     </TabsContent>
                 </Tabs>
             </div>
-        </UserLayout>
+        </UserLayout >
     );
 }
