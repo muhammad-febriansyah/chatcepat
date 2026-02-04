@@ -20,14 +20,12 @@ const MIN_REFRESH_INTERVAL = 5000;
 async function fetchCsrfToken(): Promise<string | null> {
     // Prevent concurrent refresh requests
     if (isRefreshing) {
-        console.log('[CSRF] Refresh already in progress, skipping...');
         return null;
     }
 
     // Prevent too frequent refreshes
     const now = Date.now();
     if (now - lastRefreshTime < MIN_REFRESH_INTERVAL) {
-        console.log('[CSRF] Too soon since last refresh, skipping...');
         return null;
     }
 
@@ -47,11 +45,10 @@ async function fetchCsrfToken(): Promise<string | null> {
         const metaTag = document.querySelector('meta[name="csrf-token"]');
         if (metaTag && data.csrf_token) {
             metaTag.setAttribute('content', data.csrf_token);
-            console.log('[CSRF] Token refreshed successfully');
             return data.csrf_token;
         }
     } catch (error) {
-        console.error('[CSRF] Failed to refresh token:', error);
+        // Silent fail - token will be refreshed on next attempt
     } finally {
         isRefreshing = false;
     }
@@ -63,7 +60,6 @@ async function fetchCsrfToken(): Promise<string | null> {
  */
 function handleVisibilityChange() {
     if (!document.hidden) {
-        console.log('[CSRF] Page visible - refreshing token');
         fetchCsrfToken();
     }
 }
@@ -72,7 +68,6 @@ function handleVisibilityChange() {
  * Handle window focus events
  */
 function handleWindowFocus() {
-    console.log('[CSRF] Window focused - refreshing token');
     fetchCsrfToken();
 }
 
@@ -94,14 +89,11 @@ export function startCsrfAutoRefresh(intervalMinutes: number = 10): void {
         fetchCsrfToken();
     }, intervalMinutes * 60 * 1000); // Convert minutes to milliseconds
 
-    console.log(`[CSRF] Auto-refresh started (every ${intervalMinutes} minutes)`);
-
     // Add event listeners only once (prevent duplicate listeners)
     if (!eventListenersAdded) {
         document.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('focus', handleWindowFocus);
         eventListenersAdded = true;
-        console.log('[CSRF] Event listeners added');
     }
 }
 
@@ -112,7 +104,6 @@ export function stopCsrfAutoRefresh(): void {
     if (refreshInterval) {
         clearInterval(refreshInterval);
         refreshInterval = null;
-        console.log('[CSRF] Auto-refresh stopped');
     }
 
     // Remove event listeners
@@ -120,7 +111,6 @@ export function stopCsrfAutoRefresh(): void {
         document.removeEventListener('visibilitychange', handleVisibilityChange);
         window.removeEventListener('focus', handleWindowFocus);
         eventListenersAdded = false;
-        console.log('[CSRF] Event listeners removed');
     }
 }
 

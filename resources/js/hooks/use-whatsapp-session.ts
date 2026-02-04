@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { logger } from '@/utils/logger';
 import { websocketService } from '@/services/websocket.service';
 import { toast } from 'sonner';
 
@@ -154,7 +155,7 @@ export function useWhatsAppSession(
 
     // QR Code event
     const handleQRCode = (event: SessionQRCodeEvent) => {
-      console.log('🔔 useWhatsAppSession: handleQRCode called', {
+      logger.log('🔔 useWhatsAppSession: handleQRCode called', {
         eventSessionId: event.sessionId,
         subscribedSessionId: sessionId,
         matches: event.sessionId === sessionId,
@@ -163,13 +164,13 @@ export function useWhatsAppSession(
       });
 
       if (event.sessionId === sessionId) {
-        console.log('✅ Setting QR code state:', event.qrCodeDataURL.substring(0, 50) + '...');
+        logger.log('✅ Setting QR code state:', event.qrCodeDataURL.substring(0, 50) + '...');
         setQrCode(event.qrCodeDataURL);
         setIsConnected(false);
         // Toast removed per user request
         callbacksRef.current.onQRCode?.(event);
       } else {
-        console.log('❌ Session ID mismatch - ignoring QR code event');
+        logger.log('❌ Session ID mismatch - ignoring QR code event');
       }
     };
 
@@ -217,13 +218,13 @@ export function useWhatsAppSession(
     };
 
     // Register event listeners
-    console.log(`📡 useWhatsAppSession: Registering event listeners for session: ${sessionId}`);
+    logger.log(`📡 useWhatsAppSession: Registering event listeners for session: ${sessionId}`);
     websocketService.on('session:qr', handleQRCode);
     websocketService.on('session:connected', handleConnected);
     websocketService.on('session:disconnected', handleDisconnected);
     websocketService.on('message:incoming', handleIncomingMessage);
     websocketService.on('message:status', handleMessageStatus);
-    console.log('✅ Event listeners registered');
+    logger.log('✅ Event listeners registered');
 
     // Cleanup on unmount or sessionId change
     return () => {

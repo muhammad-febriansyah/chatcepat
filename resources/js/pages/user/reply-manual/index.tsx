@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -186,7 +187,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 setConversations(filteredConversations);
             }
         } catch (error) {
-            console.error('Error loading conversations:', error);
+            logger.error('Error loading conversations:', error);
         } finally {
             setLoading(false);
         }
@@ -205,7 +206,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 setContacts(data.data.contacts);
             }
         } catch (error) {
-            console.error('Error loading contacts:', error);
+            logger.error('Error loading contacts:', error);
         } finally {
             setLoadingContacts(false);
         }
@@ -228,7 +229,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 alert(data.message || 'Gagal mengirim pesan');
             }
         } catch (error) {
-            console.error('Error sending message:', error);
+            logger.error('Error sending message:', error);
             alert('Terjadi kesalahan saat mengirim pesan');
         } finally {
             setSending(false);
@@ -261,7 +262,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 alert(data.message || 'Gagal mengirim file');
             }
         } catch (error: any) {
-            console.error('Error sending media:', error);
+            logger.error('Error sending media:', error);
             alert('Terjadi kesalahan: ' + (error.message || 'Unknown error'));
         } finally {
             setUploadingFile(false);
@@ -348,7 +349,7 @@ export default function ReplyManualIndex({ sessions, allSessions }: Props) {
                 alert(data.message || 'Gagal menyimpan nama kontak');
             }
         } catch (error) {
-            console.error('Error saving contact name:', error);
+            logger.error('Error saving contact name:', error);
             alert('Terjadi kesalahan saat menyimpan nama kontak');
         } finally {
             setSavingContact(false);

@@ -1,4 +1,5 @@
 import { Head, useForm, router } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,12 +111,12 @@ export default function AccountIndex({ user, businessCategories }: AccountIndexP
             router.post('/user/account/avatar', formData, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    console.log('Avatar uploaded successfully');
+                    logger.log('Avatar uploaded successfully');
                 },
                 onError: (errors) => {
                     setAvatarPreview(user.avatar);
                     alert('Gagal upload avatar. Silakan coba lagi.');
-                    console.error('Upload error:', errors);
+                    logger.error('Upload error:', errors);
                 },
                 onFinish: () => {
                     if (fileInputRef.current) {

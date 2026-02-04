@@ -1,4 +1,5 @@
 import React from 'react';
+import { logger } from '@/utils/logger';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin/admin-layout';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ interface Props {
 
 export default function SessionShow({ session, recentMessages }: Props) {
   // DEBUG: Cek sessionId
-  console.log('🔍 SessionShow - session data:', {
+  logger.log('🔍 SessionShow - session data:', {
     id: session.id,
     session_id: session.session_id,
     status: session.status,
@@ -38,7 +39,7 @@ export default function SessionShow({ session, recentMessages }: Props) {
       !hasAutoConnected.current
     ) {
       hasAutoConnected.current = true;
-      console.log('🔄 Auto-connecting session to generate fresh QR code...');
+      logger.log('🔄 Auto-connecting session to generate fresh QR code...');
 
       // Small delay to ensure WebSocket subscription is complete
       setTimeout(() => {
@@ -46,7 +47,7 @@ export default function SessionShow({ session, recentMessages }: Props) {
           preserveScroll: true,
           preserveState: true,
           onError: (errors) => {
-            console.error('❌ Connect failed:', errors);
+            logger.error('❌ Connect failed:', errors);
             hasAutoConnected.current = false; // Allow retry on error
           },
         });
@@ -171,7 +172,7 @@ export default function SessionShow({ session, recentMessages }: Props) {
           initialStatus={session.status}
           initialPhoneNumber={session.phone_number || null}
           onWebSocketConnected={(connected) => {
-            console.log('🔌 WebSocket connection status changed:', connected);
+            logger.log('🔌 WebSocket connection status changed:', connected);
             setWsConnected(connected);
           }}
           onConnected={() => {

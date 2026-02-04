@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react'
+import { logger } from '@/utils/logger';
 import AdminLayout from '@/layouts/admin/admin-layout'
 import { PageHeader } from '@/components/admin/common/page-header'
 import { Button } from '@/components/ui/button'
@@ -114,7 +115,7 @@ export default function Index({ categories }: IndexPageProps) {
                     toast.success('Kategori berhasil diupdate!')
                 },
                 onError: (errors) => {
-                    console.error('Error:', errors)
+                    logger.error('Error:', errors)
                     const firstError = Object.values(errors)[0] as string
                     toast.error(firstError || 'Gagal mengupdate kategori')
                 },
@@ -128,7 +129,7 @@ export default function Index({ categories }: IndexPageProps) {
                     toast.success('Kategori berhasil ditambahkan!')
                 },
                 onError: (errors) => {
-                    console.error('Error:', errors)
+                    logger.error('Error:', errors)
                     const firstError = Object.values(errors)[0] as string
                     toast.error(firstError || 'Gagal menambahkan kategori')
                 },

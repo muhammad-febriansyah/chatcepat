@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { logger } from '@/utils/logger';
 import axios from 'axios'
 import { Head, router } from '@inertiajs/react'
 import { LeafletMap } from '@/components/admin/LeafletMap'
@@ -107,10 +108,10 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
             const response = await axios.post('/user/scraper/scrape', formData)
             const result = response.data
 
-            console.log('Scraping response:', result)
+            logger.log('Scraping response:', result)
 
             if (result.status === 'success' || result.success) {
-                console.log('✅ Scraping job queued successfully!')
+                logger.log('✅ Scraping job queued successfully!')
 
                 // Show success notification for async job
                 toast.success('Pencarian dimulai', {
@@ -124,13 +125,13 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
                     kecamatan: '',
                 }))
             } else {
-                console.error('❌ Scraping failed:', result.message)
+                logger.error('❌ Scraping failed:', result.message)
                 toast.error('Scraping Gagal', {
                     description: result.message || 'Terjadi kesalahan saat memulai scraping',
                 })
             }
         } catch (error: any) {
-            console.error('Scraping error:', error)
+            logger.error('Scraping error:', error)
             toast.error('Terjadi Kesalahan', {
                 description: error.message,
             })

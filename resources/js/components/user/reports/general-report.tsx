@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { logger } from '@/utils/logger';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Loader2, TrendingUp, TrendingDown, Minus, Megaphone, Database, Bot } from 'lucide-react';
@@ -46,7 +47,7 @@ export default function GeneralReport() {
             const response = await axios.get('/user/reports/general');
             setData(response.data);
         } catch (error) {
-            console.error('Failed to fetch general report:', error);
+            logger.error('Failed to fetch general report:', error);
         } finally {
             setLoading(false);
         }

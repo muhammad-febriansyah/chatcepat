@@ -224,6 +224,13 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::post('/avatar', [App\Http\Controllers\User\AccountController::class, 'updateAvatar'])->name('update-avatar');
     });
 
+    // Email Settings
+    Route::prefix('email-settings')->name('email-settings.')->group(function () {
+        Route::get('/', [App\Http\Controllers\User\UserEmailController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\User\UserEmailController::class, 'store'])->name('store');
+        Route::delete('/{id}', [App\Http\Controllers\User\UserEmailController::class, 'destroy'])->name('destroy');
+    });
+
     // WhatsApp Management
     Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
         Route::get('/', [App\Http\Controllers\User\WhatsAppController::class, 'index'])->name('index');
@@ -669,6 +676,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
     // Users
     Route::resource('users', App\Http\Controllers\Admin\UserController::class)->except(['show']);
+
+    // Email Verifications
+    Route::prefix('email-verifications')->name('email-verifications.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\AdminEmailVerificationController::class, 'index'])->name('index');
+        Route::post('/{id}/approve', [App\Http\Controllers\Admin\AdminEmailVerificationController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [App\Http\Controllers\Admin\AdminEmailVerificationController::class, 'reject'])->name('reject');
+        Route::post('/{id}/resend', [App\Http\Controllers\Admin\AdminEmailVerificationController::class, 'resendVerification'])->name('resend');
+    });
 
     // Settings
     Route::get('/settings', [App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings');

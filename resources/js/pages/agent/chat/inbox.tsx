@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { logger } from '@/utils/logger';
 import { Head, router } from '@inertiajs/react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -102,7 +103,7 @@ export default function ChatInbox({ agent, conversations: initialConversations }
                 )
             );
         } catch (error) {
-            console.error('Error loading messages:', error);
+            logger.error('Error loading messages:', error);
         } finally {
             setLoading(false);
         }
@@ -134,7 +135,7 @@ export default function ChatInbox({ agent, conversations: initialConversations }
                 )
             );
         } catch (error) {
-            console.error('Error sending message:', error);
+            logger.error('Error sending message:', error);
         }
     };
 
@@ -152,7 +153,7 @@ export default function ChatInbox({ agent, conversations: initialConversations }
                 prev.map((c) => (c.id === selectedConversation.id ? { ...c, status } : c))
             );
         } catch (error) {
-            console.error('Error updating status:', error);
+            logger.error('Error updating status:', error);
         }
     };
 

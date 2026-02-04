@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -226,7 +227,7 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
                 alert(data.message || 'Gagal menyimpan pengaturan');
             }
         } catch (error) {
-            console.error('Error saving settings:', error);
+            logger.error('Error saving settings:', error);
             alert('Gagal menyimpan pengaturan');
         } finally {
             setSaving(false);
@@ -249,7 +250,7 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
                 setTestResponse('Error: ' + (data.message || 'Gagal test chatbot'));
             }
         } catch (error) {
-            console.error('Error testing chatbot:', error);
+            logger.error('Error testing chatbot:', error);
             setTestResponse('Error: Gagal test chatbot');
         } finally {
             setTesting(false);

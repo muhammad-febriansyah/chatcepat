@@ -63,6 +63,13 @@ class TemplateController extends Controller
      */
     public function store(Request $request)
     {
+        // Decode variables if it's a JSON string
+        if ($request->has('variables') && is_string($request->variables)) {
+            $request->merge([
+                'variables' => json_decode($request->variables, true) ?? []
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:whatsapp,email',
@@ -93,6 +100,13 @@ class TemplateController extends Controller
             abort(403);
         }
 
+        // Use specialized email builder for email templates
+        if ($template->type === 'email') {
+            return Inertia::render('user/templates/edit-email', [
+                'template' => $template,
+            ]);
+        }
+
         return Inertia::render('user/templates/edit', [
             'template' => $template,
         ]);
@@ -103,6 +117,13 @@ class TemplateController extends Controller
      */
     public function update(Request $request, MessageTemplate $template)
     {
+        // Decode variables if it's a JSON string
+        if ($request->has('variables') && is_string($request->variables)) {
+            $request->merge([
+                'variables' => json_decode($request->variables, true) ?? []
+            ]);
+        }
+
         // Ensure user owns this template
         if ($template->user_id !== Auth::id()) {
             abort(403);

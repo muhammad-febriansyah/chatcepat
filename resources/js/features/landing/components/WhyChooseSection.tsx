@@ -1,4 +1,5 @@
 import React from 'react';
+import { logger } from '@/utils/logger';
 import { Bot, CheckCircle } from 'lucide-react';
 import { iconMap } from '../constants/iconMap';
 
@@ -15,7 +16,7 @@ export function WhyChooseSection({ settings }: WhyChooseSectionProps) {
             try {
                 whyChooseFeatures = JSON.parse(settings.why_choose_features);
             } catch (e) {
-                console.error('Failed to parse why_choose_features:', e);
+                logger.error('Failed to parse why_choose_features:', e);
             }
         } else if (Array.isArray(settings.why_choose_features)) {
             whyChooseFeatures = settings.why_choose_features;

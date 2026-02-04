@@ -1,4 +1,5 @@
 import { Head, router, Link } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -208,7 +209,7 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                 setMembersStats(data.data.stats);
             }
         } catch (error) {
-            console.error('Error fetching members:', error);
+            logger.error('Error fetching members:', error);
         } finally {
             setIsLoadingMembers(false);
         }
@@ -245,7 +246,7 @@ export default function GroupsScraper({ sessions, groups, stats }: GroupsScraper
                 alert(data.error || 'Gagal mengambil anggota grup');
             }
         } catch (error) {
-            console.error('Error scraping members:', error);
+            logger.error('Error scraping members:', error);
             alert('Terjadi kesalahan. Pastikan WhatsApp Gateway berjalan dan session terhubung.');
         } finally {
             setIsScrapingMembers(false);

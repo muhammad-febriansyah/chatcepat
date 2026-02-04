@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/layouts/admin/admin-layout';
 import { Button } from '@/components/ui/button';
@@ -51,19 +52,19 @@ export default function SessionsIndex({ sessions, filters }: Props) {
     if (!wsConnected) return;
 
     const handleSessionConnected = (event: any) => {
-      console.log('🔔 Session connected event received:', event);
+      logger.log('🔔 Session connected event received:', event);
       // Reload page data to show updated status
       router.reload({ only: ['sessions'], preserveScroll: true });
     };
 
     const handleSessionDisconnected = (event: any) => {
-      console.log('🔔 Session disconnected event received:', event);
+      logger.log('🔔 Session disconnected event received:', event);
       // Reload page data to show updated status
       router.reload({ only: ['sessions'], preserveScroll: true });
     };
 
     const handleSessionStatus = (event: any) => {
-      console.log('🔔 Session status event received:', event);
+      logger.log('🔔 Session status event received:', event);
       // Reload page data to show updated status
       router.reload({ only: ['sessions'], preserveScroll: true });
     };
@@ -73,14 +74,14 @@ export default function SessionsIndex({ sessions, filters }: Props) {
     websocketService.on('session:disconnected', handleSessionDisconnected);
     websocketService.on('session:status', handleSessionStatus);
 
-    console.log('✅ Registered real-time status listeners for sessions index');
+    logger.log('✅ Registered real-time status listeners for sessions index');
 
     // Cleanup on unmount
     return () => {
       websocketService.off('session:connected', handleSessionConnected);
       websocketService.off('session:disconnected', handleSessionDisconnected);
       websocketService.off('session:status', handleSessionStatus);
-      console.log('🧹 Cleaned up real-time status listeners');
+      logger.log('🧹 Cleaned up real-time status listeners');
     };
   }, [wsConnected]);
 

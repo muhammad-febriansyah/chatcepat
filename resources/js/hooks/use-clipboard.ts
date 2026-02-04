@@ -1,5 +1,6 @@
 // Credit: https://usehooks-ts.com/
 import { useCallback, useState } from 'react';
+import { logger } from '@/utils/logger';
 
 type CopiedValue = string | null;
 
@@ -10,7 +11,7 @@ export function useClipboard(): [CopiedValue, CopyFn] {
 
     const copy: CopyFn = useCallback(async (text) => {
         if (!navigator?.clipboard) {
-            console.warn('Clipboard not supported');
+            logger.warn('Clipboard not supported');
 
             return false;
         }
@@ -21,7 +22,7 @@ export function useClipboard(): [CopiedValue, CopyFn] {
 
             return true;
         } catch (error) {
-            console.warn('Copy failed', error);
+            logger.warn('Copy failed', error);
             setCopiedText(null);
 
             return false;

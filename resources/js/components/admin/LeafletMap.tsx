@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { logger } from '@/utils/logger';
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import axios from 'axios'
@@ -175,7 +176,7 @@ export function LeafletMap({
                     setIsLoadingLocation(false)
                 },
                 (error) => {
-                    console.log('Geolocation error:', error.message)
+                    logger.log('Geolocation error:', error.message)
                     setIsLoadingLocation(false)
                 },
                 {
@@ -317,7 +318,7 @@ export function LeafletMap({
                         const finalKota = kota || address.country || 'Unknown'
 
                         // Log for debugging
-                        console.log('Geocoding result:', {
+                        logger.log('Geocoding result:', {
                             raw: address,
                             kecamatan: finalKecamatan,
                             kota: finalKota
@@ -364,7 +365,7 @@ export function LeafletMap({
                         clickMarker?.setPopupContent('❌ Tidak ada data lokasi')
                     }
                 } catch (error) {
-                    console.error('Reverse geocoding error:', error)
+                    logger.error('Reverse geocoding error:', error)
                     clickMarker?.setPopupContent('❌ Gagal mengambil informasi lokasi')
                 }
             })

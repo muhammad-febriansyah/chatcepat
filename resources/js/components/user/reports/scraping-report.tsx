@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { logger } from '@/utils/logger';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Loader2, Database, MapPin, Users, MessageSquare } from 'lucide-react';
@@ -46,7 +47,7 @@ export default function ScrapingReport() {
             const response = await axios.get('/user/reports/scraping', { params });
             setData(response.data);
         } catch (error) {
-            console.error('Failed to fetch scraping report:', error);
+            logger.error('Failed to fetch scraping report:', error);
         } finally {
             setLoading(false);
         }

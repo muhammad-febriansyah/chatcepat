@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '@/utils/logger';
 import axios from 'axios'
 import { Head, router } from '@inertiajs/react'
 import AdminLayout from '@/layouts/admin/admin-layout'
@@ -81,7 +82,7 @@ export default function GoogleMapScraperIndex({ places }: GoogleMapScraperIndexP
                 toast.error(data.message || 'Scraping gagal')
             }
         } catch (error: any) {
-            console.error('Scraping error:', error)
+            logger.error('Scraping error:', error)
             toast.error('Terjadi kesalahan: ' + (error.message || 'Unknown error'))
         } finally {
             setIsScrapingState(false)

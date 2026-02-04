@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { logger } from '@/utils/logger';
 
 /**
  * WebSocket Service for ChatCepat WhatsApp Gateway
@@ -34,7 +35,7 @@ class WebSocketService {
    */
   connect(config: WebSocketConfig): Socket {
     if (this.socket?.connected) {
-      console.warn('WebSocket already connected');
+      logger.warn('WebSocket already connected');
       return this.socket;
     }
 
@@ -71,7 +72,7 @@ class WebSocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('✅ WebSocket connected');
+      logger.log('✅ WebSocket connected');
       this.connectionStatus = {
         isConnected: true,
         error: null,
@@ -81,7 +82,7 @@ class WebSocketService {
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ WebSocket disconnected:', reason);
+      logger.log('❌ WebSocket disconnected:', reason);
       this.connectionStatus = {
         isConnected: false,
         error: reason,
@@ -91,7 +92,7 @@ class WebSocketService {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
+      logger.error('WebSocket connection error:', error);
       this.connectionStatus = {
         isConnected: false,
         error: error.message,
@@ -101,13 +102,13 @@ class WebSocketService {
     });
 
     this.socket.on('error', (error) => {
-      console.error('WebSocket error:', error);
+      logger.error('WebSocket error:', error);
       this.emit('connection:error', error);
     });
 
     // DEBUG: Log ALL incoming Socket.IO events
     this.socket.onAny((eventName, ...args) => {
-      console.log(`📥 WebSocket event received: "${eventName}"`, args);
+      logger.log(`📥 WebSocket event received: "${eventName}"`, args);
     });
   }
 
@@ -116,12 +117,12 @@ class WebSocketService {
    */
   subscribeToSession(sessionId: string): void {
     if (!this.socket?.connected) {
-      console.warn('Cannot subscribe: WebSocket not connected');
+      logger.warn('Cannot subscribe: WebSocket not connected');
       return;
     }
 
     this.socket.emit('subscribe:session', sessionId);
-    console.log(`📡 Subscribed to session: ${sessionId}`);
+    logger.log(`📡 Subscribed to session: ${sessionId}`);
   }
 
   /**
@@ -131,7 +132,7 @@ class WebSocketService {
     if (!this.socket?.connected) return;
 
     this.socket.emit('unsubscribe:session', sessionId);
-    console.log(`🔌 Unsubscribed from session: ${sessionId}`);
+    logger.log(`🔌 Unsubscribed from session: ${sessionId}`);
   }
 
   /**
@@ -139,12 +140,12 @@ class WebSocketService {
    */
   subscribeToBroadcast(campaignId: number): void {
     if (!this.socket?.connected) {
-      console.warn('Cannot subscribe: WebSocket not connected');
+      logger.warn('Cannot subscribe: WebSocket not connected');
       return;
     }
 
     this.socket.emit('subscribe:broadcast', campaignId);
-    console.log(`📡 Subscribed to broadcast: ${campaignId}`);
+    logger.log(`📡 Subscribed to broadcast: ${campaignId}`);
   }
 
   /**
@@ -154,7 +155,7 @@ class WebSocketService {
     if (!this.socket?.connected) return;
 
     this.socket.emit('unsubscribe:broadcast', campaignId);
-    console.log(`🔌 Unsubscribed from broadcast: ${campaignId}`);
+    logger.log(`🔌 Unsubscribed from broadcast: ${campaignId}`);
   }
 
   /**
@@ -162,7 +163,7 @@ class WebSocketService {
    */
   on(event: string, callback: Function): void {
     if (!this.socket) {
-      console.warn('Socket not initialized. Call connect() first.');
+      logger.warn('Socket not initialized. Call connect() first.');
       return;
     }
 
@@ -227,7 +228,7 @@ class WebSocketService {
       this.socket = null;
       this.userId = null;
       this.eventListeners.clear();
-      console.log('🔌 WebSocket disconnected manually');
+      logger.log('🔌 WebSocket disconnected manually');
     }
   }
 

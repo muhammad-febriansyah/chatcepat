@@ -1,4 +1,5 @@
 import { Head, useForm, router } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -121,13 +122,13 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                     }, 1000);
                 }
             } else {
-                console.error('Payment error:', result);
+                logger.error('Payment error:', result);
                 const errorMsg = result.message || 'Gagal membuat pembayaran';
                 const errorDetails = result.error_details?.statusMessage || '';
                 toast.error(errorDetails ? `${errorMsg}: ${errorDetails}` : errorMsg);
             }
         } catch (error) {
-            console.error('Payment creation failed:', error);
+            logger.error('Payment creation failed:', error);
             toast.error('Gagal membuat pembayaran. Silakan coba lagi.');
         } finally {
             setGatewayProcessing(false);
@@ -148,7 +149,7 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                     // Berhasil! Redireksi dan toast ditangani oleh Controller & UserLayout
                 },
                 onError: (errors) => {
-                    console.error('Manual payment errors:', errors);
+                    logger.error('Manual payment errors:', errors);
                     toast.error('Gagal membuat pembayaran manual. Periksa kembali data Anda.');
                 },
                 onFinish: () => {
@@ -156,7 +157,7 @@ export default function PaymentIndex({ package: selectedPackage, banks, user }: 
                 }
             });
         } catch (error) {
-            console.error('Manual payment failed:', error);
+            logger.error('Manual payment failed:', error);
             toast.error('Gagal membuat pembayaran manual');
         }
     };

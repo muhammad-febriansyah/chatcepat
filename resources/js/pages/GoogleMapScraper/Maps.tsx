@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { logger } from '@/utils/logger';
 import axios from 'axios'
 import { Head, router } from '@inertiajs/react'
 import { LeafletMap } from '@/components/admin/LeafletMap'
@@ -129,11 +130,11 @@ export default function MapsPage({ places: initialPlaces, categories }: MapsPage
             const response = await axios.post('/admin/google-maps-scraper/scrape', formData)
             const data = response.data
 
-            console.log('Scraping response:', data)
+            logger.log('Scraping response:', data)
 
             if (data.status === 'success') {
                 const results = data.data || []
-                console.log('✅ Scraping success! Results:', results.length, 'places')
+                logger.log('✅ Scraping success! Results:', results.length, 'places')
 
                 setScrapedResults(results)
                 setPlaces([...results, ...places])
@@ -162,9 +163,9 @@ export default function MapsPage({ places: initialPlaces, categories }: MapsPage
                     })
 
                     // ALWAYS reload page after successful scraping to get fresh data
-                    console.log('⏳ Reloading page in 2 seconds...')
+                    logger.log('⏳ Reloading page in 2 seconds...')
                     setTimeout(() => {
-                        console.log('🔄 Reloading page now...')
+                        logger.log('🔄 Reloading page now...')
                         window.location.reload()
                     }, 2000)
                 } else {
@@ -173,13 +174,13 @@ export default function MapsPage({ places: initialPlaces, categories }: MapsPage
                     })
                 }
             } else {
-                console.error('❌ Scraping failed:', data.message)
+                logger.error('❌ Scraping failed:', data.message)
                 toast.error('Scraping Gagal', {
                     description: data.message || 'Terjadi kesalahan saat scraping',
                 })
             }
         } catch (error: any) {
-            console.error('Scraping error:', error)
+            logger.error('Scraping error:', error)
             toast.error('Terjadi Kesalahan', {
                 description: error.message,
             })

@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import AdminLayout from '@/layouts/admin/admin-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -167,7 +168,7 @@ export default function BroadcastShow({ broadcast }: Props) {
             router.reload({ only: ['broadcast'] });
           }}
           onFailed={(error) => {
-            console.error('Broadcast failed:', error);
+            logger.error('Broadcast failed:', error);
             router.reload({ only: ['broadcast'] });
           }}
           showControls={false}

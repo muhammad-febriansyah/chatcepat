@@ -1,4 +1,5 @@
 import { PropsWithChildren, useState, useEffect } from 'react'
+import { logger } from '@/utils/logger';
 import { Link, usePage } from '@inertiajs/react'
 import { ChevronRight, BookOpen, Menu, X, Search, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -102,7 +103,7 @@ export default function GuideLayout({
             setCopied(true)
             setTimeout(() => setCopied(false), 2000)
         } catch (err) {
-            console.error('Failed to copy:', err)
+            logger.error('Failed to copy:', err)
             // Even if error, try fallback
             const textArea = document.createElement('textarea')
             textArea.value = url
@@ -116,7 +117,7 @@ export default function GuideLayout({
                 setCopied(true)
                 setTimeout(() => setCopied(false), 2000)
             } catch (e) {
-                console.error('Fallback copy failed:', e)
+                logger.error('Fallback copy failed:', e)
             }
             textArea.remove()
         }

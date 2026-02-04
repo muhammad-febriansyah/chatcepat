@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { logger } from '@/utils/logger';
 import { websocketService, ConnectionStatus } from '@/services/websocket.service';
 import { usePage } from '@inertiajs/react';
 
@@ -38,7 +39,7 @@ export function useWebSocket(autoConnect = true) {
    */
   const connect = useCallback(() => {
     if (!auth?.user?.id) {
-      console.error('Cannot connect: No authenticated user');
+      logger.error('Cannot connect: No authenticated user');
       return;
     }
 

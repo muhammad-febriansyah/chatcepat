@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -135,7 +136,7 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
             setData('recipients', newRecipients);
             setSelectedGroups([]);
         } catch (error) {
-            console.error('Failed to fetch group members:', error);
+            logger.error('Failed to fetch group members:', error);
         } finally {
             setLoadingGroupMembers(false);
         }

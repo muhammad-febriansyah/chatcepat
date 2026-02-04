@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { logger } from '@/utils/logger';
 import { useBroadcast } from '@/hooks/use-broadcast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,18 +66,18 @@ export function BroadcastProgressMonitor({
     reset,
   } = useBroadcast(campaignId, {
     onStarted: (event) => {
-      console.log('🚀 Broadcast started:', event);
+      logger.log('🚀 Broadcast started:', event);
       setStartTime(new Date(event.timestamp));
     },
     onProgress: (event) => {
-      console.log(`📊 Progress: ${event.progress}%`, event);
+      logger.log(`📊 Progress: ${event.progress}%`, event);
     },
     onCompleted: (event) => {
-      console.log('✅ Broadcast completed:', event);
+      logger.log('✅ Broadcast completed:', event);
       onCompleted?.();
     },
     onFailed: (event) => {
-      console.error('❌ Broadcast failed:', event);
+      logger.error('❌ Broadcast failed:', event);
       onFailed?.(event.error);
     },
     showToasts: true,

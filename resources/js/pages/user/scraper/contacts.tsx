@@ -1,4 +1,5 @@
 import { Head, router, Link } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -204,7 +205,7 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                 setMetaStats(data.data);
             }
         } catch (error) {
-            console.error('Error loading Meta stats:', error);
+            logger.error('Error loading Meta stats:', error);
         }
     };
 
@@ -217,7 +218,7 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                 setMetaContacts(data.data.data);
             }
         } catch (error) {
-            console.error('Error loading Meta contacts:', error);
+            logger.error('Error loading Meta contacts:', error);
         }
     };
 

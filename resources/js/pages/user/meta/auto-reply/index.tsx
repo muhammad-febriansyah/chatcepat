@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,7 @@ export default function MetaAutoReplyIndex({ autoReplies, filters }: Props) {
             await axios.post(`/user/meta/auto-reply/${id}/toggle`);
             router.reload({ only: ['autoReplies'] });
         } catch (error) {
-            console.error('Failed to toggle status:', error);
+            logger.error('Failed to toggle status:', error);
         }
     };
 

@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react'
+import { logger } from '@/utils/logger';
 import AdminLayout from '@/layouts/admin/admin-layout'
 import { PageHeader } from '@/components/admin/common/page-header'
 import { Button } from '@/components/ui/button'
@@ -72,7 +73,7 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
-        console.log('Submitting form:', { editingBank, data })
+        logger.log('Submitting form:', { editingBank, data })
 
         const formData = new FormData()
         formData.append('nama_bank', data.nama_bank)
@@ -82,7 +83,7 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
 
         if (data.gambar) {
             formData.append('gambar', data.gambar)
-            console.log('Image file:', data.gambar)
+            logger.log('Image file:', data.gambar)
         }
 
         if (editingBank) {
@@ -94,7 +95,7 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
                     setImagePreview(null)
                 },
                 onError: (errors) => {
-                    console.error('Update error:', errors)
+                    logger.error('Update error:', errors)
                     alert('Gagal mengupdate bank: ' + JSON.stringify(errors))
                 },
             })
@@ -106,7 +107,7 @@ export default function BanksIndex({ banks }: BanksIndexProps) {
                     setImagePreview(null)
                 },
                 onError: (errors) => {
-                    console.error('Create error:', errors)
+                    logger.error('Create error:', errors)
                     alert('Gagal menambah bank: ' + JSON.stringify(errors))
                 },
             })

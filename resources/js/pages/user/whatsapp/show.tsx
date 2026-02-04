@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 import { Head, router } from '@inertiajs/react';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -80,7 +81,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
         const wsUrl = gatewayUrl || 'http://localhost:3000';
         const wsUserId = userId || 1;
 
-        console.log(`🔌 Connecting to Socket.IO at ${wsUrl} with userId ${wsUserId}`);
+        logger.log(`🔌 Connecting to Socket.IO at ${wsUrl} with userId ${wsUserId}`);
 
         const newSocket = io(wsUrl, {
             query: { userId: wsUserId },
@@ -88,18 +89,18 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
         });
 
         newSocket.on('connect', () => {
-            console.log('✅ Socket.IO connected');
+            logger.log('✅ Socket.IO connected');
             // Subscribe to this session's events
             newSocket.emit('subscribe:session', session.session_id);
         });
 
         newSocket.on('disconnect', () => {
-            console.log('❌ Socket.IO disconnected');
+            logger.log('❌ Socket.IO disconnected');
         });
 
         // Listen for QR code updates
         newSocket.on('session:qr', (data: { sessionId: string; qrCodeDataURL: string }) => {
-            console.log('📱 Received QR code via WebSocket');
+            logger.log('📱 Received QR code via WebSocket');
             if (data.sessionId === session.session_id) {
                 setRealtimeQRCode(data.qrCodeDataURL);
                 setConnectionError(null); // Clear any previous error
@@ -108,7 +109,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
 
         // Listen for connection success
         newSocket.on('session:connected', (data: { sessionId: string; phoneNumber: string }) => {
-            console.log('✅ Session connected via WebSocket');
+            logger.log('✅ Session connected via WebSocket');
             if (data.sessionId === session.session_id) {
                 setIsConnectedRealtime(true);
                 setConnectionError(null);
@@ -120,7 +121,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
 
         // Listen for connection failure
         newSocket.on('session:connection_failed', (data: { sessionId: string; reason: string; errorCode?: number }) => {
-            console.log('❌ Connection failed via WebSocket:', data.reason);
+            logger.log('❌ Connection failed via WebSocket:', data.reason);
             if (data.sessionId === session.session_id) {
                 setConnectionError({ message: data.reason, code: data.errorCode });
                 setRealtimeQRCode(null);
@@ -133,7 +134,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
 
         // Listen for disconnection
         newSocket.on('session:disconnected', (data: { sessionId: string; reason: string }) => {
-            console.log('🔌 Session disconnected via WebSocket:', data.reason);
+            logger.log('🔌 Session disconnected via WebSocket:', data.reason);
             if (data.sessionId === session.session_id) {
                 setIsConnectedRealtime(false);
                 router.reload({ preserveScroll: true });

@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { logger } from '@/utils/logger';
 import axios from 'axios';
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
@@ -150,7 +151,7 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                 setConversations(filteredConversations);
             }
         } catch (error) {
-            console.error('Error loading conversations:', error);
+            logger.error('Error loading conversations:', error);
         } finally {
             setLoading(false);
         }
@@ -169,7 +170,7 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                 setContacts(data.data.contacts);
             }
         } catch (error) {
-            console.error('Error loading contacts:', error);
+            logger.error('Error loading contacts:', error);
         } finally {
             setLoadingContacts(false);
         }
@@ -190,7 +191,7 @@ export default function FullscreenChat({ sessions, allSessions }: Props) {
                 loadConversations();
             }
         } catch (error) {
-            console.error('Error sending message:', error);
+            logger.error('Error sending message:', error);
         } finally {
             setSending(false);
         }

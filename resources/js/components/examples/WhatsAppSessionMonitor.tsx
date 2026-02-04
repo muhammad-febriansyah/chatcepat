@@ -16,6 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 import { useWebSocket } from '@/hooks/use-websocket';
 import { useWhatsAppSession, type IncomingMessageEvent } from '@/hooks/use-whatsapp-session';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,7 +51,7 @@ export function WhatsAppSessionMonitor({
   onDisconnected,
 }: WhatsAppSessionMonitorProps) {
   // DEBUG: Log props
-  console.log('🔍 WhatsAppSessionMonitor - props:', {
+  logger.log('🔍 WhatsAppSessionMonitor - props:', {
     sessionId,
     sessionName,
     initialQrCode: initialQrCode ? 'present' : 'null',
@@ -71,7 +72,7 @@ export function WhatsAppSessionMonitor({
   } = useWebSocket();
 
   // DEBUG: Log WebSocket status
-  console.log('🔍 WhatsAppSessionMonitor - WebSocket status:', {
+  logger.log('🔍 WhatsAppSessionMonitor - WebSocket status:', {
     wsConnected,
     wsError,
   });
@@ -100,34 +101,34 @@ export function WhatsAppSessionMonitor({
     initialPhoneNumber,
     initialIsConnected: initialStatus === 'connected',
     onQRCode: (event) => {
-      console.log('📱 New QR code generated', {
+      logger.log('📱 New QR code generated', {
         sessionId: event.sessionId,
         hasQRCode: !!event.qrCodeDataURL,
         qrCodeLength: event.qrCodeDataURL?.length,
       });
     },
     onConnected: (event) => {
-      console.log('✅ Session connected:', event.phoneNumber);
+      logger.log('✅ Session connected:', event.phoneNumber);
       setMessages([]); // Clear messages on reconnect
       onConnected?.();
     },
     onDisconnected: (event) => {
-      console.log('❌ Session disconnected:', event.reason);
+      logger.log('❌ Session disconnected:', event.reason);
       onDisconnected?.();
     },
     onIncomingMessage: (event) => {
-      console.log('📨 Incoming message:', event.message);
+      logger.log('📨 Incoming message:', event.message);
       setMessages(prev => [event.message, ...prev]);
     },
     onMessageStatus: (event) => {
-      console.log('📊 Message status update:', event);
+      logger.log('📊 Message status update:', event);
       setMessageStatuses(prev => new Map(prev.set(event.messageId, event.status)));
     },
     showToasts: true, // Show automatic toast notifications
   });
 
   // DEBUG: Log session state
-  console.log('🔍 WhatsAppSessionMonitor - Session state:', {
+  logger.log('🔍 WhatsAppSessionMonitor - Session state:', {
     hasQRCode: !!qrCode,
     qrCodeLength: qrCode?.length,
     sessionConnected,
@@ -157,7 +158,7 @@ export function WhatsAppSessionMonitor({
   // Auto-refresh QR when expired
   useEffect(() => {
     if (qrExpirySeconds === 0 && qrCode && !sessionConnected && sessionDbId) {
-      console.log('⏰ QR Code expired, auto-refreshing...');
+      logger.log('⏰ QR Code expired, auto-refreshing...');
       handleRefreshQR();
     }
   }, [qrExpirySeconds]);
@@ -165,7 +166,7 @@ export function WhatsAppSessionMonitor({
   // Refresh QR Code handler
   const handleRefreshQR = () => {
     if (!sessionDbId) {
-      console.error('❌ Cannot refresh: sessionDbId not provided');
+      logger.error('❌ Cannot refresh: sessionDbId not provided');
       return;
     }
 
@@ -174,11 +175,11 @@ export function WhatsAppSessionMonitor({
       preserveScroll: true,
       preserveState: true,
       onSuccess: () => {
-        console.log('✅ QR refresh request sent');
+        logger.log('✅ QR refresh request sent');
         setIsRefreshing(false);
       },
       onError: (errors) => {
-        console.error('❌ QR refresh failed:', errors);
+        logger.error('❌ QR refresh failed:', errors);
         setIsRefreshing(false);
       },
     });

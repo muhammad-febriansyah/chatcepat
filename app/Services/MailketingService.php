@@ -131,4 +131,52 @@ class MailketingService
         </body>
         </html>';
     }
+
+    /**
+     * Send verification email to user after admin approval
+     */
+    public function sendVerificationEmail(string $email, string $userName): bool
+    {
+        $siteName = Setting::get('site_name', 'ChatCepat');
+        $subject = "Email Anda Telah Diverifikasi - {$siteName}";
+
+        $content = "
+            <h2 style='color: #1f2937; margin-top: 0;'>Halo {$userName},</h2>
+            
+            <p style='color: #4b5563; font-size: 16px; line-height: 1.6;'>
+                Email Anda telah berhasil diverifikasi dan disetujui oleh admin!
+            </p>
+            
+            <div style='background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 30px 0;'>
+                <p style='color: #059669; font-weight: bold; margin: 0; font-size: 18px;'>
+                    ✅ Email Anda Sudah Aktif
+                </p>
+                <p style='color: #4b5563; margin: 10px 0 0 0;'>
+                    Anda sekarang dapat menggunakan email ini untuk fitur broadcast email di platform kami.
+                </p>
+            </div>
+            
+            <p style='color: #4b5563; font-size: 16px; line-height: 1.6;'>
+                Fitur yang dapat Anda gunakan:
+            </p>
+            
+            <ul style='color: #4b5563; font-size: 16px; line-height: 1.8;'>
+                <li>Broadcast Email ke kontak Anda</li>
+                <li>Template Email yang dapat disesuaikan</li>
+                <li>Tracking dan analytics email</li>
+            </ul>
+            
+            <div style='text-align: center; margin: 40px 0;'>
+                <a href='" . url('/user/email-settings') . "' style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;'>
+                    Lihat Pengaturan Email
+                </a>
+            </div>
+            
+            <p style='color: #6b7280; font-size: 14px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;'>
+                Jika Anda memiliki pertanyaan, silakan hubungi tim support kami.
+            </p>
+        ";
+
+        return $this->send($email, $subject, $content);
+    }
 }

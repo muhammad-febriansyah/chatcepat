@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 import { websocketService } from '@/services/websocket.service';
 import { toast } from 'sonner';
 
@@ -65,10 +66,10 @@ export interface BroadcastProgress {
  * function BroadcastMonitor({ campaignId }: { campaignId: number }) {
  *   const { progress, status, sentCount, failedCount, totalRecipients } = useBroadcast(campaignId, {
  *     onProgress: (event) => {
- *       console.log(`Progress: ${event.progress}%`);
+ *       logger.log(`Progress: ${event.progress}%`);
  *     },
  *     onCompleted: (event) => {
- *       console.log('Broadcast completed!', event);
+ *       logger.log('Broadcast completed!', event);
  *     },
  *     showToasts: true,
  *   });
