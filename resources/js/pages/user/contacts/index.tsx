@@ -180,7 +180,8 @@ export default function ContactsIndex({ contacts, sessions, stats, filters }: Co
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-3">
-                            <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+                            {/* Scrape Kontak - HIDDEN */}
+                            {false && <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" size="lg" className="gap-2">
                                         <Download className="size-4" />
@@ -307,7 +308,7 @@ export default function ContactsIndex({ contacts, sessions, stats, filters }: Co
                                         </div>
                                     </DialogFooter>
                                 </DialogContent>
-                            </Dialog>
+                            </Dialog>}
                             <Button onClick={() => router.visit('/user/contacts/create')} size="lg" className="gap-2">
                                 <Plus className="size-4" />
                                 Tambah Kontak
