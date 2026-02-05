@@ -261,6 +261,7 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/maps', [App\Http\Controllers\User\ScraperController::class, 'maps'])->name('maps');
         Route::get('/export/excel', [App\Http\Controllers\User\ScraperController::class, 'exportExcel'])->name('export.excel');
         Route::get('/export/pdf', [App\Http\Controllers\User\ScraperController::class, 'exportPdf'])->name('export.pdf');
+        Route::get('/reverse-geocode', [App\Http\Controllers\User\ScraperController::class, 'reverseGeocode'])->name('reverse-geocode');
         Route::delete('/{place}', [App\Http\Controllers\User\ScraperController::class, 'destroy'])->name('destroy');
         Route::delete('/', [App\Http\Controllers\User\ScraperController::class, 'destroyAll'])->name('destroy-all');
 

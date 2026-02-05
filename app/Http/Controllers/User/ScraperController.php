@@ -634,4 +634,40 @@ class ScraperController extends Controller
             'data' => $stats,
         ]);
     }
+
+    /**
+     * Reverse geocoding proxy to avoid CORS issues
+     */
+    public function reverseGeocode(Request $request)
+    {
+        $validated = $request->validate([
+            'lat' => 'required|numeric',
+            'lon' => 'required|numeric',
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'ChatCepat Maps Scraper',
+            ])->get('https://nominatim.openstreetmap.org/reverse', [
+                'format' => 'json',
+                'lat' => $validated['lat'],
+                'lon' => $validated['lon'],
+                'addressdetails' => 1,
+                'accept-language' => 'id',
+            ]);
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            return response()->json([
+                'error' => 'Failed to fetch location data'
+            ], $response->status());
+        } catch (\Exception $e) {
+            Log::error('Reverse geocoding error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to fetch location data'
+            ], 500);
+        }
+    }
 }

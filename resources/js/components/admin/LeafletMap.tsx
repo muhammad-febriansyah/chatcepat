@@ -271,19 +271,13 @@ export function LeafletMap({
                     .openPopup()
 
                 try {
-                    // Reverse geocoding using Nominatim (free, no API key needed)
+                    // Reverse geocoding using Laravel proxy (to avoid CORS issues)
                     const response = await axios.get(
-                        `https://nominatim.openstreetmap.org/reverse`,
+                        `/user/scraper/reverse-geocode`,
                         {
                             params: {
-                                format: 'json',
                                 lat: lat,
                                 lon: lng,
-                                addressdetails: 1,
-                                'accept-language': 'id'
-                            },
-                            headers: {
-                                'User-Agent': 'ChatCepat Maps Scraper',
                             },
                         }
                     )

@@ -181,9 +181,9 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
         <>
             <Head title="Interactive Maps Scraper" />
             <Toaster position="top-right" richColors />
-            <div className="h-screen w-screen flex bg-slate-50">
+            <div className="min-h-screen w-full flex flex-col md:flex-row bg-slate-50">
                 {/* Sidebar Form */}
-                <div className="w-96 bg-white shadow-lg overflow-y-auto">
+                <div className="w-full md:w-96 bg-white shadow-lg overflow-y-auto max-h-screen">
                     <div className="p-6">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-2">
@@ -338,9 +338,9 @@ export default function ScraperCreate({ places: initialPlaces, categories }: Scr
                 </div>
 
                 {/* Maps Content */}
-                <div className="flex-1 flex flex-col relative">
+                <div className="flex-1 flex flex-col relative h-96 md:h-auto">
                     {/* Legends Container - Floating */}
-                    <div className="absolute top-6 right-6 z-[1000] flex flex-col gap-3 w-64">
+                    <div className="absolute top-2 right-2 md:top-6 md:right-6 z-[1000] flex flex-col gap-3 w-48 md:w-64 max-w-[90vw]">
                         {/* Category Filter Legend */}
                         <div className="bg-white rounded-lg shadow-lg border border-slate-200 overflow-hidden">
                             <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
