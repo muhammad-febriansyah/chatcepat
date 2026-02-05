@@ -308,10 +308,10 @@ export default function AccountIndex({ user, businessCategories, emails, smtpSet
                             <Mail className="size-4" />
                             Verifikasi Email
                         </TabsTrigger>
-                        <TabsTrigger value="smtp" className="gap-2">
+                        {/* <TabsTrigger value="smtp" className="gap-2">
                             <Settings className="size-4" />
                             SMTP
-                        </TabsTrigger>
+                        </TabsTrigger> */}
                         <TabsTrigger value="security" className="gap-2">
                             <Lock className="size-4" />
                             Keamanan
@@ -514,8 +514,8 @@ export default function AccountIndex({ user, businessCategories, emails, smtpSet
                         </Card>
                     </TabsContent>
 
-                    {/* SMTP Settings Tab */}
-                    <TabsContent value="smtp" className="mt-6">
+                    {/* SMTP Settings Tab - HIDDEN */}
+                    {/* <TabsContent value="smtp" className="mt-6">
                         <Card className="overflow-hidden border-2">
                             <div className="h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
                             <CardHeader>
@@ -568,7 +568,7 @@ export default function AccountIndex({ user, businessCategories, emails, smtpSet
                                 )}
                             </CardContent>
                         </Card>
-                    </TabsContent>
+                    </TabsContent> */}
 
                     {/* Security Tab */}
                     <TabsContent value="security" className="mt-6 space-y-6">
