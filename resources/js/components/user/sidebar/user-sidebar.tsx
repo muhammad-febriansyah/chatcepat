@@ -421,9 +421,9 @@ export function UserSidebar() {
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/broadcast')}
+                                                        isActive={isActive('/user/broadcast', true)}
                                                         className={cn(
-                                                            isActive('/user/broadcast') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/broadcast', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/broadcast">
@@ -439,9 +439,9 @@ export function UserSidebar() {
                                                 {hasFeature('broadcast_group') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/broadcast/groups')}
+                                                        isActive={isActive('/user/broadcast/groups', true)}
                                                         className={cn(
-                                                            isActive('/user/broadcast/groups') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/broadcast/groups', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/broadcast/groups">
@@ -457,9 +457,9 @@ export function UserSidebar() {
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/broadcast/email')}
+                                                        isActive={isActive('/user/broadcast/email', true)}
                                                         className={cn(
-                                                            isActive('/user/broadcast/email') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/broadcast/email', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/broadcast/email">
@@ -475,9 +475,9 @@ export function UserSidebar() {
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/email-broadcast/history')}
+                                                        isActive={isActive('/user/email-broadcast/history', true)}
                                                         className={cn(
-                                                            isActive('/user/email-broadcast/history') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/email-broadcast/history', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/email-broadcast/history">
@@ -493,9 +493,9 @@ export function UserSidebar() {
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/upselling')}
+                                                        isActive={isActive('/user/upselling', true)}
                                                         className={cn(
-                                                            isActive('/user/upselling') && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/upselling', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
                                                         <Link href="/user/upselling">
@@ -941,7 +941,8 @@ export function UserSidebar() {
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            <SidebarMenuItem>
+                            {/* SMTP Settings - Hidden */}
+                            {/* <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
                                     isActive={isActive('/user/smtp-settings')}
@@ -955,7 +956,7 @@ export function UserSidebar() {
                                         <span>Pengaturan SMTP</span>
                                     </Link>
                                 </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            </SidebarMenuItem> */}
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild

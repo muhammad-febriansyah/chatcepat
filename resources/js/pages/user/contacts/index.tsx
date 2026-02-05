@@ -170,7 +170,7 @@ export default function ContactsIndex({ contacts, sessions, stats, filters }: Co
                 {/* Header */}
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 border">
                     <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
-                    <div className="relative flex items-center justify-between">
+                    <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight text-foreground">
                                 Kontak WhatsApp
@@ -179,7 +179,7 @@ export default function ContactsIndex({ contacts, sessions, stats, filters }: Co
                                 Kelola kontak untuk broadcast WhatsApp
                             </p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex flex-wrap gap-3">
                             <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
                                 <DialogTrigger asChild>
                                     <Button variant="outline" size="lg" className="gap-2">

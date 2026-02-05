@@ -28,8 +28,9 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Users, Trash2, Edit2, UserPlus, RefreshCw, Phone, X, FolderPlus, Search, Database, Send } from 'lucide-react';
+import { Plus, Users, Trash2, Edit2, UserPlus, RefreshCw, Phone, X, FolderPlus, Search, Database, Send, Users2 } from 'lucide-react';
 import { useState, FormEvent, useMemo } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface WhatsAppSession {
     id: number;
@@ -77,6 +78,11 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
     ]);
     const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
     const [contactSearch, setContactSearch] = useState('');
+    const [showMembersDialog, setShowMembersDialog] = useState(false);
+    const [selectedGroupForMembers, setSelectedGroupForMembers] = useState<ContactGroup | null>(null);
+    const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([]);
+    const [memberSearch, setMemberSearch] = useState('');
+    const [bulkDeleting, setBulkDeleting] = useState(false);
 
     // Filter contacts based on search
     const filteredContacts = useMemo(() => {
@@ -246,6 +252,66 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
         newInputs[index][field] = value;
         setMemberInputs(newInputs);
     };
+
+    const openMembersDialog = (group: ContactGroup) => {
+        setSelectedGroupForMembers(group);
+        setSelectedMemberIds([]);
+        setMemberSearch('');
+        setShowMembersDialog(true);
+    };
+
+    const toggleMemberSelection = (memberId: number) => {
+        setSelectedMemberIds(prev =>
+            prev.includes(memberId)
+                ? prev.filter(id => id !== memberId)
+                : [...prev, memberId]
+        );
+    };
+
+    const toggleSelectAllMembers = () => {
+        if (!selectedGroupForMembers) return;
+        const filtered = filteredMembers;
+
+        if (selectedMemberIds.length === filtered.length && filtered.length > 0) {
+            setSelectedMemberIds([]);
+        } else {
+            setSelectedMemberIds(filtered.map(m => m.id));
+        }
+    };
+
+    const handleBulkDeleteMembers = () => {
+        if (selectedMemberIds.length === 0 || !selectedGroupForMembers) return;
+
+        if (!confirm(`Apakah Anda yakin ingin menghapus ${selectedMemberIds.length} anggota dari grup "${selectedGroupForMembers.name}"?`)) {
+            return;
+        }
+
+        setBulkDeleting(true);
+        router.post(`/user/contact-groups/${selectedGroupForMembers.id}/members/bulk-delete`, {
+            ids: selectedMemberIds,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSelectedMemberIds([]);
+                setShowMembersDialog(false);
+                setSelectedGroupForMembers(null);
+            },
+            onFinish: () => {
+                setBulkDeleting(false);
+            },
+        });
+    };
+
+    const filteredMembers = useMemo(() => {
+        if (!selectedGroupForMembers) return [];
+        if (!memberSearch.trim()) return selectedGroupForMembers.members;
+
+        const search = memberSearch.toLowerCase();
+        return selectedGroupForMembers.members.filter(m =>
+            m.phone_number.includes(search) ||
+            (m.name && m.name.toLowerCase().includes(search))
+        );
+    }, [selectedGroupForMembers, memberSearch]);
 
     return (
         <UserLayout>
@@ -483,6 +549,15 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                                                 >
                                                     <UserPlus className="mr-1 size-4" />
                                                     Tambah
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="flex-1"
+                                                    onClick={() => openMembersDialog(group)}
+                                                >
+                                                    <Users2 className="mr-1 size-4" />
+                                                    Kelola ({group.members_count})
                                                 </Button>
                                                 <Button
                                                     variant="outline"
@@ -750,6 +825,134 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                                 </Button>
                             </DialogFooter>
                         </form>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Manage Members Dialog */}
+                <Dialog open={showMembersDialog} onOpenChange={setShowMembersDialog}>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Users2 className="size-5 text-primary" />
+                                Kelola Anggota Grup
+                            </DialogTitle>
+                            <DialogDescription>
+                                Kelola anggota dari grup "{selectedGroupForMembers?.name}"
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+                            {/* Search */}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Cari nomor atau nama..."
+                                    value={memberSearch}
+                                    onChange={(e) => setMemberSearch(e.target.value)}
+                                    className="pl-9"
+                                />
+                            </div>
+
+                            {/* Bulk Actions Bar */}
+                            {selectedMemberIds.length > 0 && (
+                                <Card className="border-primary">
+                                    <CardContent className="py-3">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-sm font-medium">
+                                                {selectedMemberIds.length} anggota dipilih
+                                            </p>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={handleBulkDeleteMembers}
+                                                disabled={bulkDeleting}
+                                                className="gap-2"
+                                            >
+                                                <Trash2 className="size-4" />
+                                                {bulkDeleting ? 'Menghapus...' : 'Hapus Terpilih'}
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Select All */}
+                            <div
+                                className="flex items-center gap-2 cursor-pointer p-2 hover:bg-muted/50 rounded-lg"
+                                onClick={toggleSelectAllMembers}
+                            >
+                                <Checkbox
+                                    checked={selectedMemberIds.length === filteredMembers.length && filteredMembers.length > 0}
+                                    onCheckedChange={toggleSelectAllMembers}
+                                />
+                                <span className="text-sm font-medium">
+                                    {selectedMemberIds.length === filteredMembers.length && filteredMembers.length > 0
+                                        ? 'Batalkan Pilih Semua'
+                                        : 'Pilih Semua'}
+                                </span>
+                                <Badge variant="outline" className="ml-auto">
+                                    {filteredMembers.length} anggota
+                                </Badge>
+                            </div>
+
+                            {/* Members List */}
+                            <ScrollArea className="h-[400px] border rounded-lg">
+                                <div className="p-3 space-y-2">
+                                    {filteredMembers.length === 0 ? (
+                                        <div className="text-center py-8">
+                                            <Users className="size-12 mx-auto text-muted-foreground mb-2" />
+                                            <p className="text-sm text-muted-foreground">
+                                                {memberSearch ? 'Tidak ada anggota ditemukan' : 'Grup ini belum memiliki anggota'}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        filteredMembers.map((member) => (
+                                            <div
+                                                key={member.id}
+                                                className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                                                    selectedMemberIds.includes(member.id)
+                                                        ? 'bg-primary/10 border-primary'
+                                                        : 'hover:bg-muted/50'
+                                                }`}
+                                            >
+                                                <Checkbox
+                                                    checked={selectedMemberIds.includes(member.id)}
+                                                    onCheckedChange={() => toggleMemberSelection(member.id)}
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-mono text-sm font-medium">{member.phone_number}</p>
+                                                    {member.name && (
+                                                        <p className="text-xs text-muted-foreground truncate">{member.name}</p>
+                                                    )}
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 shrink-0"
+                                                    onClick={() => handleRemoveMember(selectedGroupForMembers!.id, member.id)}
+                                                >
+                                                    <X className="size-4" />
+                                                </Button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </div>
+
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    setShowMembersDialog(false);
+                                    setSelectedMemberIds([]);
+                                    setMemberSearch('');
+                                }}
+                            >
+                                Tutup
+                            </Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>

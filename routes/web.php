@@ -342,6 +342,7 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::delete('/{contactGroup}', [App\Http\Controllers\User\ContactGroupController::class, 'destroy'])->name('destroy');
         Route::post('/{contactGroup}/members', [App\Http\Controllers\User\ContactGroupController::class, 'addMembers'])->name('members.add');
         Route::delete('/{contactGroup}/members/{member}', [App\Http\Controllers\User\ContactGroupController::class, 'removeMember'])->name('members.remove');
+        Route::post('/{contactGroup}/members/bulk-delete', [App\Http\Controllers\User\ContactGroupController::class, 'bulkDeleteMembers'])->name('members.bulk-delete');
         Route::post('/sync-whatsapp', [App\Http\Controllers\User\ContactGroupController::class, 'syncFromWhatsApp'])->name('sync-whatsapp');
         Route::get('/for-broadcast', [App\Http\Controllers\User\ContactGroupController::class, 'getGroupsForBroadcast'])->name('for-broadcast');
         Route::get('/{contactGroup}/members', [App\Http\Controllers\User\ContactGroupController::class, 'getGroupMembers'])->name('members');
@@ -363,6 +364,8 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/', [App\Http\Controllers\User\ChatbotController::class, 'index'])->name('index');
         Route::post('/{session}/settings', [App\Http\Controllers\User\ChatbotController::class, 'updateSettings'])->name('settings');
         Route::post('/{session}/test', [App\Http\Controllers\User\ChatbotController::class, 'testChatbot'])->name('test');
+        Route::post('/{session}/upload-training-pdf', [App\Http\Controllers\User\ChatbotController::class, 'uploadTrainingPdf'])->name('upload-pdf');
+        Route::delete('/{session}/delete-training-pdf', [App\Http\Controllers\User\ChatbotController::class, 'deleteTrainingPdf'])->name('delete-pdf');
     });
 
     // Products Management

@@ -12,8 +12,17 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { Send, FileUp, MessageSquare, Users, X, UserPlus, Edit, FolderOpen, Calendar, Clock } from 'lucide-react';
-import { useState, FormEvent, useEffect } from 'react';
+import { Send, FileUp, MessageSquare, Users, X, UserPlus, Edit, FolderOpen, Calendar, Clock, FolderPlus, Eye, Database, Phone, Plus, Users2, Search } from 'lucide-react';
+import { useState, FormEvent, useEffect, useMemo } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface WhatsAppSession {
     id: number;
@@ -26,12 +35,14 @@ interface WhatsAppSession {
 interface Contact {
     id: number;
     phone_number: string;
-    display_name: string | null;
+    name: string;
+    display_name?: string | null;
 }
 
 interface ContactGroup {
     id: number;
     name: string;
+    description: string | null;
     source: 'manual' | 'whatsapp';
     members_count: number;
 }
@@ -51,6 +62,17 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
     const [loadingGroupMembers, setLoadingGroupMembers] = useState(false);
     const [broadcastType, setBroadcastType] = useState<'now' | 'scheduled'>('now');
     const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+    const [showGroupDialog, setShowGroupDialog] = useState(false);
+    const [showEditGroupDialog, setShowEditGroupDialog] = useState(false);
+    const [selectedGroupForEdit, setSelectedGroupForEdit] = useState<ContactGroup | null>(null);
+    const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+    const [previewRecipients, setPreviewRecipients] = useState<string[]>([]);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const [showAddMembersDialog, setShowAddMembersDialog] = useState(false);
+    const [newlyCreatedGroup, setNewlyCreatedGroup] = useState<ContactGroup | null>(null);
+    const [memberInputs, setMemberInputs] = useState<{ phone_number: string; name: string }[]>([{ phone_number: '', name: '' }]);
+    const [selectedContactsForGroup, setSelectedContactsForGroup] = useState<number[]>([]);
+    const [contactSearch, setContactSearch] = useState('');
 
     const { data, setData, post, processing, errors, reset } = useForm({
         session_id: '',
@@ -60,6 +82,16 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
         broadcast_type: 'now' as 'now' | 'scheduled',
         scheduled_at: null as string | null,
         broadcast_name: null as string | null,
+    });
+
+    const groupForm = useForm({
+        name: '',
+        description: '',
+    });
+
+    const editGroupForm = useForm({
+        name: '',
+        description: '',
     });
 
     const connectedSessions = sessions.filter(s => s.status === 'connected');
@@ -142,7 +174,101 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
         }
     };
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleCreateGroup = async (e: FormEvent) => {
+        e.preventDefault();
+
+        try {
+            // Send request with proper headers for JSON response
+            const response = await axios.post('/user/contact-groups', {
+                name: groupForm.data.name,
+                description: groupForm.data.description,
+            }, {
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
+
+            // Get the created group from response (safe for SaaS - no ambiguity)
+            const createdGroup = response.data.group as ContactGroup;
+
+            // Reload contactGroups to get the updated list
+            router.reload({ only: ['contactGroups'], preserveScroll: true, onSuccess: () => {
+                setNewlyCreatedGroup(createdGroup);
+                setShowGroupDialog(false);
+                groupForm.reset();
+
+                // Open add members dialog for the new group
+                setShowAddMembersDialog(true);
+            }});
+        } catch (error) {
+            console.error('Failed to create group:', error);
+            alert('Gagal membuat grup. Silakan coba lagi.');
+        }
+    };
+
+    const handleEditGroup = (e: FormEvent) => {
+        e.preventDefault();
+        if (!selectedGroupForEdit) return;
+        editGroupForm.put(`/user/contact-groups/${selectedGroupForEdit.id}`, {
+            onSuccess: () => {
+                setShowEditGroupDialog(false);
+                setSelectedGroupForEdit(null);
+                editGroupForm.reset();
+                router.reload({ only: ['contactGroups'] });
+            },
+        });
+    };
+
+    const openEditGroupDialog = (group: ContactGroup) => {
+        setSelectedGroupForEdit(group);
+        editGroupForm.setData({
+            name: group.name,
+            description: group.description || '',
+        });
+        setShowEditGroupDialog(true);
+    };
+
+    const deduplicateRecipients = (recipientList: string[]): string[] => {
+        return [...new Set(recipientList)];
+    };
+
+    const handlePreviewRecipients = async () => {
+        setPreviewLoading(true);
+        try {
+            let allRecipients: string[] = [];
+
+            // 1. Manual inputs (already in recipients state)
+            allRecipients = [...recipients];
+
+            // 2. Selected contacts
+            const contactsToAdd = contacts
+                .filter(c => selectedContacts.includes(c.id))
+                .map(c => c.phone_number);
+            allRecipients = [...allRecipients, ...contactsToAdd];
+
+            // 3. Selected groups members
+            for (const groupId of selectedGroups) {
+                const response = await axios.get(`/user/contact-groups/${groupId}/members`);
+                const data = response.data;
+                if (data.members) {
+                    data.members.forEach((member: { phone_number: string }) => {
+                        allRecipients.push(member.phone_number);
+                    });
+                }
+            }
+
+            const deduplicated = deduplicateRecipients(allRecipients);
+            setPreviewRecipients(deduplicated);
+            setShowPreviewDialog(true);
+        } catch (error) {
+            console.error('Failed to preview recipients:', error);
+            alert('Gagal memuat preview penerima');
+        } finally {
+            setPreviewLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
         if (!data.session_id) {
@@ -155,7 +281,11 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
             return;
         }
 
-        if (recipients.length === 0) {
+        await handlePreviewRecipients();
+    };
+
+    const confirmAndSend = () => {
+        if (previewRecipients.length === 0) {
             alert('Tambahkan minimal 1 nomor penerima');
             return;
         }
@@ -165,9 +295,9 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
             return;
         }
 
-        // Update form data before submitting
         setData('broadcast_type', broadcastType);
         setData('scheduled_at', scheduledDate ? scheduledDate.toISOString() : null);
+        setData('recipients', previewRecipients);
 
         post('/user/broadcast/send', {
             onSuccess: () => {
@@ -177,9 +307,119 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                 setRecipientInput('');
                 setBroadcastType('now');
                 setScheduledDate(null);
+                setShowPreviewDialog(false);
+                setPreviewRecipients([]);
+                setSelectedContacts([]);
+                setSelectedGroups([]);
             },
         });
     };
+
+    // Helper function to normalize phone number to 62xxx format
+    const normalizePhoneNumber = (phone: string): string => {
+        // Remove all non-digit characters
+        let cleaned = phone.replace(/\D/g, '');
+
+        // Convert various formats to 62xxx
+        if (cleaned.startsWith('0')) {
+            cleaned = '62' + cleaned.substring(1);
+        } else if (cleaned.startsWith('8')) {
+            cleaned = '62' + cleaned;
+        } else if (cleaned.startsWith('+62')) {
+            cleaned = cleaned.substring(1);
+        }
+
+        return cleaned;
+    };
+
+    const toggleContactSelection = (contactId: number) => {
+        setSelectedContactsForGroup(prev =>
+            prev.includes(contactId)
+                ? prev.filter(id => id !== contactId)
+                : [...prev, contactId]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        const filtered = filteredContacts;
+        if (selectedContactsForGroup.length === filtered.length && filtered.length > 0) {
+            setSelectedContactsForGroup([]);
+        } else {
+            setSelectedContactsForGroup(filtered.map(c => c.id));
+        }
+    };
+
+    const addMemberInput = () => {
+        setMemberInputs([...memberInputs, { phone_number: '', name: '' }]);
+    };
+
+    const removeMemberInput = (index: number) => {
+        setMemberInputs(memberInputs.filter((_, i) => i !== index));
+    };
+
+    const updateMemberInput = (index: number, field: 'phone_number' | 'name', value: string) => {
+        const newInputs = [...memberInputs];
+        newInputs[index][field] = value;
+        setMemberInputs(newInputs);
+    };
+
+    const handleAddMembers = (e: FormEvent) => {
+        e.preventDefault();
+        if (!newlyCreatedGroup) return;
+
+        let members: { phone_number: string; name: string }[] = [];
+
+        // Get selected contacts from database
+        if (selectedContactsForGroup.length > 0) {
+            const contactMembers = selectedContactsForGroup.map(contactId => {
+                const contact = contacts.find(c => c.id === contactId);
+                return {
+                    phone_number: contact?.phone_number || '',
+                    name: contact?.name || '',
+                };
+            }).filter(m => m.phone_number);
+            members = [...members, ...contactMembers];
+        }
+
+        // Get valid manual inputs and normalize phone numbers
+        const validInputs = memberInputs.filter(m => m.phone_number.trim());
+        if (validInputs.length > 0) {
+            const manualMembers = validInputs.map(m => ({
+                phone_number: normalizePhoneNumber(m.phone_number),
+                name: m.name || '',
+            }));
+            members = [...members, ...manualMembers];
+        }
+
+        if (members.length === 0) {
+            alert('Pilih kontak atau masukkan minimal satu nomor telepon.');
+            return;
+        }
+
+        router.post(`/user/contact-groups/${newlyCreatedGroup.id}/members`, {
+            members,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowAddMembersDialog(false);
+                setNewlyCreatedGroup(null);
+                setMemberInputs([{ phone_number: '', name: '' }]);
+                setSelectedContactsForGroup([]);
+                setContactSearch('');
+                router.reload({ only: ['contactGroups'] });
+            },
+        });
+    };
+
+    const filteredContacts = useMemo(() => {
+        if (!contactSearch.trim()) return contacts;
+
+        const search = contactSearch.toLowerCase();
+        return contacts.filter(c =>
+            c.phone_number.includes(search) ||
+            (c.name && c.name.toLowerCase().includes(search))
+        );
+    }, [contacts, contactSearch]);
 
     return (
         <UserLayout>
@@ -458,13 +698,26 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                 <Card className="overflow-hidden border-2">
                                     <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
                                     <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <FolderOpen className="size-5 text-primary" />
-                                            Pilih dari Grup
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Pilih grup kontak untuk broadcast
-                                        </CardDescription>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <CardTitle className="flex items-center gap-2">
+                                                    <FolderOpen className="size-5 text-primary" />
+                                                    Pilih dari Grup
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    Pilih grup kontak untuk broadcast
+                                                </CardDescription>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setShowGroupDialog(true)}
+                                            >
+                                                <FolderPlus className="size-4 mr-1" />
+                                                Buat Grup
+                                            </Button>
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         {contactGroups.length === 0 ? (
@@ -509,6 +762,15 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                                                     </Badge>
                                                                 </p>
                                                             </label>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-7 w-7 p-0"
+                                                                onClick={() => openEditGroupDialog(group)}
+                                                            >
+                                                                <Edit className="size-4" />
+                                                            </Button>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -642,23 +904,12 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                                                 : 'Siap menjadwalkan broadcast?'}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            {broadcastType === 'now'
-                                                ? `Pesan akan dikirim ke ${recipients.length} penerima`
-                                                : `Broadcast akan dijadwalkan untuk ${recipients.length} penerima`}
+                                            Klik tombol untuk melihat preview penerima
                                         </p>
                                     </div>
-                                    <Button type="submit" disabled={processing} size="lg">
-                                        {broadcastType === 'now' ? (
-                                            <>
-                                                <Send className="mr-2 size-4" />
-                                                {processing ? 'Mengirim...' : 'Kirim Broadcast'}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Calendar className="mr-2 size-4" />
-                                                {processing ? 'Menjadwalkan...' : 'Jadwalkan Broadcast'}
-                                            </>
-                                        )}
+                                    <Button type="submit" disabled={processing || previewLoading} size="lg">
+                                        <Eye className="mr-2 size-4" />
+                                        {previewLoading ? 'Memuat...' : 'Preview & Kirim'}
                                     </Button>
                                 </div>
                             </CardContent>
@@ -666,6 +917,387 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                     </form>
                 )}
             </div>
+
+            {/* Create Group Dialog */}
+            <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+                <DialogContent>
+                    <form onSubmit={handleCreateGroup}>
+                        <DialogHeader>
+                            <DialogTitle>Buat Grup Baru</DialogTitle>
+                            <DialogDescription>
+                                Buat grup kontak baru untuk mengorganisir penerima broadcast
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <div>
+                                <Label htmlFor="group-name">Nama Grup</Label>
+                                <Input
+                                    id="group-name"
+                                    value={groupForm.data.name}
+                                    onChange={(e) => groupForm.setData('name', e.target.value)}
+                                    placeholder="Contoh: Pelanggan VIP"
+                                    className="mt-2"
+                                />
+                                {groupForm.errors.name && (
+                                    <p className="text-sm text-destructive mt-1">{groupForm.errors.name}</p>
+                                )}
+                            </div>
+                            <div>
+                                <Label htmlFor="group-description">Deskripsi (Opsional)</Label>
+                                <Textarea
+                                    id="group-description"
+                                    value={groupForm.data.description}
+                                    onChange={(e) => groupForm.setData('description', e.target.value)}
+                                    placeholder="Deskripsi singkat tentang grup ini..."
+                                    className="mt-2"
+                                    rows={3}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setShowGroupDialog(false)}>
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={groupForm.processing}>
+                                {groupForm.processing ? 'Menyimpan...' : 'Simpan'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Group Dialog */}
+            <Dialog open={showEditGroupDialog} onOpenChange={setShowEditGroupDialog}>
+                <DialogContent>
+                    <form onSubmit={handleEditGroup}>
+                        <DialogHeader>
+                            <DialogTitle>Edit Grup</DialogTitle>
+                            <DialogDescription>
+                                Ubah nama atau deskripsi grup
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4 space-y-4">
+                            <div>
+                                <Label htmlFor="edit-group-name">Nama Grup</Label>
+                                <Input
+                                    id="edit-group-name"
+                                    value={editGroupForm.data.name}
+                                    onChange={(e) => editGroupForm.setData('name', e.target.value)}
+                                    className="mt-2"
+                                />
+                                {editGroupForm.errors.name && (
+                                    <p className="text-sm text-destructive mt-1">{editGroupForm.errors.name}</p>
+                                )}
+                            </div>
+                            <div>
+                                <Label htmlFor="edit-group-description">Deskripsi (Opsional)</Label>
+                                <Textarea
+                                    id="edit-group-description"
+                                    value={editGroupForm.data.description}
+                                    onChange={(e) => editGroupForm.setData('description', e.target.value)}
+                                    className="mt-2"
+                                    rows={3}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setShowEditGroupDialog(false)}>
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={editGroupForm.processing}>
+                                {editGroupForm.processing ? 'Menyimpan...' : 'Simpan'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Preview Recipients Dialog */}
+            <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Users className="size-5 text-primary" />
+                            Preview Penerima Broadcast
+                        </DialogTitle>
+                        <DialogDescription>
+                            Berikut adalah daftar penerima yang akan menerima broadcast (sudah dihapus duplikat)
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        {/* Summary */}
+                        <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg">
+                            <div>
+                                <p className="text-sm font-medium">Total Penerima Unik</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Dari {selectedContacts.length} kontak, {selectedGroups.length} grup,
+                                    dan {recipients.length} input manual
+                                </p>
+                            </div>
+                            <div className="text-3xl font-bold text-primary">
+                                {previewRecipients.length}
+                            </div>
+                        </div>
+
+                        {/* Recipients List */}
+                        <div>
+                            <Label className="text-sm font-medium mb-2 block">Daftar Nomor Penerima:</Label>
+                            <ScrollArea className="h-96 rounded-lg border p-3">
+                                <div className="space-y-1">
+                                    {previewRecipients.map((phone, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between rounded-md bg-muted/50 p-2.5"
+                                        >
+                                            <span className="text-sm font-mono">{phone}</span>
+                                            <Badge variant="outline">{index + 1}</Badge>
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </div>
+
+                        {/* Message Preview */}
+                        <div>
+                            <Label className="text-sm font-medium mb-2 block">Pesan yang Akan Dikirim:</Label>
+                            <div className="rounded-lg border p-3 bg-muted/30">
+                                <p className="text-sm whitespace-pre-wrap">
+                                    {data.message || '(Tanpa teks, hanya file)'}
+                                </p>
+                                {data.file && (
+                                    <div className="mt-2 pt-2 border-t">
+                                        <p className="text-xs text-muted-foreground">
+                                            File: {selectedFile?.name}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowPreviewDialog(false)}
+                        >
+                            Kembali & Edit
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={confirmAndSend}
+                            disabled={processing}
+                        >
+                            {broadcastType === 'now' ? (
+                                <>
+                                    <Send className="mr-2 size-4" />
+                                    {processing ? 'Mengirim...' : `Kirim ke ${previewRecipients.length} Nomor`}
+                                </>
+                            ) : (
+                                <>
+                                    <Calendar className="mr-2 size-4" />
+                                    {processing ? 'Menjadwalkan...' : `Jadwalkan untuk ${previewRecipients.length} Nomor`}
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add Members Dialog */}
+            <Dialog open={showAddMembersDialog} onOpenChange={setShowAddMembersDialog}>
+                <DialogContent className="max-w-md">
+                    <form onSubmit={handleAddMembers}>
+                        <DialogHeader className="pb-4">
+                            <DialogTitle className="flex items-center gap-2">
+                                <UserPlus className="size-5 text-primary" />
+                                Tambah Anggota ke Grup Baru
+                            </DialogTitle>
+                            <DialogDescription>
+                                Tambahkan anggota ke grup "{newlyCreatedGroup?.name}"
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-5">
+                            {/* Section: Pilih dari Kontak */}
+                            {contacts.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium flex items-center gap-2">
+                                            <Database className="size-4" />
+                                            Pilih dari Kontak
+                                        </span>
+                                        {selectedContactsForGroup.length > 0 && (
+                                            <Badge variant="default" className="text-xs">
+                                                {selectedContactsForGroup.length} dipilih
+                                            </Badge>
+                                        )}
+                                    </div>
+
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="Cari nama atau nomor..."
+                                            value={contactSearch}
+                                            onChange={(e) => setContactSearch(e.target.value)}
+                                            className="pl-9 h-9"
+                                        />
+                                    </div>
+
+                                    <div
+                                        className="flex items-center gap-2 cursor-pointer"
+                                        onClick={toggleSelectAll}
+                                    >
+                                        <div
+                                            className={`h-4 w-4 rounded border flex items-center justify-center ${selectedContactsForGroup.length === filteredContacts.length && filteredContacts.length > 0
+                                                ? 'bg-primary border-primary'
+                                                : 'border-input'
+                                                }`}
+                                        >
+                                            {selectedContactsForGroup.length === filteredContacts.length && filteredContacts.length > 0 && (
+                                                <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span className="text-sm text-muted-foreground">Pilih Semua</span>
+                                    </div>
+
+                                    <ScrollArea className="h-[160px] border rounded-lg">
+                                        <div className="p-1.5 space-y-0.5">
+                                            {filteredContacts.length === 0 ? (
+                                                <p className="text-center text-muted-foreground py-6 text-sm">
+                                                    Tidak ada kontak ditemukan
+                                                </p>
+                                            ) : (
+                                                filteredContacts.map((contact) => {
+                                                    const isSelected = selectedContactsForGroup.includes(contact.id);
+                                                    return (
+                                                        <div
+                                                            key={contact.id}
+                                                            className={`flex items-center gap-2.5 px-2 py-1.5 rounded cursor-pointer hover:bg-muted/50 transition-colors ${isSelected ? 'bg-primary/10' : ''
+                                                                }`}
+                                                            onClick={() => toggleContactSelection(contact.id)}
+                                                        >
+                                                            <div
+                                                                className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-input'
+                                                                    }`}
+                                                            >
+                                                                {isSelected && (
+                                                                    <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="font-medium truncate text-sm leading-tight">{contact.name}</p>
+                                                                <p className="text-xs text-muted-foreground font-mono leading-tight">
+                                                                    {contact.phone_number}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </ScrollArea>
+                                </div>
+                            )}
+
+                            {/* Divider */}
+                            {contacts.length > 0 && (
+                                <div className="relative py-1">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <span className="w-full border-t" />
+                                    </div>
+                                    <div className="relative flex justify-center text-xs">
+                                        <span className="bg-background px-3 text-muted-foreground">atau</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Section: Input Manual */}
+                            <div className="space-y-2">
+                                <span className="text-sm font-medium flex items-center gap-2">
+                                    <Phone className="size-4" />
+                                    Input Manual
+                                </span>
+
+                                <div className="space-y-2">
+                                    {memberInputs.map((input, index) => (
+                                        <div key={index} className="space-y-2 p-3 border rounded-lg bg-muted/30">
+                                            <div className="flex gap-2 items-start">
+                                                <div className="flex-1 space-y-2">
+                                                    <Input
+                                                        placeholder="Nomor: 08123456789"
+                                                        value={input.phone_number}
+                                                        onChange={(e) => updateMemberInput(index, 'phone_number', e.target.value)}
+                                                        className="h-9"
+                                                    />
+                                                    <Input
+                                                        placeholder="Nama: Budi Santoso (opsional)"
+                                                        value={input.name}
+                                                        onChange={(e) => updateMemberInput(index, 'name', e.target.value)}
+                                                        className="h-9"
+                                                    />
+                                                </div>
+                                                {memberInputs.length > 1 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive"
+                                                        onClick={() => removeMemberInput(index)}
+                                                    >
+                                                        <X className="size-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={addMemberInput}
+                                    className="w-full h-8"
+                                >
+                                    <Plus className="mr-1.5 size-3.5" />
+                                    Tambah Nomor
+                                </Button>
+
+                                <p className="text-xs text-muted-foreground">
+                                    Format 08xxx otomatis dikonversi ke 628xxx
+                                </p>
+                            </div>
+                        </div>
+
+                        <DialogFooter className="pt-5">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setShowAddMembersDialog(false);
+                                    setNewlyCreatedGroup(null);
+                                    setMemberInputs([{ phone_number: '', name: '' }]);
+                                    setSelectedContactsForGroup([]);
+                                    setContactSearch('');
+                                }}
+                            >
+                                Lewati
+                            </Button>
+                            <Button type="submit" size="sm">
+                                <UserPlus className="mr-1.5 size-4" />
+                                Simpan Anggota
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </UserLayout>
     );
 }

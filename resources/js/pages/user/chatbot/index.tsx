@@ -52,6 +52,10 @@ import {
     X,
     Package,
     Link as LinkIcon,
+    Upload,
+    FileText,
+    Download,
+    Trash,
 } from 'lucide-react';
 import {
     Dialog,
@@ -93,6 +97,8 @@ interface WhatsappSession {
         communication_tone?: string;
         ai_description?: string;
         products?: Product[];
+        training_pdf_content?: string;
+        training_pdf_pages?: number;
     } | null;
     settings: {
         autoReplyEnabled?: boolean;
@@ -102,6 +108,8 @@ interface WhatsappSession {
         blacklist?: string[];
         whitelist?: string[];
     } | null;
+    training_pdf_path?: string | null;
+    training_pdf_name?: string | null;
 }
 
 interface AiAssistantType {
@@ -167,6 +175,8 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
     const [whitelist, setWhitelist] = useState(
         selectedSession?.settings?.whitelist?.join(', ') || ''
     );
+    const [uploadingPdf, setUploadingPdf] = useState(false);
+    const [deletingPdf, setDeletingPdf] = useState(false);
 
     const handleSessionChange = (sessionId: string) => {
         const session = sessions.find((s) => s.id.toString() === sessionId);
@@ -198,6 +208,93 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
 
     const handleRemoveProduct = (index: number) => {
         setProducts(products.filter((_, i) => i !== index));
+    };
+
+    const handlePdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!selectedSession || !event.target.files || !event.target.files[0]) return;
+
+        const file = event.target.files[0];
+
+        // Validate file type
+        if (file.type !== 'application/pdf') {
+            alert('File harus berformat PDF');
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran file maksimal 5MB');
+            return;
+        }
+
+        setUploadingPdf(true);
+        try {
+            const formData = new FormData();
+            formData.append('pdf', file);
+
+            const response = await axios.post(
+                `/user/chatbot/${selectedSession.id}/upload-training-pdf`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
+            );
+
+            const data = response.data;
+            if (data.success) {
+                // Update selected session state
+                setSelectedSession({
+                    ...selectedSession,
+                    training_pdf_path: data.data.pdf_path,
+                    training_pdf_name: data.data.pdf_name,
+                });
+                alert('Training PDF berhasil diupload!');
+            } else {
+                alert(data.message || 'Gagal upload PDF');
+            }
+        } catch (error) {
+            logger.error('Error uploading PDF:', error);
+            alert('Gagal upload PDF');
+        } finally {
+            setUploadingPdf(false);
+            // Reset input
+            event.target.value = '';
+        }
+    };
+
+    const handlePdfDelete = async () => {
+        if (!selectedSession || !selectedSession.training_pdf_path) return;
+
+        if (!confirm('Apakah Anda yakin ingin menghapus training PDF ini?')) {
+            return;
+        }
+
+        setDeletingPdf(true);
+        try {
+            const response = await axios.delete(
+                `/user/chatbot/${selectedSession.id}/delete-training-pdf`
+            );
+
+            const data = response.data;
+            if (data.success) {
+                // Update selected session state
+                setSelectedSession({
+                    ...selectedSession,
+                    training_pdf_path: null,
+                    training_pdf_name: null,
+                });
+                alert('Training PDF berhasil dihapus');
+            } else {
+                alert(data.message || 'Gagal hapus PDF');
+            }
+        } catch (error) {
+            logger.error('Error deleting PDF:', error);
+            alert('Gagal hapus PDF');
+        } finally {
+            setDeletingPdf(false);
+        }
     };
 
     const handleSave = async () => {
@@ -630,6 +727,119 @@ export default function ChatbotIndex({ sessions, aiAssistantTypes }: Props) {
                                                     />
                                                     <p className="text-xs text-muted-foreground">
                                                         Ini akan digunakan sebagai base prompt untuk mendefinisikan perilaku dan pedoman AI agent Anda
+                                                    </p>
+                                                </div>
+
+                                                {/* PDF Training Document */}
+                                                <div className="space-y-2">
+                                                    <Label className="flex items-center gap-2">
+                                                        <FileText className="size-4" />
+                                                        Training Document (Optional)
+                                                    </Label>
+
+                                                    {selectedSession?.training_pdf_path ? (
+                                                        // Show uploaded PDF
+                                                        <Card className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="size-10 rounded-lg bg-green-100 flex items-center justify-center">
+                                                                            <FileText className="size-5 text-green-600" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="font-medium text-sm">
+                                                                                {selectedSession.training_pdf_name}
+                                                                            </p>
+                                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                                {selectedSession.ai_config?.training_pdf_pages && (
+                                                                                    <Badge variant="outline" className="text-xs bg-white">
+                                                                                        {selectedSession.ai_config.training_pdf_pages} halaman
+                                                                                    </Badge>
+                                                                                )}
+                                                                                {selectedSession.ai_config?.training_pdf_content && (
+                                                                                    <Badge variant="outline" className="text-xs bg-white">
+                                                                                        ✅ Text extracted
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <a
+                                                                            href={`/storage/${selectedSession.training_pdf_path}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                        >
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                className="h-8"
+                                                                            >
+                                                                                <Download className="size-3 mr-1" />
+                                                                                Download
+                                                                            </Button>
+                                                                        </a>
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={handlePdfDelete}
+                                                                            disabled={deletingPdf}
+                                                                            className="h-8 text-destructive hover:text-destructive"
+                                                                        >
+                                                                            <Trash className="size-3 mr-1" />
+                                                                            {deletingPdf ? 'Menghapus...' : 'Hapus'}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Extracted Text Info */}
+                                                                {selectedSession.ai_config?.training_pdf_content && (
+                                                                    <div className="pt-2 border-t border-green-200">
+                                                                        <p className="text-xs text-green-700">
+                                                                            <CheckCircle2 className="size-3 inline mr-1" />
+                                                                            PDF berhasil diproses. Text training ({selectedSession.ai_config.training_pdf_content.length.toLocaleString()} karakter) siap digunakan untuk AI chatbot.
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </Card>
+                                                    ) : (
+                                                        // Upload PDF
+                                                        <div className="border-2 border-dashed rounded-lg p-6 hover:border-primary transition-colors">
+                                                            <label htmlFor="pdf-upload" className="cursor-pointer">
+                                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                                    <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                                                        {uploadingPdf ? (
+                                                                            <RefreshCw className="size-6 text-primary animate-spin" />
+                                                                        ) : (
+                                                                            <Upload className="size-6 text-primary" />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-center">
+                                                                        <p className="text-sm font-medium">
+                                                                            {uploadingPdf ? 'Uploading...' : 'Upload PDF Training Document'}
+                                                                        </p>
+                                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                                            Klik untuk memilih file PDF (Maks 5MB)
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <input
+                                                                    id="pdf-upload"
+                                                                    type="file"
+                                                                    accept="application/pdf"
+                                                                    onChange={handlePdfUpload}
+                                                                    disabled={uploadingPdf}
+                                                                    className="hidden"
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    )}
+
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Upload panduan lengkap (contoh: FAQ, product catalog, company policy) untuk training AI lebih detail
                                                     </p>
                                                 </div>
                                             </CardContent>

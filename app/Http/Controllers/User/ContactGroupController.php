@@ -59,7 +59,7 @@ class ContactGroupController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
@@ -72,12 +72,27 @@ class ContactGroupController extends Controller
 
         $user = auth()->user();
 
-        ContactGroup::create([
+        $group = ContactGroup::create([
             'user_id' => $user->id,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'source' => 'manual',
         ]);
+
+        // Return JSON for AJAX requests (more secure for SaaS)
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Grup berhasil dibuat.',
+                'group' => [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'description' => $group->description,
+                    'source' => $group->source,
+                    'members_count' => 0,
+                ],
+            ], 201);
+        }
 
         return redirect()->back()->with('success', 'Grup berhasil dibuat.');
     }
@@ -176,6 +191,41 @@ class ContactGroupController extends Controller
         $contactGroup->updateMembersCount();
 
         return redirect()->back()->with('success', 'Member berhasil dihapus dari grup.');
+    }
+
+    public function bulkDeleteMembers(Request $request, ContactGroup $contactGroup): RedirectResponse
+    {
+        if ($contactGroup->user_id !== auth()->id()) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses ke grup ini.');
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:contact_group_members,id',
+        ], [
+            'ids.required' => 'Pilih minimal satu anggota untuk dihapus.',
+            'ids.min' => 'Pilih minimal satu anggota untuk dihapus.',
+        ]);
+
+        // Verify all members belong to this group
+        $memberCount = ContactGroupMember::where('contact_group_id', $contactGroup->id)
+            ->whereIn('id', $validated['ids'])
+            ->count();
+
+        if ($memberCount !== count($validated['ids'])) {
+            return redirect()->back()->with('error', 'Beberapa anggota tidak ditemukan di grup ini.');
+        }
+
+        // Delete members
+        ContactGroupMember::where('contact_group_id', $contactGroup->id)
+            ->whereIn('id', $validated['ids'])
+            ->delete();
+
+        // Update members count
+        $contactGroup->updateMembersCount();
+
+        $deletedCount = count($validated['ids']);
+        return redirect()->back()->with('success', "Berhasil menghapus {$deletedCount} anggota dari grup.");
     }
 
     public function syncFromWhatsApp(Request $request): RedirectResponse

@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
+use Smalot\PdfParser\Parser as PdfParser;
 
 class ChatbotController extends Controller
 {
@@ -22,7 +23,7 @@ class ChatbotController extends Controller
 
         // Get all user sessions
         $sessions = WhatsappSession::where('user_id', $user->id)
-            ->select('id', 'session_id', 'name', 'phone_number', 'status', 'ai_assistant_type', 'ai_config', 'settings')
+            ->select('id', 'session_id', 'name', 'phone_number', 'status', 'ai_assistant_type', 'ai_config', 'settings', 'training_pdf_path', 'training_pdf_name')
             ->get();
 
         // Get AI assistant types
@@ -162,6 +163,126 @@ class ChatbotController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Upload training PDF document
+     */
+    public function uploadTrainingPdf(Request $request, WhatsappSession $session): JsonResponse
+    {
+        // Ensure user owns this session
+        if ($session->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'pdf' => 'required|file|mimes:pdf|max:5120', // Max 5MB
+        ], [
+            'pdf.required' => 'File PDF wajib diupload.',
+            'pdf.mimes' => 'File harus berformat PDF.',
+            'pdf.max' => 'Ukuran file maksimal 5MB.',
+        ]);
+
+        try {
+            // Delete old PDF if exists
+            if ($session->training_pdf_path) {
+                \Storage::delete($session->training_pdf_path);
+            }
+
+            // Store new PDF
+            $file = $request->file('pdf');
+            $originalName = $file->getClientOriginalName();
+            $filename = 'session_' . $session->id . '_' . time() . '.pdf';
+            $path = $file->storeAs('chatbot-training', $filename);
+
+            // Extract text from PDF
+            $extractedText = '';
+            $pageCount = 0;
+
+            try {
+                $parser = new PdfParser();
+                $pdf = $parser->parseFile(\Storage::path($path));
+                $extractedText = $pdf->getText();
+                $pageCount = count($pdf->getPages());
+
+                // Clean up extracted text
+                $extractedText = trim(preg_replace('/\s+/', ' ', $extractedText));
+
+                // Limit text length to prevent database issues (max 50k chars)
+                if (strlen($extractedText) > 50000) {
+                    $extractedText = substr($extractedText, 0, 50000) . '... (truncated)';
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to extract text from PDF: ' . $e->getMessage());
+                $extractedText = '[Text extraction failed - PDF will be used as reference only]';
+            }
+
+            // Update ai_config with extracted text
+            $aiConfig = $session->ai_config ?? [];
+            $aiConfig['training_pdf_content'] = $extractedText;
+            $aiConfig['training_pdf_pages'] = $pageCount;
+
+            // Update session
+            $session->training_pdf_path = $path;
+            $session->training_pdf_name = $originalName;
+            $session->ai_config = $aiConfig;
+            $session->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Training PDF berhasil diupload dan diproses',
+                'data' => [
+                    'pdf_name' => $originalName,
+                    'pdf_path' => $path,
+                    'pages' => $pageCount,
+                    'text_length' => strlen($extractedText),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal upload PDF: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete training PDF document
+     */
+    public function deleteTrainingPdf(Request $request, WhatsappSession $session): JsonResponse
+    {
+        // Ensure user owns this session
+        if ($session->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        try {
+            // Delete PDF file
+            if ($session->training_pdf_path) {
+                \Storage::delete($session->training_pdf_path);
+            }
+
+            // Remove extracted text from ai_config
+            $aiConfig = $session->ai_config ?? [];
+            unset($aiConfig['training_pdf_content']);
+            unset($aiConfig['training_pdf_pages']);
+
+            // Clear database fields
+            $session->training_pdf_path = null;
+            $session->training_pdf_name = null;
+            $session->ai_config = $aiConfig;
+            $session->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Training PDF berhasil dihapus',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal hapus PDF: ' . $e->getMessage(),
             ], 500);
         }
     }

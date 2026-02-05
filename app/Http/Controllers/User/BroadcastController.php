@@ -68,6 +68,7 @@ class BroadcastController extends Controller
                 return [
                     'id' => $group->id,
                     'name' => $group->name,
+                    'description' => $group->description,
                     'source' => $group->source,
                     'members_count' => $group->members_count,
                 ];
