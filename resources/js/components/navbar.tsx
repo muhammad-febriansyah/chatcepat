@@ -32,7 +32,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
 
     const navItems = [
         { name: 'Home', link: '/' },
-        { name: 'Harga', link: '/pricing' },
+        // { name: 'Harga', link: '/pricing' }, // HIDDEN
         { name: 'Blog', link: '/blog' },
         // { name: 'Kontak', link: '/contact' }, // HIDDEN
     ];
@@ -170,7 +170,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 </div>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    onClick={() => router.visit(auth.user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard')}
+                                    onClick={() => router.visit(auth.user.role === 'admin' ? '/admin/dashboard' : auth.user.role === 'owner' ? '/owner/dashboard' : '/user/dashboard')}
                                     className="cursor-pointer"
                                 >
                                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -324,7 +324,7 @@ export default function Navbar({ canRegister = true }: NavbarProps) {
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
-                                        router.visit(auth.user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard');
+                                        router.visit(auth.user.role === 'admin' ? '/admin/dashboard' : auth.user.role === 'owner' ? '/owner/dashboard' : '/user/dashboard');
                                     }}
                                     className="flex w-full items-center gap-2 rounded-[100px] bg-slate-100 px-4 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-200"
                                 >

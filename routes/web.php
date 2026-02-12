@@ -94,6 +94,7 @@ Route::get('/', function () {
         ->latest()
         ->get();
     $partners = App\Models\Partner::active()->ordered()->get();
+    $packages = App\Models\PricingPackage::active()->ordered()->get();
     return Inertia::render('landing', [
         'canRegister' => Features::enabled(Features::registration()),
         'features' => $features,
@@ -101,6 +102,7 @@ Route::get('/', function () {
         'faqs' => $faqs,
         'testimonials' => $testimonials,
         'partners' => $partners,
+        'packages' => $packages,
     ]);
 })->name('home');
 
@@ -609,6 +611,17 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
 // Legacy dashboard route (redirect to new route)
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     return redirect()->route('user.dashboard');
+});
+
+// Owner Routes
+Route::middleware(['auth', 'verified', 'role:owner'])->prefix('owner')->name('owner.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/users', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'users'])->name('users');
+    Route::get('/users/{id}', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'showUser'])->name('users.show');
+    Route::get('/transactions', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'transactions'])->name('transactions');
+    Route::get('/transactions/export/excel', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'exportExcel'])->name('transactions.export.excel');
+    Route::get('/transactions/export/pdf', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'exportPdf'])->name('transactions.export.pdf');
+    Route::get('/transactions/{id}', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'showTransaction'])->name('transactions.show');
 });
 
 // Admin Routes

@@ -7,3 +7,5 @@ export { FiturUnggulanSection } from './FiturUnggulanSection';
 export { TestimonialsSection } from './TestimonialsSection';
 export { FaqSection } from './FaqSection';
 export { HelpSectionWrapper } from './HelpSectionWrapper';
+export { PricingSection } from './PricingSection';
+export { TransformasiSection } from './TransformasiSection';

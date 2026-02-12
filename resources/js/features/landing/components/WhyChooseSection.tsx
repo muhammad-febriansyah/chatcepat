@@ -2,13 +2,15 @@ import React from 'react';
 import { logger } from '@/utils/logger';
 import { Bot, CheckCircle } from 'lucide-react';
 import { iconMap } from '../constants/iconMap';
+import { motion } from 'framer-motion';
 
 interface WhyChooseSectionProps {
     settings: any;
 }
 
+const ease = [0.16, 1, 0.3, 1] as const;
+
 export function WhyChooseSection({ settings }: WhyChooseSectionProps) {
-    // Handle both parsed array and JSON string
     let whyChooseFeatures = [];
 
     if (settings.why_choose_features) {
@@ -30,7 +32,13 @@ export function WhyChooseSection({ settings }: WhyChooseSectionProps) {
             <div className="container mx-auto max-w-6xl">
                 <div className="grid items-center gap-12 lg:grid-cols-2">
                     {/* Left Image */}
-                    <div className="order-2 lg:order-1">
+                    <motion.div
+                        initial={{ opacity: 0, x: -40 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true, margin: '-80px' }}
+                        transition={{ duration: 0.8, ease }}
+                        className="order-2 lg:order-1"
+                    >
                         {settings.why_choose_image ? (
                             <div className="relative rounded-2xl overflow-hidden">
                                 <img
@@ -42,43 +50,50 @@ export function WhyChooseSection({ settings }: WhyChooseSectionProps) {
                         ) : (
                             <div
                                 className="aspect-square rounded-2xl p-1"
-                                style={{
-                                    background: 'linear-gradient(135deg, #2547F9 0%, #1e3fcc 50%, #4a63f9 100%)'
-                                }}
+                                style={{ background: 'linear-gradient(135deg, #2547F9 0%, #1e3fcc 50%, #4a63f9 100%)' }}
                             >
                                 <div className="flex h-full w-full items-center justify-center rounded-2xl" style={{ backgroundColor: '#F7F8FD' }}>
                                     <div className="space-y-3 p-6 text-center">
                                         <Bot className="mx-auto h-20 w-20" style={{ color: '#2547F9' }} />
-                                        <p className="text-xl font-bold text-slate-900">
-                                            Upload Image
-                                        </p>
+                                        <p className="text-xl font-bold text-slate-900">Upload Image</p>
                                     </div>
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </motion.div>
 
                     {/* Right Content */}
                     <div className="order-1 lg:order-2 space-y-8">
-                        <div className="space-y-3">
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.7, ease }}
+                            className="space-y-3"
+                        >
                             <h2 className="font-display text-3xl font-bold text-slate-900 leading-tight md:text-4xl md:leading-tight">
                                 {(settings.why_choose_heading as string) || 'Kenapa Ribuan Bisnis'}
                                 <span className="block mt-2" style={{ color: '#2547F9' }}>
                                     {(settings.why_choose_subheading as string) || 'Menggunakan ChatCepat'}
                                 </span>
                             </h2>
-                        </div>
+                        </motion.div>
 
                         <div className="space-y-6">
                             {whyChooseFeatures.map((feature: { icon: string; title: string; description: string; image?: string }, index: number) => {
                                 const IconComponent = iconMap[feature.icon] || CheckCircle;
                                 return (
-                                    <div key={index} className="flex gap-4 items-start">
+                                    <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, x: 30 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: true, margin: '-40px' }}
+                                        transition={{ duration: 0.6, delay: index * 0.1, ease }}
+                                        className="flex gap-4 items-start"
+                                    >
                                         <div
                                             className="flex-shrink-0 flex h-12 w-12 items-center justify-center rounded-xl"
-                                            style={{
-                                                backgroundColor: '#EEF1FE',
-                                            }}
+                                            style={{ backgroundColor: '#EEF1FE' }}
                                         >
                                             <IconComponent className="h-6 w-6" style={{ color: '#2547F9' }} />
                                         </div>
@@ -99,7 +114,7 @@ export function WhyChooseSection({ settings }: WhyChooseSectionProps) {
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 );
                             })}
                         </div>

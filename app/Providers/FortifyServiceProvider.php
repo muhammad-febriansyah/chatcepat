@@ -37,6 +37,10 @@ class FortifyServiceProvider extends ServiceProvider
                         return redirect()->intended('/admin/dashboard');
                     }
 
+                    if ($user->role === 'owner') {
+                        return redirect()->intended('/owner/dashboard');
+                    }
+
                     // Default redirect for regular users
                     return redirect()->intended('/user/dashboard');
                 }

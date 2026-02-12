@@ -14,6 +14,11 @@ class LogAuthenticationActivity
      */
     public function handleLogin(Login $event): void
     {
+        try {
+            $event->user->update(['last_login_at' => now()]);
+        } catch (\Exception $e) {
+            report($e);
+        }
         $this->logAuthActivity($event->user, 'login', 'Autentikasi', true);
     }
 

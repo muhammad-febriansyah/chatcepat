@@ -14,6 +14,8 @@ import {
     TestimonialsSection,
     FaqSection,
     HelpSectionWrapper,
+    PricingSection,
+    TransformasiSection,
 } from '@/features/landing/components';
 
 interface User {
@@ -40,6 +42,24 @@ interface Partner {
     is_active: boolean;
 }
 
+interface PricingPackage {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    price: string;
+    currency: string;
+    period: number;
+    period_unit: string;
+    features: string[];
+    is_featured: boolean;
+    is_active: boolean;
+    button_text: string;
+    button_url: string;
+    formatted_price: string;
+    period_text: string;
+}
+
 export default function Landing({
     canRegister = true,
     features = [],
@@ -47,6 +67,7 @@ export default function Landing({
     faqs = [],
     testimonials = [],
     partners = [],
+    packages = [],
 }: {
     canRegister?: boolean;
     features?: Feature[];
@@ -54,6 +75,7 @@ export default function Landing({
     faqs?: Faq[];
     testimonials?: Testimonial[];
     partners?: Partner[];
+    packages?: PricingPackage[];
 }) {
     const { settings } = usePage<SharedData>().props;
 
@@ -73,6 +95,10 @@ export default function Landing({
                 <FiturUnggulanSection fiturUnggulans={fiturUnggulans} />
             </div>
             <TestimonialsSection testimonials={testimonials} />
+            <div id="harga">
+                <PricingSection packages={packages} />
+            </div>
+            <TransformasiSection />
             <HelpSectionWrapper settings={settings} />
             <div id="faq">
                 <FaqSection faqs={faqs} settings={settings} />

@@ -57,6 +57,7 @@ class User extends Authenticatable
         'widget_placeholder',
         // AI Credit
         'ai_credit',
+        'last_login_at',
     ];
 
     /**
@@ -82,6 +83,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 
