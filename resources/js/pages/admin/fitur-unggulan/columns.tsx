@@ -33,6 +33,28 @@ export const columns: ColumnDef<FiturUnggulan>[] = [
         },
     },
     {
+        accessorKey: 'image',
+        header: 'Gambar',
+        cell: ({ row }) => {
+            const image = row.getValue('image') as string | null
+            return (
+                <div className="flex items-center justify-center">
+                    {image ? (
+                        <img
+                            src={`/storage/${image}`}
+                            alt={row.getValue('title') as string}
+                            className="h-16 w-16 rounded-md object-cover"
+                        />
+                    ) : (
+                        <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                            No Image
+                        </div>
+                    )}
+                </div>
+            )
+        },
+    },
+    {
         accessorKey: 'title',
         header: 'Judul',
         cell: ({ row }) => <div className="font-medium">{row.getValue('title')}</div>,
