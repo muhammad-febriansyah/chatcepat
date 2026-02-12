@@ -4,7 +4,7 @@ import axios from 'axios';
 import UserLayout from '@/layouts/user/user-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Download, Loader2, CheckCircle2, XCircle, Clock, AlertTriangle, ExternalLink, Search, ChevronLeft, ChevronRight, Trash2, Upload, FileSpreadsheet, Facebook, Instagram, MessageCircle } from 'lucide-react';
+import { Users, Download, Loader2, CheckCircle2, XCircle, Clock, AlertTriangle, ExternalLink, Search, ChevronLeft, ChevronRight, Trash2, Upload, FileSpreadsheet, MessageCircle, RefreshCw, Shield, Smartphone, WifiOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
     Select,
@@ -13,15 +13,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface Session {
     id: number;
     session_id: string;
     name: string;
+    phone_number: string;
     status: string;
 }
 
@@ -29,7 +31,13 @@ interface Contact {
     id: number;
     phone_number: string;
     display_name: string;
+    push_name: string;
     session_name: string;
+    metadata?: {
+        source?: string;
+        fromGroup?: string;
+        isLidFormat?: boolean;
+    };
     created_at: string;
 }
 
@@ -55,29 +63,30 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
     const [isImporting, setIsImporting] = useState(false);
     const [selectedSession, setSelectedSession] = useState<string>('');
     const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
-    const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-    const [scrapeResult, setScrapeResult] = useState<{ totalScraped: number; totalSaved: number } | null>(null);
+    const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
+    const [scrapeResult, setScrapeResult] = useState<{
+        totalScraped: number;
+        totalSaved: number;
+        lidContacts?: number;
+        realPhoneContacts?: number;
+    } | null>(null);
     const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
-    const [activeTab, setActiveTab] = useState('meta');
+    const [activeTab, setActiveTab] = useState('whatsapp');
     const [searchQuery, setSearchQuery] = useState('');
     const [importFile, setImportFile] = useState<File | null>(null);
-
-    // Meta scraping states
-    const [isScrapingMeta, setIsScrapingMeta] = useState(false);
-    const [metaPlatform, setMetaPlatform] = useState<'whatsapp' | 'facebook' | 'instagram' | null>(null);
-    const [metaContacts, setMetaContacts] = useState<any[]>([]);
-    const [metaStats, setMetaStats] = useState<any>(null);
-    const [metaAlertMessage, setMetaAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [scrapingProgress, setScrapingProgress] = useState(0);
 
     // Check if any session is connected
     const hasConnectedSession = sessions.some(s => s.status === 'connected');
+    const connectedSessions = sessions.filter(s => s.status === 'connected');
     const selectedSessionObj = sessions.find(s => s.session_id === selectedSession);
     const isSelectedSessionConnected = selectedSessionObj?.status === 'connected';
 
     // Filter contacts by search query
     const filteredContacts = contacts?.data.filter(contact =>
         contact.phone_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contact.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.push_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         contact.session_name.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
@@ -95,38 +104,68 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
             return;
         }
 
+        if (!isSelectedSessionConnected) {
+            setAlertMessage({
+                type: 'error',
+                message: 'Session belum terhubung. Hubungkan session terlebih dahulu di halaman WhatsApp Management.'
+            });
+            return;
+        }
+
         setIsScraping(true);
         setAlertMessage(null);
         setScrapeResult(null);
+        setScrapingProgress(10);
 
         try {
+            // Simulate progress
+            const progressInterval = setInterval(() => {
+                setScrapingProgress(prev => Math.min(prev + 5, 90));
+            }, 500);
+
             const response = await axios.post('/user/contacts/scrape', {
                 session_id: selectedSession
             });
+
+            clearInterval(progressInterval);
+            setScrapingProgress(100);
+
             const data = response.data;
 
             if (data.success) {
-                setScrapeResult({
+                const result = {
                     totalScraped: data.data.total_scraped,
                     totalSaved: data.data.total_saved,
-                });
+                };
+                setScrapeResult(result);
+
+                // Check for LID warning in message
+                const hasLidWarning = data.data.message?.toLowerCase().includes('lid');
+
                 setAlertMessage({
-                    type: 'success',
-                    message: `Berhasil! ${data.data.total_saved} kontak berhasil disimpan dari ${data.data.total_scraped} kontak yang ditemukan`
+                    type: hasLidWarning ? 'warning' : 'success',
+                    message: data.message || `Berhasil! ${data.data.total_saved} kontak berhasil disimpan dari ${data.data.total_scraped} kontak yang ditemukan`
                 });
+
+                // Reload contacts after a delay
+                setTimeout(() => {
+                    router.reload({ only: ['contacts', 'stats'], preserveScroll: true });
+                }, 1000);
             } else {
                 setAlertMessage({
                     type: 'error',
                     message: data.error || 'Gagal mengambil kontak'
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Terjadi kesalahan saat mengambil kontak. Pastikan WhatsApp Gateway sedang berjalan.';
             setAlertMessage({
                 type: 'error',
-                message: 'Terjadi kesalahan saat mengambil kontak. Pastikan WhatsApp Gateway sedang berjalan.'
+                message: errorMessage
             });
         } finally {
             setIsScraping(false);
+            setScrapingProgress(0);
         }
     };
 
@@ -190,74 +229,6 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
         setSelectedSessionId(session?.id || null);
     };
 
-    // Load Meta stats and contacts when Meta tab is active
-    useEffect(() => {
-        if (activeTab === 'meta') {
-            loadMetaStats();
-        }
-    }, [activeTab]);
-
-    const loadMetaStats = async () => {
-        try {
-            const response = await axios.get('/user/scraper/meta/stats');
-            const data = response.data;
-            if (data.success) {
-                setMetaStats(data.data);
-            }
-        } catch (error) {
-            logger.error('Error loading Meta stats:', error);
-        }
-    };
-
-    const loadMetaContacts = async (platform?: string) => {
-        try {
-            const url = platform ? `/user/scraper/meta/contacts?platform=${platform}` : '/user/scraper/meta/contacts';
-            const response = await axios.get(url);
-            const data = response.data;
-            if (data.success) {
-                setMetaContacts(data.data.data);
-            }
-        } catch (error) {
-            logger.error('Error loading Meta contacts:', error);
-        }
-    };
-
-    const handleMetaScrape = async (platform: 'whatsapp' | 'facebook' | 'instagram') => {
-        setIsScrapingMeta(true);
-        setMetaPlatform(platform);
-        setMetaAlertMessage(null);
-
-        try {
-            const endpoint = platform === 'whatsapp' ? 'whatsapp-cloud' : platform;
-            const response = await axios.post(`/user/contacts/scrape/${endpoint}`);
-
-            const data = response.data;
-
-            if (data.success) {
-                setMetaAlertMessage({
-                    type: 'success',
-                    message: data.message
-                });
-                // Reload stats and contacts
-                loadMetaStats();
-                loadMetaContacts(platform);
-            } else {
-                setMetaAlertMessage({
-                    type: 'error',
-                    message: data.error || 'Gagal scraping kontak'
-                });
-            }
-        } catch (error) {
-            setMetaAlertMessage({
-                type: 'error',
-                message: 'Terjadi kesalahan saat scraping kontak.'
-            });
-        } finally {
-            setIsScrapingMeta(false);
-            setMetaPlatform(null);
-        }
-    };
-
     return (
         <UserLayout>
             <Head title="Scraping Kontak WhatsApp" />
@@ -267,26 +238,76 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent p-6 border">
                     <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
                     <div className="relative">
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                            Scraping Kontak WhatsApp
-                        </h1>
-                        <p className="text-muted-foreground mt-1">
-                            Ambil kontak dari WhatsApp Cloud API (Official Meta Business)
-                        </p>
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                                    <MessageCircle className="size-8 text-green-600" />
+                                    Scraping Kontak WhatsApp
+                                </h1>
+                                <p className="text-muted-foreground mt-1">
+                                    Ambil kontak dari WhatsApp menggunakan Baileys Gateway (Non-Official)
+                                </p>
+                            </div>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                                <Shield className="size-3 mr-1" />
+                                Baileys Gateway
+                            </Badge>
+                        </div>
                     </div>
                 </div>
+
+                {/* Session Warning */}
+                {!hasConnectedSession && (
+                    <Alert className="border-amber-300 bg-amber-50">
+                        <AlertTriangle className="size-5 text-amber-600" />
+                        <AlertTitle className="text-amber-900 font-semibold">Tidak Ada Session Terhubung</AlertTitle>
+                        <AlertDescription className="text-amber-800">
+                            Anda belum memiliki session WhatsApp yang terhubung.
+                            <Link href="/user/whatsapp" className="underline font-medium ml-1">
+                                Hubungkan session WhatsApp terlebih dahulu
+                            </Link> untuk mulai scraping kontak.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {/* Stats Cards */}
+                {stats && (
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <Card className="border-2">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground">Total Kontak</p>
+                                        <p className="text-3xl font-bold text-green-600">{stats.total_contacts.toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-green-100">
+                                        <Users className="size-8 text-green-600" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-2">
+                            <CardContent className="pt-6">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground">Kontak dengan Nama</p>
+                                        <p className="text-3xl font-bold text-blue-600">{stats.with_name.toLocaleString('id-ID')}</p>
+                                    </div>
+                                    <div className="p-3 rounded-xl bg-blue-100">
+                                        <CheckCircle2 className="size-8 text-blue-600" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
 
                 {/* Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="meta" className="flex items-center gap-2">
+                        <TabsTrigger value="whatsapp" className="flex items-center gap-2">
                             <MessageCircle className="size-4" />
                             Scraping WhatsApp
-                            {metaStats && metaStats.whatsapp > 0 && (
-                                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                                    {metaStats.whatsapp}
-                                </span>
-                            )}
                         </TabsTrigger>
                         <TabsTrigger value="import" className="flex items-center gap-2">
                             <Upload className="size-4" />
@@ -294,201 +315,173 @@ export default function ContactsScraper({ sessions, contacts, stats }: ContactsS
                         </TabsTrigger>
                     </TabsList>
 
-                    {/* Tab 1: WhatsApp Cloud API (Official) */}
-                    <TabsContent value="meta" className="space-y-6 mt-6">
-                        {/* Info Alert */}
-                        <Alert className="bg-green-50 border-green-300">
-                            <AlertDescription className="text-green-900">
-                                <p className="font-medium mb-2">Scraping Kontak dari WhatsApp Cloud API</p>
-                                <p className="text-sm">
-                                    Scraping kontak dari WhatsApp Business API (Official Meta).
-                                    Pastikan Anda sudah setup WhatsApp Business di <Link href="/user/meta/settings" className="underline font-medium">Meta Settings</Link>.
-                                </p>
-                            </AlertDescription>
-                        </Alert>
+                    {/* Tab 1: WhatsApp Baileys Scraping */}
+                    <TabsContent value="whatsapp" className="space-y-6 mt-6">
+                        {/* Scraping Card */}
+                        <Card className="overflow-hidden border-2">
+                            <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Smartphone className="size-5 text-green-600" />
+                                    Scrape Kontak dari WhatsApp
+                                </CardTitle>
+                                <CardDescription>
+                                    Ambil kontak dari store kontak, chat history, dan member group WhatsApp Anda
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Alert Messages */}
+                                {alertMessage && activeTab === 'whatsapp' && (
+                                    <Alert
+                                        className={
+                                            alertMessage.type === 'error' ? 'bg-red-50 border-red-300' :
+                                            alertMessage.type === 'warning' ? 'bg-amber-50 border-amber-300' :
+                                            'bg-green-50 border-green-300'
+                                        }
+                                    >
+                                        <AlertDescription className={`flex items-center gap-2 ${
+                                            alertMessage.type === 'error' ? 'text-red-900' :
+                                            alertMessage.type === 'warning' ? 'text-amber-900' :
+                                            'text-green-900'
+                                        }`}>
+                                            {alertMessage.type === 'success' || alertMessage.type === 'warning' ? (
+                                                <CheckCircle2 className="size-4 flex-shrink-0" />
+                                            ) : (
+                                                <XCircle className="size-4 flex-shrink-0" />
+                                            )}
+                                            <span>{alertMessage.message}</span>
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
 
-                        {/* Alert Messages */}
-                        {metaAlertMessage && (
-                            <Alert
-                                className={metaAlertMessage.type === 'error'
-                                    ? 'bg-red-50 border-red-300'
-                                    : 'bg-green-50 border-green-300'
-                                }
-                            >
-                                <AlertDescription className={`flex items-center gap-2 ${metaAlertMessage.type === 'error' ? 'text-red-900' : 'text-green-900'}`}>
-                                    {metaAlertMessage.type === 'success' ? (
-                                        <CheckCircle2 className="size-4 flex-shrink-0" />
-                                    ) : (
-                                        <XCircle className="size-4 flex-shrink-0" />
+                                {/* Scrape Result */}
+                                {scrapeResult && (
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <Card className="bg-green-50 border-green-200">
+                                            <CardContent className="pt-6">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-green-900">Total Ditemukan</p>
+                                                        <p className="text-3xl font-bold text-green-700">{scrapeResult.totalScraped}</p>
+                                                    </div>
+                                                    <Search className="size-8 text-green-600" />
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="bg-blue-50 border-blue-200">
+                                            <CardContent className="pt-6">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-blue-900">Berhasil Disimpan</p>
+                                                        <p className="text-3xl font-bold text-blue-700">{scrapeResult.totalSaved}</p>
+                                                    </div>
+                                                    <CheckCircle2 className="size-8 text-blue-600" />
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                )}
+
+                                {/* Session Selection */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Pilih WhatsApp Session</label>
+                                    <Select value={selectedSession} onValueChange={handleSessionChange} disabled={!hasConnectedSession}>
+                                        <SelectTrigger className="h-12">
+                                            <SelectValue placeholder={hasConnectedSession ? "Pilih session untuk scraping..." : "Tidak ada session terhubung"} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {connectedSessions.map((session) => (
+                                                <SelectItem key={session.id} value={session.session_id}>
+                                                    <div className="flex items-center gap-2">
+                                                        <Smartphone className="size-4 text-green-600" />
+                                                        <span className="font-medium">{session.name}</span>
+                                                        <span className="text-xs text-muted-foreground">({session.phone_number})</span>
+                                                        <Badge className="bg-green-100 text-green-700 text-xs">Connected</Badge>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {selectedSessionObj && !isSelectedSessionConnected && (
+                                        <p className="text-sm text-red-600 flex items-center gap-1">
+                                            <WifiOff className="size-3" />
+                                            Session ini tidak terhubung. Pilih session yang status-nya "connected".
+                                        </p>
                                     )}
-                                    <span>{metaAlertMessage.message}</span>
-                                </AlertDescription>
-                            </Alert>
-                        )}
+                                </div>
 
-                        <div className="grid gap-4 md:grid-cols-3">
-                            {/* WhatsApp */}
-                            <Card className="overflow-hidden border-2">
-                                <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <MessageCircle className="size-5 text-green-600" />
-                                            WhatsApp
-                                        </CardTitle>
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Cloud API</Badge>
+                                {/* Progress Bar */}
+                                {isScraping && scrapingProgress > 0 && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">Proses Scraping...</span>
+                                            <span className="font-medium">{scrapingProgress}%</span>
+                                        </div>
+                                        <Progress value={scrapingProgress} className="h-2" />
                                     </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="text-2xl font-bold">{metaStats?.whatsapp || 0} <span className="text-sm font-normal text-muted-foreground">kontak</span></div>
-                                    <Button
-                                        onClick={() => handleMetaScrape('whatsapp')}
-                                        disabled={isScrapingMeta}
-                                        className="w-full"
-                                        size="sm"
-                                        variant="outline"
-                                    >
-                                        {isScrapingMeta && metaPlatform === 'whatsapp' ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <>
-                                                <Download className="mr-2 size-4" />
-                                                Scrape WhatsApp
-                                            </>
-                                        )}
-                                    </Button>
-                                </CardContent>
-                            </Card>
+                                )}
 
-                            {/* Facebook */}
-                            <Card className="overflow-hidden border-2">
-                                <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <Facebook className="size-5 text-blue-600" />
-                                            Facebook
-                                        </CardTitle>
-                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Messenger</Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="text-2xl font-bold">{metaStats?.facebook || 0} <span className="text-sm font-normal text-muted-foreground">kontak</span></div>
-                                    <Button
-                                        onClick={() => handleMetaScrape('facebook')}
-                                        disabled={isScrapingMeta}
-                                        className="w-full"
-                                        size="sm"
-                                        variant="outline"
-                                    >
-                                        {isScrapingMeta && metaPlatform === 'facebook' ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <>
-                                                <Download className="mr-2 size-4" />
-                                                Scrape Facebook
-                                            </>
-                                        )}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-
-                            {/* Instagram */}
-                            <Card className="overflow-hidden border-2">
-                                <div className="h-1 bg-gradient-to-r from-pink-500 to-rose-500" />
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <Instagram className="size-5 text-pink-600" />
-                                            Instagram
-                                        </CardTitle>
-                                        <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">Direct</Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="text-2xl font-bold">{metaStats?.instagram || 0} <span className="text-sm font-normal text-muted-foreground">kontak</span></div>
-                                    <Button
-                                        onClick={() => handleMetaScrape('instagram')}
-                                        disabled={isScrapingMeta}
-                                        className="w-full"
-                                        size="sm"
-                                        variant="outline"
-                                    >
-                                        {isScrapingMeta && metaPlatform === 'instagram' ? (
-                                            <Loader2 className="size-4 animate-spin" />
-                                        ) : (
-                                            <>
-                                                <Download className="mr-2 size-4" />
-                                                Scrape Instagram
-                                            </>
-                                        )}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        {/* WhatsApp Contacts Table */}
-                        {metaContacts.length > 0 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Users className="size-5 text-green-600" />
-                                        Daftar Kontak WhatsApp
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Kontak yang berhasil di-scrape dari WhatsApp Cloud API
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="rounded-md border">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-muted/50">
-                                                <tr>
-                                                    <th className="px-4 py-3 text-left font-medium">Nomor WhatsApp</th>
-                                                    <th className="px-4 py-3 text-left font-medium">Nama</th>
-                                                    <th className="px-4 py-3 text-left font-medium">Username</th>
-                                                    <th className="px-4 py-3 text-left font-medium">Terakhir Chat</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {metaContacts.map((contact, index) => (
-                                                    <tr key={contact.id} className={index % 2 === 0 ? 'bg-white dark:bg-transparent' : 'bg-muted/20'}>
-                                                        <td className="px-4 py-3 font-mono text-xs">{contact.identifier}</td>
-                                                        <td className="px-4 py-3">{contact.name || '-'}</td>
-                                                        <td className="px-4 py-3">{contact.username || '-'}</td>
-                                                        <td className="px-4 py-3 text-muted-foreground text-xs">{contact.last_message_at}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                                {/* Scrape Button */}
+                                <Button
+                                    onClick={handleScrapeContacts}
+                                    disabled={isScraping || !selectedSession || !hasConnectedSession}
+                                    className="w-full h-12 text-base bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                                    size="lg"
+                                >
+                                    {isScraping ? (
+                                        <>
+                                            <Loader2 className="mr-2 size-5 animate-spin" />
+                                            Sedang scraping kontak...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="mr-2 size-5" />
+                                            Mulai Scraping Kontak
+                                        </>
+                                    )}
+                                </Button>
+                            </CardContent>
+                        </Card>
 
                         {/* How it works */}
                         <Card className="border-dashed">
                             <CardHeader>
-                                <CardTitle>Cara Kerja Scraping WhatsApp</CardTitle>
+                                <CardTitle>Cara Kerja Scraping WhatsApp (Baileys)</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                                    <li>Setup WhatsApp Business Account di <Link href="/user/meta/settings" className="underline font-medium text-primary">Meta Settings</Link></li>
-                                    <li>Klik tombol "Mulai Scraping Kontak WhatsApp"</li>
-                                    <li>Sistem akan mengambil kontak dari history percakapan WhatsApp Business Anda</li>
-                                    <li>Kontak disimpan otomatis ke database (auto-update jika sudah ada)</li>
-                                    <li>Data kontak siap digunakan untuk broadcast atau campaign</li>
-                                </ol>
-                                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                    <p className="text-sm text-amber-900">
-                                        <strong>Catatan:</strong> WhatsApp Cloud API hanya menyediakan kontak dari user yang pernah chat dengan WhatsApp Business Anda. Tidak bisa scrape semua kontak di phonebook.
-                                    </p>
+                                <div className="space-y-4">
+                                    <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                                        <li>Pastikan WhatsApp session sudah terhubung (scan QR code)</li>
+                                        <li>Pilih session yang akan digunakan untuk scraping</li>
+                                        <li>Klik tombol "Mulai Scraping Kontak"</li>
+                                        <li>Sistem akan mengambil kontak dari 3 sumber:
+                                            <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
+                                                <li><strong>Contact Store</strong> - Kontak yang tersimpan di WhatsApp</li>
+                                                <li><strong>Chat List</strong> - Kontak dari daftar chat Anda</li>
+                                                <li><strong>Group Members</strong> - Member dari semua group yang Anda ikuti</li>
+                                            </ul>
+                                        </li>
+                                        <li>Kontak disimpan otomatis ke database (auto-update jika sudah ada)</li>
+                                    </ol>
+                                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <p className="text-sm text-blue-900 font-medium mb-2">💡 Tips:</p>
+                                        <ul className="text-sm text-blue-800 space-y-1 ml-4">
+                                            <li>• Scraping dari group member akan memberikan hasil paling banyak</li>
+                                            <li>• Tunggu minimal 30 menit antara 2 scraping untuk menghindari rate limit</li>
+                                            <li>• Kontak dengan format LID akan dicoba diresolve ke nomor asli</li>
+                                        </ul>
+                                    </div>
+                                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <p className="text-sm text-amber-900">
+                                            <strong>⚠️ Peringatan:</strong> Gunakan fitur ini dengan bijak. Scraping terlalu sering dapat menyebabkan akun WhatsApp Anda diblokir oleh WhatsApp. Disarankan maksimal 3-5 kali scraping per hari.
+                                        </p>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
                     </TabsContent>
 
-                    {/* Tab 3: Import Excel */}
+                    {/* Tab 2: Import Excel */}
                     <TabsContent value="import" className="space-y-6 mt-6">
                         <Card className="overflow-hidden border-2">
                             <div className="h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
