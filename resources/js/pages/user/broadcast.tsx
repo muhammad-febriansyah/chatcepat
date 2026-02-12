@@ -45,6 +45,13 @@ interface ContactGroup {
     description: string | null;
     source: 'manual' | 'whatsapp';
     members_count: number;
+    members?: GroupMember[];
+}
+
+interface GroupMember {
+    id: number;
+    phone_number: string;
+    name: string | null;
 }
 
 interface BroadcastPageProps {
@@ -73,6 +80,11 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
     const [memberInputs, setMemberInputs] = useState<{ phone_number: string; name: string }[]>([{ phone_number: '', name: '' }]);
     const [selectedContactsForGroup, setSelectedContactsForGroup] = useState<number[]>([]);
     const [contactSearch, setContactSearch] = useState('');
+    const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+    const [loadingMembers, setLoadingMembers] = useState(false);
+    const [memberInputsForEdit, setMemberInputsForEdit] = useState<{ phone_number: string; name: string }[]>([{ phone_number: '', name: '' }]);
+    const [selectedContactsForEdit, setSelectedContactsForEdit] = useState<number[]>([]);
+    const [contactSearchForEdit, setContactSearchForEdit] = useState('');
 
     const { data, setData, post, processing, errors, reset } = useForm({
         session_id: '',
@@ -177,16 +189,27 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
     const handleCreateGroup = async (e: FormEvent) => {
         e.preventDefault();
 
+        // Validation
+        if (!groupForm.data.name || !groupForm.data.name.trim()) {
+            alert('Nama grup wajib diisi.');
+            return;
+        }
+
         try {
             // Send request with proper headers for JSON response
             const response = await axios.post('/user/contact-groups', {
-                name: groupForm.data.name,
-                description: groupForm.data.description,
+                name: groupForm.data.name.trim(),
+                description: groupForm.data.description?.trim() || null,
             }, {
                 headers: {
                     'Accept': 'application/json',
                 },
             });
+
+            // Validate response
+            if (!response.data || !response.data.group) {
+                throw new Error('Invalid response from server');
+            }
 
             // Get the created group from response (safe for SaaS - no ambiguity)
             const createdGroup = response.data.group as ContactGroup;
@@ -199,33 +222,190 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
 
                 // Open add members dialog for the new group
                 setShowAddMembersDialog(true);
+            }, onError: () => {
+                alert('Gagal memuat ulang data grup. Silakan refresh halaman.');
             }});
-        } catch (error) {
-            console.error('Failed to create group:', error);
-            alert('Gagal membuat grup. Silakan coba lagi.');
+        } catch (error: any) {
+            logger.error('Failed to create group:', error);
+
+            // Get detailed error message
+            const errorMsg = error.response?.data?.message
+                || error.response?.data?.error
+                || error.message
+                || 'Gagal membuat grup. Silakan coba lagi.';
+
+            alert(errorMsg);
+
+            // Reset form on validation errors
+            if (error.response?.status === 422) {
+                const errors = error.response?.data?.errors;
+                if (errors?.name) {
+                    alert(`Error: ${errors.name[0]}`);
+                }
+            }
         }
     };
 
     const handleEditGroup = (e: FormEvent) => {
         e.preventDefault();
-        if (!selectedGroupForEdit) return;
+        if (!selectedGroupForEdit) {
+            alert('Grup tidak ditemukan. Silakan refresh halaman.');
+            return;
+        }
+
         editGroupForm.put(`/user/contact-groups/${selectedGroupForEdit.id}`, {
             onSuccess: () => {
-                setShowEditGroupDialog(false);
-                setSelectedGroupForEdit(null);
-                editGroupForm.reset();
-                router.reload({ only: ['contactGroups'] });
+                // Don't close dialog, just show success
+                alert('Informasi grup berhasil diperbarui');
+                router.reload({ only: ['contactGroups'], preserveScroll: true });
+            },
+            onError: (errors) => {
+                const errorMsg = errors.name || errors.description || 'Gagal memperbarui grup. Silakan coba lagi.';
+                alert(errorMsg);
             },
         });
     };
 
-    const openEditGroupDialog = (group: ContactGroup) => {
+    const openEditGroupDialog = async (group: ContactGroup) => {
+        if (!group || !group.id) {
+            alert('Grup tidak valid. Silakan refresh halaman.');
+            return;
+        }
+
         setSelectedGroupForEdit(group);
         editGroupForm.setData({
             name: group.name,
             description: group.description || '',
         });
+
+        // Reset states
+        setMemberInputsForEdit([{ phone_number: '', name: '' }]);
+        setSelectedContactsForEdit([]);
+        setContactSearchForEdit('');
+
+        // Fetch group members
+        setLoadingMembers(true);
+        try {
+            const response = await axios.get(`/user/contact-groups/${group.id}/members`);
+            setGroupMembers(response.data?.members || []);
+        } catch (error: any) {
+            logger.error('Failed to fetch group members:', error);
+            setGroupMembers([]);
+
+            // Show error but still open dialog
+            const errorMsg = error.response?.data?.message || 'Gagal memuat anggota grup. Coba refresh halaman.';
+            console.error(errorMsg);
+        } finally {
+            setLoadingMembers(false);
+        }
+
         setShowEditGroupDialog(true);
+    };
+
+    const handleRemoveMemberFromEdit = async (memberId: number) => {
+        if (!selectedGroupForEdit) {
+            alert('Grup tidak ditemukan. Silakan refresh halaman.');
+            return;
+        }
+
+        if (!confirm('Hapus anggota ini dari grup?')) return;
+
+        try {
+            await axios.delete(`/user/contact-groups/${selectedGroupForEdit.id}/members/${memberId}`);
+            // Remove from local state immediately for better UX
+            setGroupMembers(prev => prev.filter(m => m.id !== memberId));
+            // Reload contactGroups to update members_count
+            router.reload({ only: ['contactGroups'], preserveScroll: true });
+        } catch (error: any) {
+            logger.error('Failed to remove member:', error);
+
+            // Restore member to local state if delete failed
+            const errorMsg = error.response?.data?.message || error.message || 'Gagal menghapus anggota. Silakan coba lagi.';
+            alert(errorMsg);
+
+            // Refresh member list to get accurate state
+            if (selectedGroupForEdit) {
+                try {
+                    const response = await axios.get(`/user/contact-groups/${selectedGroupForEdit.id}/members`);
+                    setGroupMembers(response.data.members || []);
+                } catch (refreshError) {
+                    logger.error('Failed to refresh members:', refreshError);
+                }
+            }
+        }
+    };
+
+    const handleAddMembersToEditGroup = async (e: FormEvent) => {
+        e.preventDefault();
+
+        if (!selectedGroupForEdit) {
+            alert('Grup tidak ditemukan. Silakan refresh halaman.');
+            return;
+        }
+
+        let members: { phone_number: string; name: string }[] = [];
+
+        // Get selected contacts from database
+        if (selectedContactsForEdit.length > 0) {
+            const contactMembers = selectedContactsForEdit.map(contactId => {
+                const contact = contacts.find(c => c.id === contactId);
+                return {
+                    phone_number: contact?.phone_number || '',
+                    name: contact?.name || '',
+                };
+            }).filter(m => m.phone_number);
+            members = [...members, ...contactMembers];
+        }
+
+        // Get valid manual inputs and normalize phone numbers
+        const validInputs = memberInputsForEdit.filter(m => m.phone_number.trim());
+        if (validInputs.length > 0) {
+            const manualMembers = validInputs.map(m => ({
+                phone_number: normalizePhoneNumber(m.phone_number),
+                name: m.name || '',
+            }));
+            members = [...members, ...manualMembers];
+        }
+
+        if (members.length === 0) {
+            alert('Pilih kontak atau masukkan minimal satu nomor telepon.');
+            return;
+        }
+
+        try {
+            const response = await axios.post(`/user/contact-groups/${selectedGroupForEdit.id}/members`, { members });
+
+            // Show success message
+            const message = response.data?.message || `Berhasil menambahkan ${members.length} anggota`;
+            alert(message);
+
+            // Refresh members list
+            try {
+                const membersResponse = await axios.get(`/user/contact-groups/${selectedGroupForEdit.id}/members`);
+                setGroupMembers(membersResponse.data.members || []);
+            } catch (refreshError) {
+                logger.error('Failed to refresh members:', refreshError);
+                // Still reset form even if refresh fails
+            }
+
+            // Reset form
+            setMemberInputsForEdit([{ phone_number: '', name: '' }]);
+            setSelectedContactsForEdit([]);
+            setContactSearchForEdit('');
+
+            // Reload contactGroups to update members_count
+            router.reload({ only: ['contactGroups'], preserveScroll: true });
+        } catch (error: any) {
+            logger.error('Failed to add members:', error);
+
+            // Get detailed error message
+            const errorMsg = error.response?.data?.message
+                || error.response?.data?.error
+                || error.message
+                || 'Gagal menambahkan anggota. Silakan coba lagi.';
+
+            alert(errorMsg);
+        }
     };
 
     const deduplicateRecipients = (recipientList: string[]): string[] => {
@@ -317,16 +497,26 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
 
     // Helper function to normalize phone number to 62xxx format
     const normalizePhoneNumber = (phone: string): string => {
+        if (!phone || typeof phone !== 'string') {
+            return '';
+        }
+
         // Remove all non-digit characters
         let cleaned = phone.replace(/\D/g, '');
+
+        // Return empty if no digits
+        if (!cleaned) {
+            return '';
+        }
 
         // Convert various formats to 62xxx
         if (cleaned.startsWith('0')) {
             cleaned = '62' + cleaned.substring(1);
         } else if (cleaned.startsWith('8')) {
             cleaned = '62' + cleaned;
-        } else if (cleaned.startsWith('+62')) {
-            cleaned = cleaned.substring(1);
+        } else if (!cleaned.startsWith('62')) {
+            // If doesn't start with 62, 0, or 8, assume it needs 62 prefix
+            cleaned = '62' + cleaned;
         }
 
         return cleaned;
@@ -365,7 +555,12 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
 
     const handleAddMembers = (e: FormEvent) => {
         e.preventDefault();
-        if (!newlyCreatedGroup) return;
+
+        if (!newlyCreatedGroup) {
+            alert('Grup tidak ditemukan. Silakan coba lagi.');
+            setShowAddMembersDialog(false);
+            return;
+        }
 
         let members: { phone_number: string; name: string }[] = [];
 
@@ -392,7 +587,12 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
         }
 
         if (members.length === 0) {
-            alert('Pilih kontak atau masukkan minimal satu nomor telepon.');
+            // Allow skipping - user can add members later
+            setShowAddMembersDialog(false);
+            setNewlyCreatedGroup(null);
+            setMemberInputs([{ phone_number: '', name: '' }]);
+            setSelectedContactsForGroup([]);
+            setContactSearch('');
             return;
         }
 
@@ -406,7 +606,11 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                 setMemberInputs([{ phone_number: '', name: '' }]);
                 setSelectedContactsForGroup([]);
                 setContactSearch('');
-                router.reload({ only: ['contactGroups'] });
+                router.reload({ only: ['contactGroups'], preserveScroll: true });
+            },
+            onError: (errors: any) => {
+                const errorMsg = errors?.members || errors?.message || 'Gagal menambahkan anggota. Silakan coba lagi.';
+                alert(errorMsg);
             },
         });
     };
@@ -420,6 +624,47 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
             (c.name && c.name.toLowerCase().includes(search))
         );
     }, [contacts, contactSearch]);
+
+    const filteredContactsForEdit = useMemo(() => {
+        if (!contactSearchForEdit.trim()) return contacts;
+
+        const search = contactSearchForEdit.toLowerCase();
+        return contacts.filter(c =>
+            c.phone_number.includes(search) ||
+            (c.name && c.name.toLowerCase().includes(search))
+        );
+    }, [contacts, contactSearchForEdit]);
+
+    const toggleContactSelectionForEdit = (contactId: number) => {
+        setSelectedContactsForEdit(prev =>
+            prev.includes(contactId)
+                ? prev.filter(id => id !== contactId)
+                : [...prev, contactId]
+        );
+    };
+
+    const toggleSelectAllForEdit = () => {
+        const filtered = filteredContactsForEdit;
+        if (selectedContactsForEdit.length === filtered.length && filtered.length > 0) {
+            setSelectedContactsForEdit([]);
+        } else {
+            setSelectedContactsForEdit(filtered.map(c => c.id));
+        }
+    };
+
+    const addMemberInputForEdit = () => {
+        setMemberInputsForEdit([...memberInputsForEdit, { phone_number: '', name: '' }]);
+    };
+
+    const removeMemberInputForEdit = (index: number) => {
+        setMemberInputsForEdit(memberInputsForEdit.filter((_, i) => i !== index));
+    };
+
+    const updateMemberInputForEdit = (index: number, field: 'phone_number' | 'name', value: string) => {
+        const newInputs = [...memberInputsForEdit];
+        newInputs[index][field] = value;
+        setMemberInputsForEdit(newInputs);
+    };
 
     return (
         <UserLayout>
@@ -966,49 +1211,289 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                 </DialogContent>
             </Dialog>
 
-            {/* Edit Group Dialog */}
-            <Dialog open={showEditGroupDialog} onOpenChange={setShowEditGroupDialog}>
-                <DialogContent>
-                    <form onSubmit={handleEditGroup}>
-                        <DialogHeader>
-                            <DialogTitle>Edit Grup</DialogTitle>
-                            <DialogDescription>
-                                Ubah nama atau deskripsi grup
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4 space-y-4">
-                            <div>
-                                <Label htmlFor="edit-group-name">Nama Grup</Label>
-                                <Input
-                                    id="edit-group-name"
-                                    value={editGroupForm.data.name}
-                                    onChange={(e) => editGroupForm.setData('name', e.target.value)}
-                                    className="mt-2"
-                                />
-                                {editGroupForm.errors.name && (
-                                    <p className="text-sm text-destructive mt-1">{editGroupForm.errors.name}</p>
+            {/* Edit Group Dialog - Comprehensive */}
+            <Dialog open={showEditGroupDialog} onOpenChange={(open) => {
+                setShowEditGroupDialog(open);
+                if (!open) {
+                    // Reset state when closing
+                    setGroupMembers([]);
+                    setMemberInputsForEdit([{ phone_number: '', name: '' }]);
+                    setSelectedContactsForEdit([]);
+                    setContactSearchForEdit('');
+                }
+            }}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Edit className="size-5 text-primary" />
+                            Kelola Grup: {selectedGroupForEdit?.name}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Edit informasi grup dan kelola anggota grup
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-4">
+                        {/* Section 1: Edit Grup Info */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Informasi Grup</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleEditGroup} className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="edit-group-name">Nama Grup</Label>
+                                        <Input
+                                            id="edit-group-name"
+                                            value={editGroupForm.data.name}
+                                            onChange={(e) => editGroupForm.setData('name', e.target.value)}
+                                            className="mt-2"
+                                        />
+                                        {editGroupForm.errors.name && (
+                                            <p className="text-sm text-destructive mt-1">{editGroupForm.errors.name}</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="edit-group-description">Deskripsi (Opsional)</Label>
+                                        <Textarea
+                                            id="edit-group-description"
+                                            value={editGroupForm.data.description}
+                                            onChange={(e) => editGroupForm.setData('description', e.target.value)}
+                                            className="mt-2"
+                                            rows={2}
+                                        />
+                                    </div>
+                                    <Button type="submit" disabled={editGroupForm.processing} size="sm">
+                                        {editGroupForm.processing ? 'Menyimpan...' : 'Simpan Info Grup'}
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+
+                        {/* Section 2: Anggota Grup */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base flex items-center justify-between">
+                                    <span>Anggota Grup ({groupMembers.length})</span>
+                                    <Badge variant="outline">{selectedGroupForEdit?.source === 'manual' ? 'Manual' : 'WhatsApp'}</Badge>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {loadingMembers ? (
+                                    <div className="text-center py-6">
+                                        <p className="text-sm text-muted-foreground">Memuat anggota...</p>
+                                    </div>
+                                ) : groupMembers.length === 0 ? (
+                                    <div className="text-center py-6 border rounded-lg bg-muted/50">
+                                        <Users2 className="size-10 mx-auto text-muted-foreground mb-2" />
+                                        <p className="text-sm text-muted-foreground">Belum ada anggota</p>
+                                    </div>
+                                ) : (
+                                    <ScrollArea className="h-48 border rounded-lg p-3">
+                                        <div className="space-y-2">
+                                            {groupMembers.map((member) => (
+                                                <div
+                                                    key={member.id}
+                                                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-mono text-sm">{member.phone_number}</p>
+                                                        {member.name && (
+                                                            <p className="text-xs text-muted-foreground truncate">{member.name}</p>
+                                                        )}
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 w-7 p-0"
+                                                        onClick={() => handleRemoveMemberFromEdit(member.id)}
+                                                    >
+                                                        <X className="size-4 text-destructive" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
                                 )}
-                            </div>
-                            <div>
-                                <Label htmlFor="edit-group-description">Deskripsi (Opsional)</Label>
-                                <Textarea
-                                    id="edit-group-description"
-                                    value={editGroupForm.data.description}
-                                    onChange={(e) => editGroupForm.setData('description', e.target.value)}
-                                    className="mt-2"
-                                    rows={3}
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setShowEditGroupDialog(false)}>
-                                Batal
-                            </Button>
-                            <Button type="submit" disabled={editGroupForm.processing}>
-                                {editGroupForm.processing ? 'Menyimpan...' : 'Simpan'}
-                            </Button>
-                        </DialogFooter>
-                    </form>
+                            </CardContent>
+                        </Card>
+
+                        {/* Section 3: Tambah Anggota */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Tambah Anggota Baru</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <form onSubmit={handleAddMembersToEditGroup} className="space-y-4">
+                                    {/* Pilih dari Kontak */}
+                                    {contacts.length > 0 && (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-sm font-medium flex items-center gap-2">
+                                                    <Database className="size-4" />
+                                                    Pilih dari Kontak
+                                                </Label>
+                                                {selectedContactsForEdit.length > 0 && (
+                                                    <Badge variant="default" className="text-xs">
+                                                        {selectedContactsForEdit.length} dipilih
+                                                    </Badge>
+                                                )}
+                                            </div>
+
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Cari nama atau nomor..."
+                                                    value={contactSearchForEdit}
+                                                    onChange={(e) => setContactSearchForEdit(e.target.value)}
+                                                    className="pl-9 h-9"
+                                                />
+                                            </div>
+
+                                            <div
+                                                className="flex items-center gap-2 cursor-pointer"
+                                                onClick={toggleSelectAllForEdit}
+                                            >
+                                                <div
+                                                    className={`h-4 w-4 rounded border flex items-center justify-center ${selectedContactsForEdit.length === filteredContactsForEdit.length && filteredContactsForEdit.length > 0
+                                                        ? 'bg-primary border-primary'
+                                                        : 'border-input'
+                                                        }`}
+                                                >
+                                                    {selectedContactsForEdit.length === filteredContactsForEdit.length && filteredContactsForEdit.length > 0 && (
+                                                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <span className="text-sm text-muted-foreground">Pilih Semua</span>
+                                            </div>
+
+                                            <ScrollArea className="h-32 border rounded-lg">
+                                                <div className="p-1.5 space-y-0.5">
+                                                    {filteredContactsForEdit.length === 0 ? (
+                                                        <p className="text-center text-muted-foreground py-6 text-sm">
+                                                            Tidak ada kontak ditemukan
+                                                        </p>
+                                                    ) : (
+                                                        filteredContactsForEdit.map((contact) => {
+                                                            const isSelected = selectedContactsForEdit.includes(contact.id);
+                                                            return (
+                                                                <div
+                                                                    key={contact.id}
+                                                                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded cursor-pointer hover:bg-muted/50 transition-colors ${isSelected ? 'bg-primary/10' : ''}`}
+                                                                    onClick={() => toggleContactSelectionForEdit(contact.id)}
+                                                                >
+                                                                    <div
+                                                                        className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary border-primary' : 'border-input'}`}
+                                                                    >
+                                                                        {isSelected && (
+                                                                            <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                            </svg>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="font-medium truncate text-sm leading-tight">{contact.name}</p>
+                                                                        <p className="text-xs text-muted-foreground font-mono leading-tight">
+                                                                            {contact.phone_number}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+                                            </ScrollArea>
+                                        </div>
+                                    )}
+
+                                    {/* Divider */}
+                                    {contacts.length > 0 && (
+                                        <div className="relative py-1">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <span className="w-full border-t" />
+                                            </div>
+                                            <div className="relative flex justify-center text-xs">
+                                                <span className="bg-background px-3 text-muted-foreground">atau</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Input Manual */}
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium flex items-center gap-2">
+                                            <Phone className="size-4" />
+                                            Input Manual
+                                        </Label>
+
+                                        <div className="space-y-2">
+                                            {memberInputsForEdit.map((input, index) => (
+                                                <div key={index} className="flex gap-2 items-start p-2 border rounded-lg bg-muted/30">
+                                                    <div className="flex-1 space-y-2">
+                                                        <Input
+                                                            placeholder="Nomor: 08123456789"
+                                                            value={input.phone_number}
+                                                            onChange={(e) => updateMemberInputForEdit(index, 'phone_number', e.target.value)}
+                                                            className="h-8"
+                                                        />
+                                                        <Input
+                                                            placeholder="Nama (opsional)"
+                                                            value={input.name}
+                                                            onChange={(e) => updateMemberInputForEdit(index, 'name', e.target.value)}
+                                                            className="h-8"
+                                                        />
+                                                    </div>
+                                                    {memberInputsForEdit.length > 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="shrink-0 h-8 w-8"
+                                                            onClick={() => removeMemberInputForEdit(index)}
+                                                        >
+                                                            <X className="size-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={addMemberInputForEdit}
+                                            className="w-full h-8"
+                                        >
+                                            <Plus className="mr-1.5 size-3.5" />
+                                            Tambah Nomor
+                                        </Button>
+
+                                        <p className="text-xs text-muted-foreground">
+                                            Format 08xxx otomatis dikonversi ke 628xxx
+                                        </p>
+                                    </div>
+
+                                    <Button type="submit" size="sm" className="w-full">
+                                        <UserPlus className="mr-2 size-4" />
+                                        Tambah Anggota
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowEditGroupDialog(false)}
+                        >
+                            Tutup
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 

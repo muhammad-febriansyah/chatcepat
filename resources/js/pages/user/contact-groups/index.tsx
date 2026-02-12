@@ -28,9 +28,19 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Users, Trash2, Edit2, UserPlus, RefreshCw, Phone, X, FolderPlus, Search, Database, Send, Users2 } from 'lucide-react';
+import { Plus, Users, Trash2, Edit2, UserPlus, RefreshCw, Phone, X, FolderPlus, Search, Database, Send, Users2, MoreHorizontal } from 'lucide-react';
 import { useState, FormEvent, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DataTable } from '@/components/ui/data-table';
+import { ColumnDef } from '@tanstack/react-table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface WhatsAppSession {
     id: number;
@@ -84,6 +94,122 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
     const [memberSearch, setMemberSearch] = useState('');
     const [bulkDeleting, setBulkDeleting] = useState(false);
 
+    // Define columns for DataTable
+    const columns: ColumnDef<ContactGroup>[] = [
+        {
+            accessorKey: 'name',
+            header: 'Nama Grup',
+            cell: ({ row }) => {
+                const group = row.original;
+                return (
+                    <div className="flex items-center gap-2">
+                        <Users className="size-4 text-primary" />
+                        <div>
+                            <p className="font-medium">{group.name}</p>
+                            {group.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                    {group.description}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'source',
+            header: 'Sumber',
+            cell: ({ row }) => {
+                const source = row.original.source;
+                return (
+                    <Badge variant={source === 'manual' ? 'default' : 'secondary'}>
+                        {source === 'manual' ? 'Manual' : 'WhatsApp'}
+                    </Badge>
+                );
+            },
+        },
+        {
+            accessorKey: 'members_count',
+            header: 'Anggota',
+            cell: ({ row }) => {
+                const count = row.original.members_count;
+                return (
+                    <div className="flex items-center gap-2">
+                        <Phone className="size-4 text-muted-foreground" />
+                        <span>{count} anggota</span>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'created_at',
+            header: 'Dibuat',
+            cell: ({ row }) => {
+                const date = new Date(row.original.created_at);
+                return (
+                    <span className="text-sm text-muted-foreground">
+                        {date.toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                        })}
+                    </span>
+                );
+            },
+        },
+        {
+            id: 'actions',
+            header: 'Aksi',
+            cell: ({ row }) => {
+                const group = row.original;
+                return (
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 gap-1"
+                            onClick={() => openAddMembersDialog(group)}
+                        >
+                            <UserPlus className="size-3.5" />
+                            Tambah
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 gap-1"
+                            onClick={() => openMembersDialog(group)}
+                        >
+                            <Users2 className="size-3.5" />
+                            Kelola ({group.members_count})
+                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="size-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => openEditDialog(group)}>
+                                    <Edit2 className="mr-2 size-4" />
+                                    Edit Grup
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDeleteGroup(group.id, group.name)}
+                                >
+                                    <Trash2 className="mr-2 size-4" />
+                                    Hapus Grup
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            },
+        },
+    ];
+
     // Filter contacts based on search
     const filteredContacts = useMemo(() => {
         if (!contactSearch.trim()) return contacts;
@@ -130,8 +256,10 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
         });
     };
 
-    const handleDeleteGroup = (groupId: number) => {
-        router.delete(`/user/contact-groups/${groupId}`);
+    const handleDeleteGroup = (groupId: number, groupName: string) => {
+        if (confirm(`Apakah Anda yakin ingin menghapus grup "${groupName}"? Semua anggota grup akan dihapus. Tindakan ini tidak dapat dibatalkan.`)) {
+            router.delete(`/user/contact-groups/${groupId}`);
+        }
     };
 
     // Helper function to normalize phone number to 62xxx format
@@ -452,149 +580,29 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                             Daftar Grup Kontak
                         </CardTitle>
                         <CardDescription>
-                            Kelola grup kontak Anda di sini
+                            Kelola grup kontak Anda di sini. Total: {groups.length} grup
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-
-                        {/* Groups List */}
                         {groups.length === 0 ? (
-                            <Card>
-                                <CardContent className="pt-6">
-                                    <div className="flex flex-col items-center justify-center py-12">
-                                        <Users className="size-16 text-muted-foreground mb-4" />
-                                        <h3 className="text-xl font-semibold mb-2">Belum Ada Grup</h3>
-                                        <p className="text-muted-foreground text-center mb-4">
-                                            Buat grup kontak untuk mengorganisir penerima broadcast Anda
-                                        </p>
-                                        <Button onClick={() => setShowCreateDialog(true)}>
-                                            <Plus className="mr-2 size-4" />
-                                            Buat Grup Pertama
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {groups.map((group) => (
-                                    <Card key={group.id} className="flex flex-col">
-                                        <CardHeader>
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <CardTitle className="flex items-center gap-2">
-                                                        <Users className="size-5 text-primary" />
-                                                        {group.name}
-                                                    </CardTitle>
-                                                    {group.description && (
-                                                        <CardDescription className="mt-1">
-                                                            {group.description}
-                                                        </CardDescription>
-                                                    )}
-                                                </div>
-                                                <Badge variant={group.source === 'manual' ? 'default' : 'secondary'}>
-                                                    {group.source === 'manual' ? 'Manual' : 'WhatsApp'}
-                                                </Badge>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="flex-1">
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                                                <Phone className="size-4" />
-                                                <span>{group.members_count} anggota</span>
-                                            </div>
-
-                                            {/* Members Preview */}
-                                            {group.members.length > 0 && (
-                                                <div className="space-y-2 mb-4">
-                                                    <p className="text-xs font-medium text-muted-foreground">Anggota:</p>
-                                                    <div className="max-h-32 overflow-y-auto space-y-1">
-                                                        {group.members.slice(0, 5).map((member) => (
-                                                            <div
-                                                                key={member.id}
-                                                                className="flex items-center justify-between text-sm bg-muted/50 rounded px-2 py-1"
-                                                            >
-                                                                <div className="flex-1 min-w-0">
-                                                                    <span className="font-mono text-xs">{member.phone_number}</span>
-                                                                    {member.name && (
-                                                                        <span className="text-muted-foreground ml-2 text-xs">
-                                                                            ({member.name})
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-6 w-6 p-0 shrink-0"
-                                                                    onClick={() => handleRemoveMember(group.id, member.id)}
-                                                                >
-                                                                    <X className="size-3" />
-                                                                </Button>
-                                                            </div>
-                                                        ))}
-                                                        {group.members.length > 5 && (
-                                                            <p className="text-xs text-muted-foreground text-center">
-                                                                +{group.members.length - 5} anggota lainnya
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Actions */}
-                                            <div className="flex gap-2 mt-auto pt-4 border-t">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() => openAddMembersDialog(group)}
-                                                >
-                                                    <UserPlus className="mr-1 size-4" />
-                                                    Tambah
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="flex-1"
-                                                    onClick={() => openMembersDialog(group)}
-                                                >
-                                                    <Users2 className="mr-1 size-4" />
-                                                    Kelola ({group.members_count})
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => openEditDialog(group)}
-                                                >
-                                                    <Edit2 className="size-4" />
-                                                </Button>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="outline" size="sm">
-                                                            <Trash2 className="size-4 text-destructive" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Hapus Grup?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                Grup "{group.name}" dan semua anggotanya akan dihapus. Tindakan ini tidak dapat dibatalkan.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                            <AlertDialogAction
-                                                                onClick={() => handleDeleteGroup(group.id)}
-                                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                            >
-                                                                Hapus
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                            <div className="flex flex-col items-center justify-center py-12">
+                                <Users className="size-16 text-muted-foreground mb-4" />
+                                <h3 className="text-xl font-semibold mb-2">Belum Ada Grup</h3>
+                                <p className="text-muted-foreground text-center mb-4">
+                                    Buat grup kontak untuk mengorganisir penerima broadcast Anda
+                                </p>
+                                <Button onClick={() => setShowCreateDialog(true)}>
+                                    <Plus className="mr-2 size-4" />
+                                    Buat Grup Pertama
+                                </Button>
                             </div>
+                        ) : (
+                            <DataTable
+                                columns={columns}
+                                data={groups}
+                                searchKey="name"
+                                searchPlaceholder="Cari nama grup..."
+                            />
                         )}
                     </CardContent>
                 </Card>

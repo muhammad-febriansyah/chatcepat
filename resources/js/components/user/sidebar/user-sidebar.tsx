@@ -80,7 +80,8 @@ export function UserSidebar() {
 
     // Determine which sections should be open based on active URL
     const isScrapingActive = isAnyActive(['/user/scraper'])
-    const isBroadcastActive = isAnyActive(['/user/broadcast', '/user/contact-groups', '/user/email-broadcast'])
+    const isContactGroupsActive = isAnyActive(['/user/contact-groups'])
+    const isBroadcastActive = isAnyActive(['/user/broadcast', '/user/email-broadcast'])
     const isChatbotActive = isAnyActive(['/user/chatbot', '/user/reply-manual'])
     const isPlatformsActive = isAnyActive(['/user/whatsapp'])
     const isTemplatesActive = isAnyActive(['/user/templates', '/user/products'])
@@ -391,6 +392,27 @@ export function UserSidebar() {
                                 </SidebarMenuItem>
                             </Collapsible>
 
+                            {/* Kelola Grup */}
+                            <SidebarMenuItem>
+                                {hasFeature('broadcast_wa') || hasFeature('broadcast_group') ? (
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isContactGroupsActive}
+                                        className={cn(
+                                            'h-10 rounded-lg',
+                                            isContactGroupsActive && 'bg-primary/10 text-primary font-semibold'
+                                        )}
+                                    >
+                                        <Link href="/user/contact-groups">
+                                            <Users className="size-5" />
+                                            <span>Kelola Grup</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                ) : (
+                                    <LockedMenuButton icon={Users} label="Kelola Grup" />
+                                )}
+                            </SidebarMenuItem>
+
                             {/* Broadcast Pesan */}
                             <Collapsible
                                 open={openSections.broadcast}
@@ -457,12 +479,12 @@ export function UserSidebar() {
                                                 {hasFeature('broadcast_wa') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={isActive('/user/broadcast/email', true)}
+                                                        isActive={isActive('/user/email-broadcast', true)}
                                                         className={cn(
-                                                            isActive('/user/broadcast/email', true) && 'bg-primary/10 text-primary font-semibold'
+                                                            isActive('/user/email-broadcast', true) && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
-                                                        <Link href="/user/broadcast/email">
+                                                        <Link href="/user/email-broadcast">
                                                             <Mail className="size-4 text-red-500" />
                                                             <span>Broadcast Email</span>
                                                         </Link>
@@ -832,10 +854,10 @@ export function UserSidebar() {
                                 {hasFeature('master_data') ? (
                                     <SidebarMenuButton
                                         asChild
-                                        isActive={isActive('/user/contacts') || isActive('/user/contact-groups')}
+                                        isActive={isActive('/user/contacts')}
                                         className={cn(
                                             'h-10 rounded-lg',
-                                            (isActive('/user/contacts') || isActive('/user/contact-groups')) && 'bg-primary/10 text-primary font-semibold'
+                                            isActive('/user/contacts') && 'bg-primary/10 text-primary font-semibold'
                                         )}
                                     >
                                         <Link href="/user/contacts">

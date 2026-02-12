@@ -18,6 +18,35 @@ use Illuminate\Support\Facades\DB;
 
 class ContactGroupController extends Controller
 {
+    public function __construct()
+    {
+        // Check if user has broadcast feature (wa or group)
+        $this->middleware(function ($request, $next) {
+            $user = auth()->user();
+
+            // Admin always has access
+            if ($user && $user->role === 'admin') {
+                return $next($request);
+            }
+
+            // Check if user has active subscription with broadcast features
+            $subscription = $user ? $user->getActiveSubscription() : null;
+
+            if (!$subscription) {
+                return redirect()->route('user.topup')->with('error', 'Anda perlu berlangganan untuk mengakses fitur Kelola Grup.');
+            }
+
+            $featureKeys = $subscription['feature_keys'] ?? [];
+            $hasAccess = in_array('broadcast_wa', $featureKeys) || in_array('broadcast_group', $featureKeys);
+
+            if (!$hasAccess) {
+                return redirect()->route('user.topup')->with('error', 'Paket Anda tidak memiliki akses ke fitur Kelola Grup. Upgrade paket Anda untuk menggunakan fitur ini.');
+            }
+
+            return $next($request);
+        });
+    }
+
     private function gatewayUrl(): string
     {
         return config('services.whatsapp_gateway.url', 'http://localhost:3000');
