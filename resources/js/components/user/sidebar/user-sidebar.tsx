@@ -80,14 +80,15 @@ export function UserSidebar() {
 
     // Determine which sections should be open based on active URL
     const isScrapingActive = isAnyActive(['/user/scraper'])
-    const isContactGroupsActive = isAnyActive(['/user/contact-groups'])
+    const isContactGroupsActive = isAnyActive(['/user/contact-groups', '/user/contacts'])
     const isBroadcastActive = isAnyActive(['/user/broadcast', '/user/email-broadcast'])
     const isChatbotActive = isAnyActive(['/user/chatbot', '/user/reply-manual'])
-    const isPlatformsActive = isAnyActive(['/user/whatsapp'])
+    const isPlatformsActive = isAnyActive(['/user/whatsapp', '/user/crm-chat/connect/whatsapp', '/user/crm-chat/connect/instagram', '/user/crm-chat/connect/messenger', '/user/meta/settings', '/user/meta/messenger', '/user/meta/instagram'])
     const isTemplatesActive = isAnyActive(['/user/templates', '/user/products'])
 
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({
         scraping: isScrapingActive,
+        contactGroups: isContactGroupsActive,
         broadcast: isBroadcastActive,
         chatbot: isChatbotActive,
         platforms: isPlatformsActive,
@@ -392,26 +393,65 @@ export function UserSidebar() {
                                 </SidebarMenuItem>
                             </Collapsible>
 
-                            {/* Kelola Grup */}
-                            <SidebarMenuItem>
-                                {hasFeature('broadcast_wa') || hasFeature('broadcast_group') ? (
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={isContactGroupsActive}
-                                        className={cn(
-                                            'h-10 rounded-lg',
-                                            isContactGroupsActive && 'bg-primary/10 text-primary font-semibold'
-                                        )}
-                                    >
-                                        <Link href="/user/contact-groups">
+                            {/* Kontak & Grup */}
+                            <Collapsible
+                                open={openSections.contactGroups}
+                                onOpenChange={() => toggleSection('contactGroups')}
+                            >
+                                <SidebarMenuItem>
+                                    <CollapsibleTrigger asChild>
+                                        <SidebarMenuButton
+                                            isActive={isContactGroupsActive}
+                                            className={cn(
+                                                'h-10 rounded-lg',
+                                                isContactGroupsActive && 'bg-primary/10 text-primary font-semibold',
+                                                !hasFeature('broadcast_wa') && !hasFeature('broadcast_group') && 'opacity-50'
+                                            )}
+                                        >
                                             <Users className="size-5" />
-                                            <span>Kelola Grup</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                ) : (
-                                    <LockedMenuButton icon={Users} label="Kelola Grup" />
-                                )}
-                            </SidebarMenuItem>
+                                            <span>Kontak & Grup</span>
+                                            <ChevronRight
+                                                className={cn(
+                                                    'ml-auto size-4 transition-transform',
+                                                    openSections.contactGroups && 'rotate-90'
+                                                )}
+                                            />
+                                        </SidebarMenuButton>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                        <SidebarMenuSub>
+                                            <SidebarMenuSubItem>
+                                                <SidebarMenuSubButton
+                                                    asChild
+                                                    isActive={isActive('/user/contacts', true)}
+                                                    className={cn(
+                                                        isActive('/user/contacts', true) && 'bg-primary/10 text-primary font-semibold'
+                                                    )}
+                                                >
+                                                    <Link href="/user/contacts">
+                                                        <User className="size-4 text-blue-500" />
+                                                        <span>Kontak</span>
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                            <SidebarMenuSubItem>
+                                                <SidebarMenuSubButton
+                                                    asChild
+                                                    isActive={isActive('/user/contact-groups', true)}
+                                                    className={cn(
+                                                        isActive('/user/contact-groups', true) && 'bg-primary/10 text-primary font-semibold'
+                                                    )}
+                                                >
+                                                    <Link href="/user/contact-groups">
+                                                        <Users className="size-4 text-green-600" />
+                                                        <span>Grup</span>
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                        </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                </SidebarMenuItem>
+                            </Collapsible>
 
                             {/* Broadcast Pesan */}
                             <Collapsible
@@ -675,12 +715,12 @@ export function UserSidebar() {
                                                 {hasFeature('platforms') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={url.startsWith('/user/meta/settings')}
+                                                        isActive={url.startsWith('/user/crm-chat/connect/whatsapp')}
                                                         className={cn(
-                                                            url.startsWith('/user/meta/settings') && 'bg-primary/10 text-primary font-semibold'
+                                                            url.startsWith('/user/crm-chat/connect/whatsapp') && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
-                                                        <Link href="/user/meta/settings">
+                                                        <Link href="/user/crm-chat/connect/whatsapp">
                                                             <MessageCircle className="size-4 text-green-600" />
                                                             <span>WhatsApp Business API</span>
                                                         </Link>
@@ -711,12 +751,12 @@ export function UserSidebar() {
                                                 {hasFeature('platforms') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={url.startsWith('/user/meta/messenger')}
+                                                        isActive={url.startsWith('/user/crm-chat/connect/messenger')}
                                                         className={cn(
-                                                            url.startsWith('/user/meta/messenger') && 'bg-primary/10 text-primary font-semibold'
+                                                            url.startsWith('/user/crm-chat/connect/messenger') && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
-                                                        <Link href="/user/meta/messenger">
+                                                        <Link href="/user/crm-chat/connect/messenger">
                                                             <Facebook className="size-4 text-blue-600" />
                                                             <span>Facebook Messenger</span>
                                                         </Link>
@@ -729,12 +769,12 @@ export function UserSidebar() {
                                                 {hasFeature('platforms') ? (
                                                     <SidebarMenuSubButton
                                                         asChild
-                                                        isActive={url.startsWith('/user/meta/instagram')}
+                                                        isActive={url.startsWith('/user/crm-chat/connect/instagram')}
                                                         className={cn(
-                                                            url.startsWith('/user/meta/instagram') && 'bg-primary/10 text-primary font-semibold'
+                                                            url.startsWith('/user/crm-chat/connect/instagram') && 'bg-primary/10 text-primary font-semibold'
                                                         )}
                                                     >
-                                                        <Link href="/user/meta/instagram">
+                                                        <Link href="/user/crm-chat/connect/instagram">
                                                             <Instagram className="size-4 text-pink-500" />
                                                             <span>DM Instagram</span>
                                                         </Link>

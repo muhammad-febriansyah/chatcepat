@@ -404,6 +404,13 @@ Route::middleware(['auth', 'verified'])->prefix('user')->name('user.')->group(fu
         Route::get('/connect/messenger', [App\Http\Controllers\User\CrmChatController::class, 'connectMessengerForm'])->name('connect.messenger');
         Route::post('/connect/messenger', [App\Http\Controllers\User\CrmChatController::class, 'storeMessenger'])->name('connect.messenger.store');
         Route::delete('/disconnect/{id}', [App\Http\Controllers\User\CrmChatController::class, 'disconnect'])->name('disconnect');
+
+        // Onboarding API Endpoints
+        Route::prefix('connect/api')->name('connect.api.')->group(function () {
+            Route::post('/validate-credentials', [App\Http\Controllers\User\CrmChatController::class, 'validateCredentials'])->name('validate-credentials');
+            Route::post('/test-connection', [App\Http\Controllers\User\CrmChatController::class, 'testConnection'])->name('test-connection');
+            Route::post('/save-connection', [App\Http\Controllers\User\CrmChatController::class, 'saveConnection'])->name('save-connection');
+        });
     });
 
     // Telegram Management

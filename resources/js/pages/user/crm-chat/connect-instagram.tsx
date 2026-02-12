@@ -1,39 +1,78 @@
-import { Head, useForm, router } from '@inertiajs/react';
-import UserLayout from '@/layouts/user/user-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Instagram, Info, Key, Building } from 'lucide-react';
-import { FormEvent } from 'react';
+import { useState } from 'react'
+import { Head, router } from '@inertiajs/react'
+import UserLayout from '@/layouts/user/user-layout'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, Instagram } from 'lucide-react'
+import ProgressSteps from './connect/components/ProgressSteps'
+import Step1CreateMetaApp from './connect/steps/Step1CreateMetaApp'
+import Step2AddProduct from './connect/steps/instagram/Step2AddProduct'
+import Step3SetupWebhook from './connect/steps/instagram/Step3SetupWebhook'
+import Step4GetCredentials from './connect/steps/instagram/Step4GetCredentials'
+import Step5TestConnect from './connect/steps/instagram/Step5TestConnect'
+import SuccessScreen from './connect/SuccessScreenInstagram'
 
-interface CrmChannel {
-    id: number;
-    name: string | null;
-    account_id: string | null;
-    credentials: {
-        instagram_account_id?: string;
-        page_id?: string;
-    } | null;
+interface Props {
+    channel?: any
+    webhookUrl: string
+    verifyToken: string
 }
 
-interface ConnectInstagramProps {
-    channel: CrmChannel | null;
+interface WizardData {
+    appId: string
+    channelName: string
+    instagramAccountId: string
+    pageId: string
+    pageAccessToken: string
 }
 
-export default function ConnectInstagram({ channel }: ConnectInstagramProps) {
-    const { data, setData, post, processing, errors } = useForm({
-        name: channel?.name || '',
-        instagram_account_id: channel?.credentials?.instagram_account_id || '',
-        page_id: channel?.credentials?.page_id || '',
-        access_token: '',
-    });
+const STEPS = [
+    'Buat Meta App',
+    'Tambah Product',
+    'Setup Webhook',
+    'Credentials',
+    'Test & Simpan',
+]
 
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        post('/user/crm-chat/connect/instagram');
-    };
+export default function ConnectInstagram({ channel, webhookUrl, verifyToken }: Props) {
+    const [currentStep, setCurrentStep] = useState(1)
+    const [isCompleted, setIsCompleted] = useState(false)
+    const [data, setData] = useState<WizardData>({
+        appId: '',
+        channelName: channel?.name || '',
+        instagramAccountId: channel?.credentials?.instagram_account_id || '',
+        pageId: channel?.credentials?.page_id || '',
+        pageAccessToken: '',
+    })
+
+    const updateData = (newData: Partial<WizardData>) => {
+        setData(prev => ({ ...prev, ...newData }))
+    }
+
+    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, STEPS.length))
+    const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1))
+
+    const renderStep = () => {
+        switch (currentStep) {
+            case 1: return <Step1CreateMetaApp data={data} updateData={updateData} onNext={nextStep} onBack={() => router.visit('/user/crm-chat')} />
+            case 2: return <Step2AddProduct data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />
+            case 3: return <Step3SetupWebhook data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} webhookUrl={webhookUrl} verifyToken={verifyToken} />
+            case 4: return <Step4GetCredentials data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />
+            case 5: return <Step5TestConnect data={data} onBack={prevStep} onComplete={() => setIsCompleted(true)} />
+            default: return null
+        }
+    }
+
+    if (isCompleted) {
+        return (
+            <UserLayout>
+                <Head title="Instagram Terhubung" />
+                <div className="space-y-6">
+                    <Card><CardContent className="p-8"><SuccessScreen data={data} /></CardContent></Card>
+                </div>
+            </UserLayout>
+        )
+    }
 
     return (
         <UserLayout>
@@ -42,8 +81,7 @@ export default function ConnectInstagram({ channel }: ConnectInstagramProps) {
             <div className="space-y-6">
                 {/* Header */}
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-pink-500/10 via-purple-500/5 to-transparent p-6 border">
-                    <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_85%)]" />
-                    <div className="relative flex items-center gap-4">
+                    <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
                             size="icon"
@@ -57,138 +95,28 @@ export default function ConnectInstagram({ channel }: ConnectInstagramProps) {
                                 <Instagram className="size-6 text-pink-600" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    Instagram
+                                <h1 className="text-2xl font-bold tracking-tight">
+                                    Instagram API
                                 </h1>
                                 <p className="text-muted-foreground text-sm">
-                                    Hubungkan Instagram Business Account
+                                    Ikuti langkah-langkah berikut untuk menghubungkan Instagram Anda
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Info Alert */}
-                <Alert className="bg-pink-50 border-pink-200">
-                    <Info className="size-4 text-pink-600" />
-                    <AlertDescription className="text-pink-800">
-                        Untuk menggunakan Instagram Messaging API, akun Instagram Anda harus berupa akun bisnis dan terhubung ke Facebook Page.
-                        <a
-                            href="https://developers.facebook.com/docs/instagram-api/getting-started"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium underline ml-1"
-                        >
-                            Pelajari lebih lanjut
-                        </a>
-                    </AlertDescription>
-                </Alert>
-
-                {/* Form Card */}
+                {/* Wizard Card */}
                 <Card className="border-2">
                     <div className="h-1.5 bg-gradient-to-r from-pink-500 to-purple-600" />
-                    <CardHeader>
-                        <CardTitle>Konfigurasi Instagram</CardTitle>
-                        <CardDescription>
-                            Masukkan kredensial dari Meta Developer Console
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-5">
-                            <div className="space-y-2">
-                                <Label htmlFor="name" className="flex items-center gap-2">
-                                    <Building className="size-4" />
-                                    Nama Channel
-                                </Label>
-                                <Input
-                                    id="name"
-                                    placeholder="Contoh: Instagram Bisnis Utama"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                />
-                                {errors.name && (
-                                    <p className="text-sm text-destructive">{errors.name}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="instagram_account_id" className="flex items-center gap-2">
-                                    <Instagram className="size-4" />
-                                    Instagram Business Account ID
-                                </Label>
-                                <Input
-                                    id="instagram_account_id"
-                                    placeholder="Contoh: 17841400123456789"
-                                    value={data.instagram_account_id}
-                                    onChange={(e) => setData('instagram_account_id', e.target.value)}
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    ID akun Instagram Business yang terhubung ke Facebook Page
-                                </p>
-                                {errors.instagram_account_id && (
-                                    <p className="text-sm text-destructive">{errors.instagram_account_id}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="page_id" className="flex items-center gap-2">
-                                    <Building className="size-4" />
-                                    Facebook Page ID
-                                </Label>
-                                <Input
-                                    id="page_id"
-                                    placeholder="Contoh: 123456789012345"
-                                    value={data.page_id}
-                                    onChange={(e) => setData('page_id', e.target.value)}
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    ID halaman Facebook yang terhubung ke Instagram
-                                </p>
-                                {errors.page_id && (
-                                    <p className="text-sm text-destructive">{errors.page_id}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="access_token" className="flex items-center gap-2">
-                                    <Key className="size-4" />
-                                    Page Access Token
-                                </Label>
-                                <Input
-                                    id="access_token"
-                                    type="password"
-                                    placeholder="Masukkan access token..."
-                                    value={data.access_token}
-                                    onChange={(e) => setData('access_token', e.target.value)}
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Access token dengan permission instagram_manage_messages
-                                </p>
-                                {errors.access_token && (
-                                    <p className="text-sm text-destructive">{errors.access_token}</p>
-                                )}
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => router.visit('/user/crm-chat')}
-                                >
-                                    Batal
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
-                                >
-                                    {processing ? 'Menyimpan...' : channel ? 'Update Koneksi' : 'Hubungkan Instagram'}
-                                </Button>
-                            </div>
-                        </form>
+                    <CardContent className="p-8">
+                        <ProgressSteps steps={STEPS} currentStep={currentStep} />
+                        <div className="mt-8">
+                            {renderStep()}
+                        </div>
                     </CardContent>
                 </Card>
             </div>
         </UserLayout>
-    );
+    )
 }
