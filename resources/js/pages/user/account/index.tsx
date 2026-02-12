@@ -467,7 +467,7 @@ export default function AccountIndex({ user, businessCategories, emails, smtpSet
                                     <div>
                                         <CardTitle className="flex items-center gap-2">
                                             <Mail className="size-5 text-primary" />
-                                            Verifikasi Email (Mailketing)
+                                            Verifikasi Email
                                         </CardTitle>
                                         <CardDescription>
                                             Kelola identitas pengirim email Anda

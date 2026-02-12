@@ -886,32 +886,8 @@ export function UserSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* MASTER DATA */}
-                <SidebarGroup>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            <SidebarMenuItem>
-                                {hasFeature('master_data') ? (
-                                    <SidebarMenuButton
-                                        asChild
-                                        isActive={isActive('/user/contacts')}
-                                        className={cn(
-                                            'h-10 rounded-lg',
-                                            isActive('/user/contacts') && 'bg-primary/10 text-primary font-semibold'
-                                        )}
-                                    >
-                                        <Link href="/user/contacts">
-                                            <Database className="size-5" />
-                                            <span>Master Data</span>
-                                        </Link>
-                                    </SidebarMenuButton>
-                                ) : (
-                                    <LockedMenuButton icon={Database} label="Master Data" />
-                                )}
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+
+                {/* MASTER DATA - hidden sementara */}
 
                 {/* TRANSAKSI - Always accessible */}
                 <SidebarGroup>

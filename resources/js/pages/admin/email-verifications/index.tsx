@@ -490,7 +490,7 @@ export default function EmailVerifications({ emails, stats, currentStatus }: Ema
 
                             {selectedEmail.verified_at && (
                                 <div>
-                                    <Label className="text-muted-foreground text-xs uppercase">Verified At (Mailketing)</Label>
+                                    <Label className="text-muted-foreground text-xs uppercase">Verified At</Label>
                                     <p className="text-sm mt-1 text-green-600 font-medium">✅ {selectedEmail.verified_at}</p>
                                 </div>
                             )}
