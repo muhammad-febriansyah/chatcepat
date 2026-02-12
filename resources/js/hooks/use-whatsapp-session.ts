@@ -119,6 +119,7 @@ export function useWhatsAppSession(
 
   const [qrCode, setQrCode] = useState<string | null>(initialQrCode);
   const [isConnected, setIsConnected] = useState(initialIsConnected);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string | null>(initialPhoneNumber);
   const [lastDisconnectReason, setLastDisconnectReason] = useState<string | null>(null);
 
@@ -178,6 +179,7 @@ export function useWhatsAppSession(
     const handleConnected = (event: SessionConnectedEvent) => {
       if (event.sessionId === sessionId) {
         setIsConnected(true);
+        setIsReconnecting(false);
         setPhoneNumber(event.phoneNumber);
         setQrCode(null);
         if (showToasts) {
@@ -193,8 +195,17 @@ export function useWhatsAppSession(
         setIsConnected(false);
         setPhoneNumber(null);
         setLastDisconnectReason(event.reason);
+
+        // Cek apakah sedang dalam proses reconnect otomatis
+        const isAutoReconnecting = event.reason?.toLowerCase().includes('reconnect');
+        setIsReconnecting(isAutoReconnecting);
+
         if (showToasts) {
-          toast.error(`WhatsApp terputus: ${event.reason}`);
+          if (isAutoReconnecting) {
+            toast.warning(`WhatsApp terputus, sedang mencoba menghubungkan ulang...`);
+          } else {
+            toast.error(`WhatsApp terputus: ${event.reason}`);
+          }
         }
         callbacksRef.current.onDisconnected?.(event);
       }
@@ -243,6 +254,7 @@ export function useWhatsAppSession(
   return {
     qrCode,
     isConnected,
+    isReconnecting,
     phoneNumber,
     lastDisconnectReason,
   };

@@ -39,7 +39,8 @@ import {
     Zap,
     Bot,
     Settings,
-    UserPlus
+    UserPlus,
+    RotateCcw
 } from 'lucide-react';
 
 interface WhatsAppSession {
@@ -75,6 +76,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
     const [connectionError, setConnectionError] = useState<{ message: string; code?: number } | null>(null);
     const [realtimeQRCode, setRealtimeQRCode] = useState<string | null>(null);
     const [isConnectedRealtime, setIsConnectedRealtime] = useState(false);
+    const [isReconnecting, setIsReconnecting] = useState(false);
 
     // Connect to Socket.IO for real-time updates
     useEffect(() => {
@@ -112,6 +114,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
             logger.log('✅ Session connected via WebSocket');
             if (data.sessionId === session.session_id) {
                 setIsConnectedRealtime(true);
+                setIsReconnecting(false);
                 setConnectionError(null);
                 setRealtimeQRCode(null);
                 // Reload page to get updated data
@@ -119,13 +122,14 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
             }
         });
 
-        // Listen for connection failure
+        // Listen for connection failure (hanya untuk fatal error)
         newSocket.on('session:connection_failed', (data: { sessionId: string; reason: string; errorCode?: number }) => {
             logger.log('❌ Connection failed via WebSocket:', data.reason);
             if (data.sessionId === session.session_id) {
+                setIsReconnecting(false);
                 setConnectionError({ message: data.reason, code: data.errorCode });
                 setRealtimeQRCode(null);
-                // Reload to get updated status
+                // Reload untuk update status
                 setTimeout(() => {
                     router.reload({ preserveScroll: true });
                 }, 2000);
@@ -137,7 +141,16 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
             logger.log('🔌 Session disconnected via WebSocket:', data.reason);
             if (data.sessionId === session.session_id) {
                 setIsConnectedRealtime(false);
-                router.reload({ preserveScroll: true });
+
+                // Cek apakah sedang proses reconnect otomatis (jangan reload dulu)
+                const isAutoReconnecting = data.reason?.toLowerCase().includes('reconnect');
+                if (isAutoReconnecting) {
+                    setIsReconnecting(true);
+                    // Jangan reload - session akan reconnect otomatis, tunggu event session:connected
+                } else {
+                    setIsReconnecting(false);
+                    router.reload({ preserveScroll: true });
+                }
             }
         });
 
@@ -228,6 +241,14 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
                     </Badge>
                 );
             case 'disconnected':
+                if (isReconnecting) {
+                    return (
+                        <Badge className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1.5">
+                            <RotateCcw className="size-3.5 animate-spin" />
+                            Menghubungkan Ulang...
+                        </Badge>
+                    );
+                }
                 return (
                     <Badge variant="secondary" className="flex items-center gap-1.5">
                         <XCircle className="size-3.5" />
@@ -247,6 +268,7 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
     };
 
     const getStatusColor = (status: string) => {
+        if (isReconnecting) return 'from-blue-400 to-blue-500';
         switch (status) {
             case 'connected':
                 return 'from-green-500 to-emerald-600';
@@ -299,6 +321,20 @@ export default function WhatsAppShow({ session, stats, userId, gatewayUrl }: Sho
                         {getStatusBadge(session.status)}
                     </div>
                 </div>
+
+                {/* Reconnecting Banner */}
+                {isReconnecting && !connectionError && (
+                    <Alert className="border-blue-300 bg-blue-50 dark:bg-blue-950">
+                        <RotateCcw className="size-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                        <AlertTitle className="font-semibold text-blue-900 dark:text-blue-100">
+                            Menghubungkan Ulang Otomatis...
+                        </AlertTitle>
+                        <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm mt-1">
+                            Koneksi WhatsApp terputus. Sistem sedang mencoba menghubungkan ulang secara otomatis.
+                            Mohon tunggu, Anda tidak perlu melakukan apapun.
+                        </AlertDescription>
+                    </Alert>
+                )}
 
                 {/* Connection Error Alert */}
                 {connectionError && (

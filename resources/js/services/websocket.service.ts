@@ -48,8 +48,8 @@ class WebSocketService {
       autoConnect,
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: Infinity,
       query: {
         userId: userId.toString(),
       },

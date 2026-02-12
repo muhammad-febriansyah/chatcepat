@@ -26,6 +26,7 @@ import {
     Wifi,
     Settings,
     Zap,
+    RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,7 +35,7 @@ interface WhatsAppSession {
     session_id: string;
     phone_number: string;
     name: string;
-    status: 'connected' | 'disconnected' | 'qr_pending' | 'failed';
+    status: 'connected' | 'disconnected' | 'qr_pending' | 'failed' | 'connecting';
     messages_count?: number;
     created_at: string;
 }
@@ -89,6 +90,13 @@ export default function WhatsAppIndex({
                     color: 'border-gray-300',
                     bg: 'bg-gray-50',
                     icon: 'bg-gray-100 text-gray-600',
+                };
+            case 'connecting':
+                return {
+                    badge: <Badge className="bg-blue-500 hover:bg-blue-600"><RotateCcw className="size-3 mr-1 animate-spin" />Menghubungkan...</Badge>,
+                    color: 'border-blue-400',
+                    bg: 'bg-blue-50',
+                    icon: 'bg-blue-100 text-blue-600',
                 };
             case 'failed':
                 return {
