@@ -655,9 +655,9 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
 
                 {/* Add Members Dialog */}
                 <Dialog open={showAddMembersDialog} onOpenChange={setShowAddMembersDialog}>
-                    <DialogContent className="max-w-md">
-                        <form onSubmit={handleAddMembers}>
-                            <DialogHeader className="pb-4">
+                    <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+                        <form onSubmit={handleAddMembers} className="flex flex-col h-full">
+                            <DialogHeader className="pb-4 shrink-0">
                                 <DialogTitle className="flex items-center gap-2">
                                     <UserPlus className="size-5 text-primary" />
                                     Tambah Anggota
@@ -667,7 +667,7 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <div className="space-y-5">
+                            <div className="space-y-5 overflow-y-auto flex-1 pr-2">
                                 {/* Section: Pilih dari Kontak */}
                                 {contacts.length > 0 && (
                                     <div className="space-y-2">
@@ -823,7 +823,7 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                                 </div>
                             </div>
 
-                            <DialogFooter className="pt-5">
+                            <DialogFooter className="pt-5 shrink-0 mt-4">
                                 <Button type="button" variant="outline" size="sm" onClick={() => setShowAddMembersDialog(false)}>
                                     Batal
                                 </Button>
