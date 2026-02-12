@@ -18,33 +18,34 @@ use Illuminate\Support\Facades\DB;
 
 class ContactGroupController extends Controller
 {
-    public function __construct()
+    // Laravel 11 - middleware moved to routes or removed from constructor
+    // Access control will be handled in each method if needed
+
+    /**
+     * Check if user has access to broadcast features
+     */
+    protected function checkBroadcastAccess(): void
     {
-        // Check if user has broadcast feature (wa or group)
-        $this->middleware(function ($request, $next) {
-            $user = auth()->user();
+        $user = auth()->user();
 
-            // Admin always has access
-            if ($user && $user->role === 'admin') {
-                return $next($request);
-            }
+        // Admin always has access
+        if ($user && $user->role === 'admin') {
+            return;
+        }
 
-            // Check if user has active subscription with broadcast features
-            $subscription = $user ? $user->getActiveSubscription() : null;
+        // Check if user has active subscription with broadcast features
+        $subscription = $user ? $user->getActiveSubscription() : null;
 
-            if (!$subscription) {
-                return redirect()->route('user.topup')->with('error', 'Anda perlu berlangganan untuk mengakses fitur Kelola Grup.');
-            }
+        if (!$subscription) {
+            abort(403, 'Anda perlu berlangganan untuk mengakses fitur Kelola Grup.');
+        }
 
-            $featureKeys = $subscription['feature_keys'] ?? [];
-            $hasAccess = in_array('broadcast_wa', $featureKeys) || in_array('broadcast_group', $featureKeys);
+        $featureKeys = $subscription['feature_keys'] ?? [];
+        $hasAccess = in_array('broadcast_wa', $featureKeys) || in_array('broadcast_group', $featureKeys);
 
-            if (!$hasAccess) {
-                return redirect()->route('user.topup')->with('error', 'Paket Anda tidak memiliki akses ke fitur Kelola Grup. Upgrade paket Anda untuk menggunakan fitur ini.');
-            }
-
-            return $next($request);
-        });
+        if (!$hasAccess) {
+            abort(403, 'Paket Anda tidak memiliki akses ke fitur Kelola Grup. Upgrade paket Anda.');
+        }
     }
 
     private function gatewayUrl(): string
@@ -54,6 +55,8 @@ class ContactGroupController extends Controller
 
     public function index(): Response
     {
+        $this->checkBroadcastAccess();
+
         $user = auth()->user();
 
         $groups = ContactGroup::where('user_id', $user->id)
