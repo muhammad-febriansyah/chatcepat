@@ -1222,8 +1222,8 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                     setContactSearchForEdit('');
                 }
             }}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
+                <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+                    <DialogHeader className="shrink-0">
                         <DialogTitle className="flex items-center gap-2">
                             <Edit className="size-5 text-primary" />
                             Kelola Grup: {selectedGroupForEdit?.name}
@@ -1233,7 +1233,7 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-6 py-4">
+                    <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0 pr-2">
                         {/* Section 1: Edit Grup Info */}
                         <Card>
                             <CardHeader>
@@ -1485,7 +1485,7 @@ export default function BroadcastPage({ sessions, contacts = [], contactGroups =
                         </Card>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="shrink-0 mt-4">
                         <Button
                             type="button"
                             variant="outline"

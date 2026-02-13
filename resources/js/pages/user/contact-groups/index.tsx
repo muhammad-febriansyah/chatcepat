@@ -655,8 +655,8 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
 
                 {/* Add Members Dialog */}
                 <Dialog open={showAddMembersDialog} onOpenChange={setShowAddMembersDialog}>
-                    <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-                        <form onSubmit={handleAddMembers} className="flex flex-col h-full">
+                    <DialogContent className="max-w-md max-h-[85vh] flex flex-col overflow-hidden">
+                        <form onSubmit={handleAddMembers} className="flex flex-col min-h-0 flex-1">
                             <DialogHeader className="pb-4 shrink-0">
                                 <DialogTitle className="flex items-center gap-2">
                                     <UserPlus className="size-5 text-primary" />
@@ -667,7 +667,7 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <div className="space-y-5 overflow-y-auto flex-1 pr-2">
+                            <div className="space-y-5 overflow-y-auto flex-1 min-h-0 pr-2">
                                 {/* Section: Pilih dari Kontak */}
                                 {contacts.length > 0 && (
                                     <div className="space-y-2">
@@ -712,7 +712,7 @@ export default function ContactGroupsPage({ groups, sessions, contacts }: Contac
                                             <span className="text-sm text-muted-foreground">Pilih Semua</span>
                                         </div>
 
-                                        <ScrollArea className="h-[160px] border rounded-lg">
+                                        <ScrollArea className="h-[140px] border rounded-lg">
                                             <div className="p-1.5 space-y-0.5">
                                                 {filteredContacts.length === 0 ? (
                                                     <p className="text-center text-muted-foreground py-6 text-sm">
